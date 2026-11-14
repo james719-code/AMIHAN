@@ -6,9 +6,9 @@ import {
 import cropWorkbook from '../data/crop-workbook.json';
 import { cropArtwork, cropArtworkCredit } from '../data/crop-artwork';
 import { climateTypeAt } from '../data/climate-types';
-import { imergSeasonalAt, imergSeasonalYears } from '../data/imerg-seasonal';
+import { imergRainDaysAt, imergSeasonalAt, imergSeasonalPeriod, imergSeasonalYears, imergWetDayThresholdMm } from '../data/imerg-seasonal';
 import {
-  coordinatesLabel, labelMonth, nearestClimateSite, powerUrl,
+  climatePeriod, coordinatesLabel, labelMonth, nearestClimateSite, powerUrl,
   seasonalClimate, soilUrl
 } from '../data/historical-climate';
 import {
@@ -19,7 +19,7 @@ import {
 import type { MapPlace } from '../data/places';
 import { rotationGuides } from '../data/rotation';
 import { provinces } from '../data/sites';
-import { smapMonthAt } from '../data/smap-seasonal';
+import { smapMonthAt, smapObservationYear } from '../data/smap-seasonal';
 import { SoilLayers } from './SoilLayers';
 import { TownSelect } from './TownSelect';
 import { mapPath } from '../workspace-routes';
@@ -39,6 +39,12 @@ const rotationStatusLabels: Record<RotationStatus, string> = {
   unsuitable: 'Doesn’t fit your plan'
 };
 const planningDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= '1900-01-01' && value <= '9990-12-31';
+const fieldWaterLabels: Record<Water, string> = {
+  '': 'Unknown', rainfed: 'Rain only', irrigated: 'I can water the field', paddy: 'Irrigated rice paddy'
+};
+const fieldDrainageLabels: Record<Drainage, string> = {
+  '': 'Unknown', well: 'Drains quickly', slow: 'Drains slowly', waterlogged: 'Water often stays'
+};
 const availableCrops = [...crops].sort((a, b) => farmerCropName(a).localeCompare(farmerCropName(b), 'en-PH'));
 
 export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }: Props) {
@@ -53,6 +59,7 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
   const [pickingDays, setPickingDays] = useState('21');
   const [search, setSearch] = useState('');
   const [vegetationOpen, setVegetationOpen] = useState(false);
+  const [exportState, setExportState] = useState<'ready' | 'loading' | 'error'>('ready');
   const [libraryExpanded, setLibraryExpanded] = useState(false);
   const resourceLibrary = useRef<HTMLDivElement>(null);
   const resourceGuides = useRef<HTMLDivElement>(null);
@@ -118,12 +125,54 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
     `${crop.name} ${cropWorkbook[crop.artwork].crop} ${farmerCropName(crop)}`.toLowerCase().includes(query));
   const showAllCrops = libraryExpanded || Boolean(query);
 
+  async function exportPlan() {
+    if (!season || !coordinates || exportState === 'loading') return;
+    setExportState('loading');
+    try {
+      const { downloadPlannerGuide } = await import('./planner-guide');
+      const fields: [string, string][] = [
+        ['Previous crop', previousCrop ? farmerCropName(previousCrop) : previous === 'fallow' ? 'Nothing was planted' : 'Unknown'],
+        ['Water source', fieldWaterLabels[water]],
+        ['Drainage after rain', fieldDrainageLabels[drainage]],
+        ['Climate type', climateTypes.length > 0 ? climateTypes.join(' or ') : 'Unknown'],
+        ['Extra picking time for repeat-pick crops', `${extraDays} days`]
+      ];
+      if (previousHarvest) fields.push(['Previous harvest', formatPlantingDate(previousHarvest)]);
+      if (afterRice) {
+        fields.push(['Moisture or water for monggo', moisture === 'adequate' ? 'Available' : moisture === 'dry' ? 'Dry, with no available water' : 'Unknown']);
+        if (nextRicePlanting) fields.push(['Next palay planting', formatPlantingDate(nextRicePlanting)]);
+      }
+      const wetDays = localRainfall ? imergRainDaysAt(coordinates, month) : undefined;
+      await downloadPlannerGuide({
+        location: pin ? `${location} · ${coordinatesLabel(pin)}` : location,
+        date: start,
+        fields,
+        rainfall: season.map(({ rainfallMm }) => rainfallMm),
+        rainSource: localRainfall ? `NASA IMERG · ${imergSeasonalPeriod}` : `NASA POWER · ${reference?.name} · ${climatePeriod}`,
+        rainDays: wetDays ? { ...wetDays, thresholdMm: imergWetDayThresholdMm } : undefined,
+        moisture: soilMoisture?.observed == null ? undefined : { value: soilMoisture.observed, year: smapObservationYear },
+        rotations: suggestions.map((rotation) => ({ rotation, status: rotationStatusLabels[rotation.status] })),
+        excluded: unsuitable
+      });
+      setExportState('ready');
+    } catch {
+      setExportState('error');
+    }
+  }
+
   return (
     <section className="rotation-card" aria-labelledby="rotation-heading">
-      <header className="planner-title">
+      <header className="planner-title planner-title-actions">
         <div>
           <h1 id="rotation-heading">Crop Planner</h1>
           <p>Compare crop rotations for your planting date and field conditions.</p>
+        </div>
+        <div className="planner-export">
+          <button type="button" className="planner-download" onClick={exportPlan} disabled={!season || exportState === 'loading'} aria-describedby="planner-export-note">
+            {exportState === 'loading' ? 'Preparing guide…' : 'Download PNG guide'}
+          </button>
+          <p id="planner-export-note">{season ? 'Save the top crop options and field notes as an image.' : 'Choose a town or select a field to download.'}</p>
+          {exportState === 'error' && <p role="alert">Couldn’t download the guide. Try again.</p>}
         </div>
       </header>
 

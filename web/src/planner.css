@@ -4,6 +4,21 @@
 .planner-title { margin-bottom: clamp(18px, 3.4vw, 28px); }
 .planner-title h1 { color: var(--forest); font: 750 clamp(32px, 4vw, 46px)/1.08 var(--ui-font); }
 .planner-title p { margin-top: 10px; color: var(--muted); font-size: 15px; line-height: 1.55; }
+.planner-title-actions { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 16px 24px; }
+.planner-export { max-width: 100%; }
+.planner-download {
+  min-height: 44px;
+  padding: 9px 16px;
+  border: 1px solid var(--forest);
+  border-radius: 8px;
+  background: var(--forest);
+  color: #fff;
+  font-weight: 700;
+}
+.planner-download:hover:not(:disabled) { background: var(--leaf); }
+.planner-download:disabled { border-color: var(--line); background: var(--soft); color: var(--muted); cursor: not-allowed; }
+.planner-export p { margin-top: 5px; font-size: 13px; }
+.planner-export [role="alert"] { color: #843f28; }
 .section-nav { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-bottom: 20px; }
 .section-nav a {
   display: inline-flex;
