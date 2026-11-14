@@ -107,8 +107,8 @@ export function createBicolMap(
   controls.maxZoom = 36;
   controls.maxTargetRadius = 225;
 
-  const ambientLight = new AmbientLight(0xffffff, 1.28);
-  const sun = new DirectionalLight('#fff3dd', 1.65);
+  const ambientLight = new AmbientLight('#faf9f6', 1.28);
+  const sun = new DirectionalLight('#faf9f6', 1.65);
   sun.position.set(-140, 200, -160);
   scene.add(ambientLight, sun);
   const flatMaterial = new MeshBasicMaterial({ vertexColors: true });

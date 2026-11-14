@@ -247,4 +247,4 @@ scene.add(terrain, water);
 const binary = await new GLTFExporter().parseAsync(scene, { binary: true });
 
 await writeAsset('../public/maps/bicol.glb', Buffer.from(binary));
-console.log(`Saved Bicol terrain (${positions.length / 3} vertices, ${indices.length / 3} triangles) and place elevations`);
+console.log(`Saved Bicol terrain (${positions.length / 3} vertices, ${indices.length / 3} triangles) and place elevations`);F
