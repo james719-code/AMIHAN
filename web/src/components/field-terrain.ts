@@ -72,8 +72,10 @@ export function createFieldTerrain(terrain: TerrainMesh, index: MeshBVH) {
   function createSlopeLayer() {
     const positions = terrain.geometry.getAttribute('position');
     const triangles = terrain.geometry.getIndex()!;
-    const values: number[] = [];
-    const colors: number[] = [];
+    const maxFloats = triangles.count * 3;
+    const values = new Float32Array(maxFloats);
+    const colors = new Float32Array(maxFloats);
+    let offset = 0;
     const palette = slopeBands.map(({ color }) => new Color(color));
     const a = new Vector3(), b = new Vector3(), c = new Vector3();
     const ab = new Vector3(), ac = new Vector3();
@@ -89,13 +91,18 @@ export function createFieldTerrain(terrain: TerrainMesh, index: MeshBVH) {
       const percent = 100 * Math.hypot(ab.x, ab.z) / Math.max(0.00001, Math.abs(ab.y));
       const color = palette[slopeBands.findIndex(({ max }) => percent < max)];
       for (const point of [a, b, c]) {
-        values.push(point.x / 1000, point.y / 1000, point.z / 1000);
-        colors.push(color.r, color.g, color.b);
+        values[offset] = point.x / 1000;
+        values[offset + 1] = point.y / 1000;
+        values[offset + 2] = point.z / 1000;
+        colors[offset] = color.r;
+        colors[offset + 1] = color.g;
+        colors[offset + 2] = color.b;
+        offset += 3;
       }
     }
     const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new Float32BufferAttribute(values, 3));
-    geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+    geometry.setAttribute('position', new Float32BufferAttribute(values.subarray(0, offset), 3));
+    geometry.setAttribute('color', new Float32BufferAttribute(colors.subarray(0, offset), 3));
     const material = new MeshBasicMaterial({
       vertexColors: true, transparent: true, opacity: 0.77, depthWrite: false,
       polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2

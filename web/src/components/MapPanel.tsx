@@ -125,11 +125,16 @@ export function MapPanel({
     if (!view || !roadsVisible) return;
     let active = true;
     setRoadsState('loading');
-    view.loadRoads().then(
-      () => { if (active) setRoadsState('ready'); },
-      () => { if (active) setRoadsState('error'); }
-    );
-    return () => { active = false; };
+    const timer = window.setTimeout(() => {
+      view.loadRoads().then(
+        () => { if (active) setRoadsState('ready'); },
+        () => { if (active) setRoadsState('error'); }
+      );
+    }, 60);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
   }, [roadAttempt, roadsVisible, view]);
   useEffect(() => {
     if (view && !contextLost) view.setPlaces(markers.current, labels.current, climateMarkers.current);
