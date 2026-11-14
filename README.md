@@ -21,11 +21,15 @@ Open the Vite URL printed by the dev server. The map and 2015–2024 climate his
 
 Select a city, town, or volcano to zoom in on its terrain and roads. **Reset Bicol view** returns to the regional overview.
 
-The **Crop rotation guide** shows seasonal rainfall for a named NASA POWER reference point. Select a planting month for historical rainfall, temperature, and humidity. Previous crop filters the documented Bicol sequences, while water source and drainage change the field checks. The guide provides planning context and links to the original crop studies and soil resources.
+Open **Planner** and choose a place and planting date. Enter the previous crop and harvest date, water source, and drainage. The Planner looks up the climate type for the town marker or field pin using the PAGASA map and allows a manual override. Rotation options show planting and harvest windows, local NASA GPM IMERG rainfall where available, and which field details still need checking.
+
+To check the rice–mungbean pilot, select Pamplona, Camarines Sur and enter rice as the previous crop with rainfed as the water source. Enter the available soil moisture or water and the next rice planting date. The planner checks that the mungbean planting window fits and that final picking and field preparation can finish before the next rice planting. The crop library includes all 48 crops from the supplied workbook, with illustrations, growth milestones, and production references.
+
+The Planner shows NASA SMAP root-zone moisture next to rainfall and compares 2025 with the 2016–2024 average for that month. Set point A in **Field Check**, return to **Planner**, and open **Vegetation timeline** for the last six completed months of NASA HLS greenness observations at that pin. The vegetation timeline uses an internet connection and shows gaps where usable imagery is unavailable.
 
 Use **Climate** on the map to scrub or play daily rainfall or monthly climate for a selected year. The readings appear at the requested NASA POWER coordinates. In 3D, positive daily rainfall adds animated marks at those points. In **Historical climate → 2024 daily weather**, select any of Bicol’s 107 municipalities or seven cities and use **Daily measure** to explore rainfall, temperature, wind, dew point, humidity, solar radiation, soil moisture, land evaporation, and transpiration energy. The chart uses the nearest grid cell to the mapped town or city coordinate. The other tabs include the 2015–2024 reference-point climate history and the IMERG bounding-box rainfall series.
 
-Use **Field Check** to shade the regional terrain by slope and select two land points for an elevation profile. Measurements use the original terrain heights. The display mesh has roughly 660 m spacing across Bicol, so the profile describes regional terrain and leaves gaps over water. The rotation guide uses the closest supplied climate point when Field Check point A is set.
+Use **Field Check** to shade the regional terrain by slope and select two land points for an elevation profile. Measurements use the original terrain heights. The display mesh has roughly 660 m spacing across Bicol, so the profile describes regional terrain and leaves gaps over water. The planner uses Field Check point A when using the map location.
 
 The web app builds with the [bundled 2015–2024 climate readings](web/src/data/historical-climate.json). Original NASA POWER and Giovanni exports are kept locally.
 

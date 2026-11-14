@@ -150,7 +150,10 @@ function App() {
           </aside>
 
         <WorkspacePanel id="rotation-panel" open={activePanel === 'rotation' && !mobileToolOpen} title="Crop rotation planner" onClose={() => setActivePanel(null)} keepMounted>
-          <RotationPlanner place={selectedPlace} site={selectedSite} fieldSelection={fieldSelection} onOpenClimate={() => selectWorkspace('climate')} />
+          <RotationPlanner place={selectedPlace} fieldSelection={fieldSelection} onOpenClimate={(id) => {
+            setSelectedPlaceId(id);
+            selectWorkspace('climate');
+          }} />
         </WorkspacePanel>
 
         <WorkspacePanel id="climate-panel" open={activePanel === 'climate' && !mobileToolOpen} title="Climate readings" onClose={() => setActivePanel(null)}>
