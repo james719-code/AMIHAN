@@ -158,8 +158,8 @@ export function ClimateHistory({ site, place }: { site: ClimateSite; place: MapP
                     formatter={(value) => [`${formatReading.format(Number(value))} ${displayUnit}`, metric.label]}
                     contentStyle={{ borderRadius: 12, borderColor: 'var(--line)', backgroundColor: 'var(--surface)' }} />
                   {barChart
-                    ? <Bar dataKey="value" fill={metric.color} radius={[4, 4, 0, 0]} maxBarSize={48} />
-                    : <Line dataKey="value" stroke={metric.color} strokeWidth={2.5} dot={{ r: 3 }} connectNulls={false} />}
+                    ? <Bar dataKey="value" fill={metric.color} radius={[4, 4, 0, 0]} maxBarSize={48} isAnimationActive={false} />
+                    : <Line dataKey="value" stroke={metric.color} strokeWidth={2.5} dot={{ r: 3 }} connectNulls={false} isAnimationActive={false} />}
                 </ComposedChart>
               </ResponsiveContainer>
             </div>

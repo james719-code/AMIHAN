@@ -17,7 +17,6 @@
   --muted: #304236;
   --line: #d7ded0;
   --control-line: #455c4c;
-  --header-glass: rgb(24 58 45 / 94%);
   --control-shadow: 0 2px 8px rgb(24 58 45 / 14%);
   --display-font: Georgia, "Times New Roman", serif;
 
@@ -134,7 +133,7 @@ button { cursor: pointer; }
 }
 
 .map-container, .map-markers, .map-route-labels, .map-status { position: absolute; inset: 0; }
-.map-container canvas { display: block; cursor: grab; }
+.map-container canvas { display: block; width: 100%; height: 100%; cursor: grab; }
 .map-container canvas:active { cursor: grabbing; }
 .map-container canvas:focus-visible { outline-offset: -3px; }
 .map-markers, .map-route-labels { overflow: hidden; pointer-events: none; }
@@ -539,7 +538,7 @@ tbody tr:hover { background: var(--soft); }
 }
 
 /* The map remains the full viewport; every workspace panel floats above it. */
-:root { --overlay-glass: rgb(250 249 246 / 68%); --map-footer-height: 32px; --map-controls-top: env(safe-area-inset-top); --map-controls-width: 144px; }
+:root { --map-footer-height: 32px; --map-controls-top: env(safe-area-inset-top); --map-controls-width: 144px; }
 html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .app-shell { position: fixed; inset: 0; padding: 0; }
 .map-card { position: absolute; inset: 0; border: 0; border-radius: 0; box-shadow: none; }
@@ -568,24 +567,22 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   padding: 8px;
   border: 1px solid var(--line);
   border-radius: 0;
-  background: var(--overlay-glass);
+  background: var(--surface);
   box-shadow: var(--control-shadow);
 }
 .map-header h2 { display: none; }
 .site-header, .map-header, .place-sidebar, .map-legend, .map-tool-popup,
 .workspace-panel, .map-compass, .map-zoom .quiet-button, .field-center-button,
 .map-toolbar > * {
-  -webkit-backdrop-filter: blur(36px) saturate(40%);
-  backdrop-filter: blur(36px) saturate(40%);
   box-shadow: none;
 }
-.site-header { background: var(--header-glass); }
+.site-header { background: var(--forest); }
 .map-header { top: var(--map-controls-top); width: var(--map-controls-width); min-height: 0; padding: 0; border: 0; }
 .map-header-actions { display: flex; flex-direction: column; align-items: stretch; flex-wrap: nowrap; width: 100%; gap: 0; }
 .map-header-actions .quiet-button { width: 100%; min-height: 40px; }
 .map-header { flex-direction: column; align-items: stretch; gap: 0; }
-.map-header .map-tools-collapse { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; background: var(--header-glass); color: var(--surface); }
-.map-header .map-tools-collapse:hover { background: var(--forest); }
+.map-header .map-tools-collapse { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; background: var(--forest); color: var(--surface); }
+.map-header .map-tools-collapse:hover { background: var(--leaf); }
 .map-header .map-tools-collapse:focus-visible { outline-offset: -3px; outline-color: var(--rice-gold); }
 #map-tools-content[hidden] { display: none; }
 .map-header .map-toolbar { position: static; width: 100%; max-width: none; }
@@ -597,7 +594,7 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .map-header-actions .quiet-button:not(:disabled):not([aria-pressed="true"]):hover { background: var(--soft); }
 .map-header .map-tool-toggle[aria-pressed="true"] { background: var(--forest); }
 .map-compass, .map-zoom .quiet-button, .field-center-button, .map-toolbar > * {
-  background: var(--overlay-glass);
+  background: var(--surface);
 }
 .place-sidebar .site-fact, .workspace-panel .planning-source,
 .workspace-panel .coverage-strip > div, .workspace-panel .metric-tabs {
@@ -605,7 +602,6 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 }
 .map-tool-popup .field-check, .map-tool-popup .climate-map-controls,
 .panel-content > .dashboard-card { background: transparent; }
-.panel-heading { -webkit-backdrop-filter: blur(36px) saturate(40%); backdrop-filter: blur(36px) saturate(40%); }
 .map-toolbar { top: calc(var(--map-controls-top) + 120px); left: auto; right: 0; width: var(--map-controls-width); max-width: none; flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 0; }
 .map-toolbar > * { min-height: 40px; box-sizing: border-box; justify-content: center; }
 .map-mode-controls { display: flex; gap: 0; padding: 0; }
@@ -655,7 +651,7 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   padding: 3px max(12px, env(safe-area-inset-right)) max(3px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   border: 1px solid var(--line);
   border-radius: 0;
-  background: var(--overlay-glass);
+  background: var(--surface);
   box-shadow: var(--control-shadow);
   font-size: 11px;
   gap: 5px 12px;
@@ -671,20 +667,20 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   overscroll-behavior: contain;
   border: 1px solid var(--line);
   border-radius: 0;
-  background: var(--overlay-glass);
+  background: var(--surface);
   box-shadow: 0 8px 32px rgb(24 58 45 / 18%);
 }
 .tool-popup-heading, .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); color: var(--forest); font-size: 13px; font-weight: 700; }
 .close-button { display: grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; font-size: 21px; line-height: 1; }
 .map-tool-popup .field-check, .map-tool-popup .climate-map-controls { border-bottom: 0; }
-.workspace-panel { width: min(980px, 100vw); height: 100dvh; max-width: none; max-height: 100dvh; padding: 0; border: 1px solid var(--line); border-radius: 0; background: var(--overlay-glass); color: var(--ink); box-shadow: 0 24px 80px rgb(12 32 25 / 30%); }
+.workspace-panel { width: min(980px, 100vw); height: 100dvh; max-width: none; max-height: 100dvh; padding: 0; border: 1px solid var(--line); border-radius: 0; background: var(--surface); color: var(--ink); box-shadow: 0 24px 80px rgb(12 32 25 / 30%); }
 .workspace-panel { margin: 0 0 0 auto; overflow: hidden; }
 .workspace-panel .panel-heading { position: static; flex: none; }
 .panel-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .map-tool-popup { display: flex; flex-direction: column; overflow: hidden; }
 .tool-popup-heading { flex: none; }
 .map-tool-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-.panel-heading { position: sticky; top: 0; z-index: 1; background: var(--overlay-glass); }
+.panel-heading { position: sticky; top: 0; z-index: 1; background: var(--surface); }
 .panel-content > .dashboard-card { border: 0; border-radius: 0; margin: 0; box-shadow: none; }
 
 @media (max-width: 1000px) {
@@ -924,7 +920,6 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .site-header .workspace-menu-button { flex: 1; min-width: 0; }
 .place-sidebar, .workspace-panel { position: absolute; top: calc(60px + env(safe-area-inset-top)); bottom: var(--map-footer-height); left: 0; right: auto; z-index: 5; display: flex; flex-direction: column; width: var(--workspace-panel-width); height: auto; max-height: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 0; overflow: hidden; box-shadow: none; }
 .place-sidebar[hidden], .workspace-panel[hidden] { display: none; }
-.place-sidebar, .workspace-panel { background: var(--overlay-glass); }
 /* Keep the explorer panel crisp against the map; its nested sections inherit the cream surface too. */
 .place-sidebar, .place-sidebar .site-fact, .place-sidebar .sidebar-footer { background: var(--surface); }
 .workspace-panel { background: var(--surface); }
@@ -973,7 +968,7 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .tool-popup-heading { min-height: 44px; padding: 5px 12px 5px 16px; background: rgb(250 249 246 / 90%); }
 .tool-panel-actions { display: flex; align-items: center; gap: 4px; }
 .tool-sheet-expand { display: none; }
-.map-tool-body .field-check-header, .map-tool-body .climate-map-settings { position: sticky; top: -14px; z-index: 1; margin: -14px -16px 0; padding: 14px 16px 12px; border-bottom: 1px solid var(--line); background: rgb(250 249 246 / 94%); -webkit-backdrop-filter: blur(36px) saturate(40%); backdrop-filter: blur(36px) saturate(40%); }
+.map-tool-body .field-check-header, .map-tool-body .climate-map-settings { position: sticky; top: -14px; z-index: 1; margin: -14px -16px 0; padding: 14px 16px 12px; border-bottom: 1px solid var(--line); background: var(--surface); }
 .map-tool-body .climate-map-settings { top: -12px; margin-top: -12px; }
 .field-check-actions { gap: 6px; }
 .field-check p { line-height: 1.6; }

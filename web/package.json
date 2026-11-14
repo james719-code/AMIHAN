@@ -11,6 +11,7 @@
     "build": "tsc -b && vite build",
     "lint": "tsc -b --pretty false",
     "generate:terrain": "node scripts/generate-bicol-terrain.mjs",
+    "generate:flat-map": "node scripts/generate-bicol-flat-map.mjs",
     "generate:roads": "node scripts/generate-bicol-roads.mjs"
   },
   "dependencies": {

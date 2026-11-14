@@ -8,13 +8,9 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import type { MeshBVH } from 'three-mesh-bvh';
 import geography from '../data/bicol-map.json';
+import slopeBands from '../data/slope-bands.json';
 
-export const slopeBands = [
-  { max: 3, label: 'Below 3%', color: '#8fb28c' },
-  { max: 8, label: '3–<8%', color: '#e8cc79' },
-  { max: 15, label: '8–<15%', color: '#d98a53' },
-  { max: Infinity, label: '15%+', color: '#984858' }
-];
+export { slopeBands };
 
 export type FieldPoint = {
   x: number;
@@ -42,11 +38,46 @@ const region = {
 };
 export const profileSpacingKm = detailStepDegrees * metersPerDegree / 1000;
 
-export function createFieldTerrain(terrain: TerrainMesh, index: MeshBVH) {
+export function createFieldSampler(index: MeshBVH) {
+  const ray = new Ray(new Vector3(), new Vector3(0, -1, 0));
+  function sample(x: number, z: number): FieldPoint | null {
+    if (x < region.west || x > region.east || z < region.north || z > region.south) return null;
+    ray.origin.set(x * 1000, 10000, z * 1000);
+    const hit = index.raycastFirst(ray, DoubleSide);
+    if (!hit?.face || hit.point.y <= 0) return null;
+    const normal = hit.face.normal;
+    const slopePercent = 100 * Math.hypot(normal.x, normal.z) / Math.max(0.00001, Math.abs(normal.y));
+    return { x, z, elevationM: hit.point.y, slopePercent };
+  }
+
+  return {
+    pick(screen: Vector3, direction: Vector3, relief: number) {
+      const origin = screen.clone().addScaledVector(direction, -1200);
+      ray.origin.set(origin.x * 1000, origin.y * 1000 / relief, origin.z * 1000);
+      ray.direction.set(direction.x, direction.y / relief, direction.z).normalize();
+      const hit = index.raycastFirst(ray, DoubleSide);
+      ray.direction.set(0, -1, 0);
+      if (!hit || hit.point.y <= 0) return null;
+      return sample(hit.point.x / 1000, hit.point.z / 1000);
+    },
+    makeProfile(start: FieldPoint, end: FieldPoint): FieldProfile {
+      const lengthKm = Math.hypot(end.x - start.x, end.z - start.z);
+      const segments = Math.max(1, Math.min(720, Math.ceil(lengthKm / profileSpacingKm)));
+      const samples = Array.from({ length: segments + 1 }, (_, i) => {
+        if (i === 0) return start.elevationM;
+        if (i === segments) return end.elevationM;
+        const fraction = i / segments;
+        return sample(start.x + (end.x - start.x) * fraction, start.z + (end.z - start.z) * fraction)?.elevationM ?? null;
+      });
+      return { start, end, lengthKm, samples };
+    }
+  };
+}
+
+export function createFieldTerrain(terrain: TerrainMesh) {
   const group = new Group();
   group.name = 'Field Check';
   group.visible = false;
-  const ray = new Ray(new Vector3(), new Vector3(0, -1, 0));
   const pointGeometry = new SphereGeometry(1, 12, 8);
   const pointMaterial = new MeshBasicMaterial({ color: '#183a2d', depthTest: false, depthWrite: false, transparent: true });
   const endMaterial = new MeshBasicMaterial({ color: '#9b5a28', depthTest: false, depthWrite: false, transparent: true });
@@ -58,16 +89,6 @@ export function createFieldTerrain(terrain: TerrainMesh, index: MeshBVH) {
   for (const mesh of endpointMeshes) mesh.renderOrder = 13;
   group.add(profileLine, ...endpointMeshes);
   let slope: Mesh<BufferGeometry, MeshBasicMaterial> | undefined;
-
-  function sample(x: number, z: number): FieldPoint | null {
-    if (x < region.west || x > region.east || z < region.north || z > region.south) return null;
-    ray.origin.set(x * 1000, 10000, z * 1000);
-    const hit = index.raycastFirst(ray, DoubleSide);
-    if (!hit?.face || hit.point.y <= 0) return null;
-    const normal = hit.face.normal;
-    const slopePercent = 100 * Math.hypot(normal.x, normal.z) / Math.max(0.00001, Math.abs(normal.y));
-    return { x, z, elevationM: hit.point.y, slopePercent };
-  }
 
   function createSlopeLayer() {
     const positions = terrain.geometry.getAttribute('position');
@@ -89,7 +110,7 @@ export function createFieldTerrain(terrain: TerrainMesh, index: MeshBVH) {
       if (x < region.west || x > region.east || z < region.north || z > region.south) continue;
       ab.subVectors(b, a).cross(ac.subVectors(c, a));
       const percent = 100 * Math.hypot(ab.x, ab.z) / Math.max(0.00001, Math.abs(ab.y));
-      const color = palette[slopeBands.findIndex(({ max }) => percent < max)];
+      const color = palette[slopeBands.findIndex(({ max }) => max === null || percent < max)];
       for (const point of [a, b, c]) {
         values[offset] = point.x / 1000;
         values[offset + 1] = point.y / 1000;
@@ -115,26 +136,6 @@ export function createFieldTerrain(terrain: TerrainMesh, index: MeshBVH) {
 
   return {
     group,
-    pick(screen: Vector3, direction: Vector3, relief: number) {
-      const origin = screen.clone().addScaledVector(direction, -1200);
-      ray.origin.set(origin.x * 1000, origin.y * 1000 / relief, origin.z * 1000);
-      ray.direction.set(direction.x, direction.y / relief, direction.z).normalize();
-      const hit = index.raycastFirst(ray, DoubleSide);
-      ray.direction.set(0, -1, 0);
-      if (!hit || hit.point.y <= 0) return null;
-      return sample(hit.point.x / 1000, hit.point.z / 1000);
-    },
-    makeProfile(start: FieldPoint, end: FieldPoint): FieldProfile {
-      const lengthKm = Math.hypot(end.x - start.x, end.z - start.z);
-      const segments = Math.max(1, Math.min(720, Math.ceil(lengthKm / profileSpacingKm)));
-      const samples = Array.from({ length: segments + 1 }, (_, i) => {
-        if (i === 0) return start.elevationM;
-        if (i === segments) return end.elevationM;
-        const fraction = i / segments;
-        return sample(start.x + (end.x - start.x) * fraction, start.z + (end.z - start.z) * fraction)?.elevationM ?? null;
-      });
-      return { start, end, lengthKm, samples };
-    },
     showSlope(visible: boolean) {
       if (visible && !slope) slope = createSlopeLayer();
       if (slope) slope.visible = visible;

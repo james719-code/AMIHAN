@@ -12,8 +12,9 @@ import { places, waterLabels } from '../data/places';
 import { climateSites } from '../data/historical-climate';
 import type { ClimateFrame } from '../data/climate-map';
 import { createRainGlyphs } from './bicol-rain';
-import { createFieldTerrain, emptyField, type FieldSelection } from './field-terrain';
+import { createFieldSampler, createFieldTerrain, emptyField, type FieldSelection } from './field-terrain';
 import { loadBicolRoads } from './bicol-roads';
+import { createFlatMap } from './bicol-flat-map';
 
 export type MapMode = '2d' | '3d';
 
@@ -82,17 +83,38 @@ function mapPosition([longitude, latitude]: number[]) {
 
 const overviewPoints = geography.overview.map(mapPosition);
 
+function createHardwareRenderer(canvas: HTMLCanvasElement) {
+  const context = canvas.getContext('webgl2', {
+    antialias: true, alpha: false, failIfMajorPerformanceCaveat: true
+  });
+  if (!context || context.isContextLost()) return null;
+  const info = context.getExtension('WEBGL_debug_renderer_info');
+  const name = context.getParameter(info?.UNMASKED_RENDERER_WEBGL ?? context.RENDERER);
+  // Some browsers expose a software renderer even with the performance caveat enabled.
+  if (/swiftshader|llvmpipe|softpipe|software rasterizer|microsoft basic render|warp/i.test(name)) {
+    context.getExtension('WEBGL_lose_context')?.loseContext();
+    return null;
+  }
+  try {
+    return new WebGLRenderer({ canvas, context });
+  } catch {
+    context.getExtension('WEBGL_lose_context')?.loseContext();
+    return null;
+  }
+}
+
 export function createBicolMap(
   container: HTMLDivElement, compass: HTMLSpanElement, roadOverlay: HTMLDivElement,
   onContextChange: (lost: boolean) => void,
   onFieldChange: (selection: FieldSelection) => void,
   onFieldMiss: () => void
 ) {
-  const renderer = new WebGLRenderer({ antialias: true, alpha: false });
-  const canvas = renderer.domElement;
+  const renderer = createHardwareRenderer(document.createElement('canvas'));
+  const canvas = renderer?.domElement ?? document.createElement('canvas');
+  const flatMap = renderer ? null : createFlatMap(canvas);
   canvas.tabIndex = 0;
   canvas.setAttribute('aria-label', 'Bicol map. Use arrow keys to pan.');
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+  renderer?.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   container.appendChild(canvas);
 
   const scene = new Scene();
@@ -121,6 +143,8 @@ export function createBicolMap(
   let mode: MapMode = '2d';
   let overview = true;
   let field: ReturnType<typeof createFieldTerrain> | undefined;
+  let sampler: ReturnType<typeof createFieldSampler> | undefined;
+  let slopeVisible = false;
   let fieldActive = false;
   let selection = emptyField;
   let pickStart: { x: number; y: number; id: number } | null = null;
@@ -129,6 +153,7 @@ export function createBicolMap(
   let frameId = 0;
   let layoutDirty = false;
   let sceneDirty = false;
+  let roadTilesDirty = false;
   let lost = false;
   let lastRainFrame = -Infinity;
   let rainSites: { position: Vector3; amount: number }[] = [];
@@ -139,86 +164,123 @@ export function createBicolMap(
   let climateMarkers: { id: string; element: HTMLButtonElement; position: Vector3 }[] = [];
   let contextLabels: { element: HTMLElement; position: Vector3; maxSpan: number }[] = [];
   let roads: Awaited<ReturnType<typeof loadBicolRoads>> | undefined;
+  let roadsPromise: Promise<void> | undefined;
   let roadsVisible = true;
-  let restoreTerrainMaterial = () => {};
   const abort = new AbortController();
-  const load = async () => {
-    const response = await fetch(TERRAIN_ASSET, { signal: abort.signal });
-    if (!response.ok) throw new Error(`Bicol asset returned HTTP ${response.status}`);
-    const { scene: model } = await new GLTFLoader().parseAsync(await response.arrayBuffer(), '');
-    if (abort.signal.aborted) {
-      disposeModel(model);
-      throw abort.signal.reason;
-    }
-    const terrain = model.getObjectByName('Terrain');
-    if (!(terrain instanceof Mesh)) {
-      disposeModel(model);
-      throw new Error('Bicol asset is missing its Terrain mesh');
-    }
+  let model: Object3D | undefined;
+  let terrain: Mesh | undefined;
+  let shadedMaterial: Mesh['material'] | undefined;
+  let terrainPromise: Promise<Mesh> | undefined;
+  let terrainIndex: MeshBVH | undefined;
+  let fieldRevision = 0;
 
-    const shadedMaterial = terrain.material;
-    restoreTerrainMaterial = () => { terrain.material = shadedMaterial; };
-    model.scale.setScalar(METERS_TO_KILOMETERS);
-    scene.add(model);
-    model.updateMatrixWorld(true);
+  function loadTerrain() {
+    terrainPromise ??= (async () => {
+      const response = await fetch(TERRAIN_ASSET, { signal: abort.signal });
+      if (!response.ok) throw new Error(`Bicol asset returned HTTP ${response.status}`);
+      const { scene: parsed } = await new GLTFLoader().parseAsync(await response.arrayBuffer(), '');
+      const mesh = parsed.getObjectByName('Terrain');
+      if (abort.signal.aborted || !(mesh instanceof Mesh)) {
+        disposeModel(parsed);
+        abort.signal.throwIfAborted();
+        throw new Error('Bicol asset is missing its Terrain mesh');
+      }
+      model = parsed;
+      terrain = mesh;
+      shadedMaterial = mesh.material;
+      if (renderer) {
+        model.scale.setScalar(METERS_TO_KILOMETERS);
+        scene.add(model);
+        model.updateMatrixWorld(true);
+      }
+      return mesh;
+    })().catch((error) => {
+      terrainPromise = undefined;
+      throw error;
+    });
+    return terrainPromise;
+  }
+
+  function getTerrainIndex(mesh: Mesh) {
+    return terrainIndex ??= new MeshBVH(mesh.geometry, { indirect: true });
+  }
+
+  const load = async () => {
+    if (flatMap) await flatMap.setHillshade(true);
+    else await loadTerrain();
+    abort.signal.throwIfAborted();
     loaded = true;
     requestRender();
 
-    // Build the BVH lazily only when Field Check is activated, avoiding a main-thread
-    // freeze and 120+ raycasts on initial map startup.
-    let terrainIndex: MeshBVH | undefined;
-    const getTerrainIndex = () => {
-      if (!terrainIndex) {
-        terrainIndex = new MeshBVH(terrain.geometry, { indirect: true });
-      }
-      return terrainIndex;
-    };
+    // The original terrain is only needed for rendering in WebGL and sampling in Field Check.
     const terrainPosition = (coordinates: number[], id?: string) => {
       const position = mapPosition(coordinates);
+      if (!renderer || !terrain) return position;
       if (id && Object.hasOwn(elevationRecord, id)) {
         position.y = elevationRecord[id] * METERS_TO_KILOMETERS;
         return position;
       }
       groundRay.origin.set(position.x / METERS_TO_KILOMETERS, 50000, position.z / METERS_TO_KILOMETERS);
-      const hit = getTerrainIndex().raycastFirst(groundRay, DoubleSide);
+      const hit = getTerrainIndex(terrain).raycastFirst(groundRay, DoubleSide);
       position.y = Math.max(0, hit?.point.y ?? 0) * METERS_TO_KILOMETERS;
       return position;
     };
 
     return {
-      setFieldCheck(active: boolean, showSlope: boolean) {
+      supports3D: renderer !== null,
+      async setFieldCheck(active: boolean, showSlope: boolean) {
+        if (fieldActive !== active) fieldRevision++;
         fieldActive = active;
+        slopeVisible = showSlope;
         pickStart = null;
-        if (active && !field) {
-          field = createFieldTerrain(terrain, getTerrainIndex());
-          scene.add(field.group);
-          field.setProfile(selection.profile);
-        }
-        if (field) {
-          field.group.visible = active;
-          field.showSlope(active && showSlope);
-        }
         canvas.setAttribute('aria-label', active
           ? 'Field Check map. Tap two land points or press Enter to sample the center.'
           : 'Bicol map. Use arrow keys to pan.');
+        if (field) field.group.visible = active;
+        requestRender();
+        if (!active) return;
+        if (flatMap && showSlope) {
+          await flatMap.loadSlope();
+          abort.signal.throwIfAborted();
+        }
+        if (renderer && terrain) {
+          if (!field && (selection.start || showSlope)) {
+            field = createFieldTerrain(terrain);
+            scene.add(field.group);
+            field.setProfile(selection.profile);
+          }
+          if (field) {
+            field.group.visible = true;
+            field.showSlope(showSlope);
+          }
+        }
         requestRender();
       },
       clearField() {
+        fieldRevision++;
         selection = emptyField;
         field?.setProfile(null);
         onFieldChange(selection);
         requestRender();
       },
       pickFieldCenter,
-      async loadRoads() {
-        if (roads) return;
-        roads = await loadBicolRoads(abort.signal, roadOverlay, requestSceneRender);
-        if (abort.signal.aborted) {
-          roads.dispose();
-          throw abort.signal.reason;
-        }
-        scene.add(roads.group);
-        requestRender();
+      loadRoads() {
+        roadsPromise ??= loadBicolRoads(abort.signal, roadOverlay, () => {
+          if (flatMap) roadTilesDirty = true;
+          requestSceneRender();
+        }).then((loadedRoads) => {
+          if (abort.signal.aborted) {
+            loadedRoads.dispose();
+            throw abort.signal.reason;
+          }
+          roads = loadedRoads;
+          scene.add(roads.group);
+          requestRender();
+        }).catch((error) => {
+          roadsPromise = undefined;
+          throw error;
+        });
+        return roadsPromise;
       },
       setRoadsVisible(visible: boolean) {
         roadsVisible = visible;
@@ -226,9 +288,9 @@ export function createBicolMap(
       },
       setMode(nextMode: MapMode) {
         focusStep = null;
-        mode = nextMode;
+        mode = renderer ? nextMode : '2d';
         relief = mode === '3d' ? RELIEF_SCALE : 1;
-        terrain.scale.y = relief;
+        if (terrain && renderer) terrain.scale.y = relief;
         controls.enableRotate = mode === '3d';
         controls.screenSpacePanning = mode === '2d';
         controls.mouseButtons.LEFT = mode === '3d' ? MOUSE.ROTATE : MOUSE.PAN;
@@ -238,8 +300,9 @@ export function createBicolMap(
         if (overview) fitOverview();
         else alignCamera();
       },
-      setHillshade(enabled: boolean) {
-        terrain.material = enabled ? shadedMaterial : flatMaterial;
+      async setHillshade(enabled: boolean) {
+        if (flatMap) await flatMap.setHillshade(enabled);
+        else if (terrain && shadedMaterial) terrain.material = enabled ? shadedMaterial : flatMaterial;
         requestRender();
       },
       setPlaces(elements: Map<string, HTMLButtonElement>, labels: Map<string, HTMLElement>, climate: Map<string, HTMLButtonElement>) {
@@ -286,7 +349,7 @@ export function createBicolMap(
         const targetSpan = marker.volcano ? 96 : 38;
         const toZoom = Math.max(camera.zoom, (camera.top - camera.bottom) / targetSpan);
         const start = performance.now();
-        const duration = reducedMotion.matches ? 0 : 440;
+        const duration = flatMap || reducedMotion.matches ? 0 : 440;
         focusStep = (now: number) => {
           const progress = duration ? Math.max(0, Math.min(1, (now - start) / duration)) : 1;
           const eased = 1 - (1 - progress) ** 3;
@@ -357,8 +420,10 @@ export function createBicolMap(
     focusStep = null;
   }
 
-  function pickField(clientX: number, clientY: number) {
-    if (!fieldActive || !field) return;
+  async function pickField(clientX: number, clientY: number) {
+    if (!fieldActive) return;
+    const revision = fieldRevision;
+    const currentRelief = relief;
     camera.updateMatrixWorld();
     const bounds = canvas.getBoundingClientRect();
     const screen = new Vector3(
@@ -367,16 +432,30 @@ export function createBicolMap(
       0
     ).unproject(camera);
     const direction = camera.getWorldDirection(new Vector3());
-    // Intersect the displayed relief in the GLB's meter coordinates.
-    const picked = field.pick(screen, direction, relief);
+    if (!sampler) {
+      try {
+        const mesh = terrain ?? await loadTerrain();
+        if (abort.signal.aborted || revision !== fieldRevision) return;
+        sampler ??= createFieldSampler(getTerrainIndex(mesh));
+      } catch {
+        if (!abort.signal.aborted && revision === fieldRevision) onFieldMiss();
+        return;
+      }
+    }
+    const picked = sampler.pick(screen, direction, currentRelief);
     if (!picked) {
       onFieldMiss();
       return;
     }
     const start = selection.profile ? null : selection.start;
     if (start && Math.hypot(start.x - picked.x, start.z - picked.z) < 0.01) return;
-    selection = start ? { start, profile: field.makeProfile(start, picked) } : { start: picked, profile: null };
-    field.setProfile(selection.profile);
+    selection = start ? { start, profile: sampler.makeProfile(start, picked) } : { start: picked, profile: null };
+    if (renderer && terrain && !field) {
+      field = createFieldTerrain(terrain);
+      scene.add(field.group);
+      field.group.visible = true;
+    }
+    field?.setProfile(selection.profile);
     onFieldChange(selection);
     requestRender();
   }
@@ -441,10 +520,18 @@ export function createBicolMap(
       if (rainVisible) rain.update(rainSites, verticalSpan, relief, animateRain ? now / 1000 : 0);
       if (rainDue) lastRainFrame = now;
     }
-    if (layoutDirty || sceneDirty || rainDue) renderer.render(scene, camera);
+    if (layoutDirty || sceneDirty || rainDue) {
+      if (renderer) renderer.render(scene, camera);
+      else {
+        camera.updateMatrixWorld();
+        flatMap?.draw(camera, fieldActive && slopeVisible, fieldActive ? selection : null,
+          roadsVisible ? roads?.drawFlat : undefined, roadTilesDirty, requestSceneRender);
+      }
+    }
     if (layoutDirty) positionOverlays(verticalSpan);
     layoutDirty = false;
     sceneDirty = false;
+    roadTilesDirty = false;
     frameId = 0;
     if (focusStep || animateRain) scheduleFrame();
   }
@@ -463,7 +550,7 @@ export function createBicolMap(
       const north = Math.abs(Math.sin(azimuth)) * halfWidth + Math.abs(Math.cos(azimuth)) * halfDepth + 5;
       roads.setDetail(verticalSpan, roadsVisible ? {
         minX: x - east, maxX: x + east, minZ: z - north, maxZ: z + north
-      } : null);
+      } : null, renderer !== null);
     }
   }
 
@@ -599,7 +686,8 @@ export function createBicolMap(
     camera.top = halfHeight;
     camera.bottom = -halfHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
+    if (renderer) renderer.setSize(width, height, false);
+    else flatMap?.resize(width, height);
     if (loaded && overview) fitOverview();
     else requestRender();
   }
@@ -654,15 +742,16 @@ export function createBicolMap(
       canvas.removeEventListener('pointerup', fieldPointerUp);
       canvas.removeEventListener('pointercancel', cancelFieldPick);
       canvas.removeEventListener('keydown', fieldKeyDown);
-      restoreTerrainMaterial();
+      if (terrain && shadedMaterial) terrain.material = shadedMaterial;
       roads?.dispose();
       scene.remove(rain.mesh);
       rain.dispose();
       field?.dispose();
-      disposeModel(scene);
+      if (model) disposeModel(model);
       flatMaterial.dispose();
-      renderer.dispose();
-      renderer.forceContextLoss();
+      flatMap?.dispose();
+      renderer?.dispose();
+      renderer?.forceContextLoss();
       canvas.remove();
     }
   };

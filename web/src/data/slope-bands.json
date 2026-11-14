@@ -1,0 +1,6 @@
+[
+  { "max": 3, "label": "Below 3%", "color": "#8fb28c" },
+  { "max": 8, "label": "3–<8%", "color": "#e8cc79" },
+  { "max": 15, "label": "8–<15%", "color": "#d98a53" },
+  { "max": null, "label": "15%+", "color": "#984858" }
+]
