@@ -115,6 +115,7 @@ export function createBicolMap(
     requestRender();
 
     // Keep the terrain's triangle order intact for rendering and slope shading.
+    // This intentionally stays on the main thread for broad browser compatibility.
     const terrainIndex = new MeshBVH(terrain.geometry, { indirect: true });
     const terrainPosition = (coordinates: number[]) => {
       const position = mapPosition(coordinates);
