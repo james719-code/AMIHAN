@@ -1,0 +1,13 @@
+{
+  "bounds": { "west": 117.2, "south": 8.2, "east": 129.4, "north": 18.4 },
+  "detailBounds": { "west": 122.05, "south": 11.55, "east": 124.65, "north": 14.65 },
+  "overview": [[122.25, 14.35], [123.0, 14.58], [124.48, 14.18], [124.32, 12.45], [124.06, 11.68], [122.85, 11.9]],
+  "origin": [123.35, 13.13],
+  "metersPerDegree": 111319.49079327358,
+  "metersPerLongitude": 108333.77656831744,
+  "detailStepDegrees": 0.006,
+  "contextStepDegrees": 0.025,
+  "source": "Mapzen Terrain Tiles",
+  "attribution": "SRTM and GMTED2010 courtesy of USGS. ETOPO1 courtesy of NOAA NCEI.",
+  "attributionUrl": "https://github.com/tilezen/joerd/blob/master/docs/attribution.md"
+}

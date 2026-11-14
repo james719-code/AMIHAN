@@ -9,20 +9,29 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "tsc -b --pretty false"
+    "lint": "tsc -b --pretty false",
+    "generate:terrain": "node scripts/generate-bicol-terrain.mjs",
+    "generate:roads": "node scripts/generate-bicol-roads.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.0",
-    "maplibre-gl": "^6.18.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^3.0.0",
-    "tailwindcss": "^4.1.0"
+    "tailwindcss": "^4.1.0",
+    "three": "0.187.0"
   },
   "devDependencies": {
+    "@mapbox/vector-tile": "3.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/three": "0.187.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "delaunator": "5.1.0",
+    "pbf": "5.1.2",
+    "pmtiles": "4.5.0",
+    "pngjs": "7.0.0",
+    "three-mesh-bvh": "0.9.18",
     "typescript": "~5.7.2",
     "vite": "^7.0.0"
   }

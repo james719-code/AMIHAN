@@ -1,0 +1,50 @@
+[
+  {
+    "id": "albay-01", "name": "Legazpi City", "kind": "City", "provinceCode": "0500500000",
+    "coordinates": [123.74073, 13.14125], "population": 210616, "climateSite": true
+  },
+  {
+    "id": "camarines-norte-01", "name": "Daet", "kind": "Municipality", "provinceCode": "0501600000",
+    "coordinates": [122.9553, 14.1122], "population": 106465, "climateSite": true
+  },
+  {
+    "id": "camarines-sur-01", "name": "Naga City", "kind": "City", "provinceCode": "0501700000",
+    "coordinates": [123.18139, 13.61917], "population": 210545, "climateSite": true
+  },
+  {
+    "id": "catanduanes-01", "name": "Virac", "kind": "Municipality", "provinceCode": "0502000000",
+    "coordinates": [124.2374, 13.5848], "population": 75135, "climateSite": true
+  },
+  {
+    "id": "masbate-01", "name": "Masbate City", "kind": "City", "provinceCode": "0504100000",
+    "coordinates": [123.62494, 12.37169], "population": 104011, "climateSite": true
+  },
+  {
+    "id": "sorsogon-01", "name": "Sorsogon City", "kind": "City", "provinceCode": "0506200000",
+    "coordinates": [123.99333, 12.97389], "population": 187670, "climateSite": true
+  },
+  {
+    "id": "iriga", "name": "Iriga City", "kind": "City", "provinceCode": "0501700000",
+    "coordinates": [123.4115, 13.4324], "population": 115306
+  },
+  {
+    "id": "ligao", "name": "Ligao City", "kind": "City", "provinceCode": "0500500000",
+    "coordinates": [123.55, 13.23333], "population": 119779
+  },
+  {
+    "id": "tabaco", "name": "Tabaco City", "kind": "City", "provinceCode": "0500500000",
+    "coordinates": [123.73361, 13.35861], "population": 140779
+  },
+  {
+    "id": "mayon", "name": "Mayon", "kind": "Volcano", "provinceCode": "0500500000",
+    "coordinates": [123.685, 13.257], "summitMeters": 2462, "volcanoNumber": 273030
+  },
+  {
+    "id": "isarog", "name": "Mount Isarog", "kind": "Volcano", "provinceCode": "0501700000",
+    "coordinates": [123.38, 13.658], "summitMeters": 1966, "volcanoNumber": 273042
+  },
+  {
+    "id": "bulusan", "name": "Bulusan", "kind": "Volcano", "provinceCode": "0506200000",
+    "coordinates": [124.056, 12.769], "summitMeters": 1535, "volcanoNumber": 273010
+  }
+]

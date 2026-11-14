@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   Bar,
   CartesianGrid,
@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { demoDataManifest, demoWeatherBySite } from './data/demo-weather';
 import { demoSites, provinces } from './data/sites';
+import { citySource, coordinateSource, elevationSource, municipalitySource, places } from './data/places';
 import type { MetricDefinition, MetricKey } from './types';
 import { MapPanel } from './components/MapPanel';
 
@@ -23,22 +24,22 @@ const metrics: MetricDefinition[] = [
 ];
 
 const dateLabel = (value: string) => new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric' }).format(new Date(`${value}T00:00:00Z`));
+const number = new Intl.NumberFormat('en-PH');
+const coordinatesLabel = ([longitude, latitude]: number[]) => `${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E`;
 
 function App() {
-  const [selectedProvinceCode, setSelectedProvinceCode] = useState(provinces[0].code);
-  const [selectedSiteId, setSelectedSiteId] = useState(demoSites[0].id);
+  const [selectedPlaceId, setSelectedPlaceId] = useState(places[0].id);
   const [metricKey, setMetricKey] = useState<MetricKey>('rainfallMm');
-  const [mapMode, setMapMode] = useState<'2d' | '3d'>('2d');
+  const [mapMode, setMapMode] = useState<'2d' | '3d'>('3d');
   const [dateStart, setDateStart] = useState(demoDataManifest.selectedDates.start);
   const [dateEnd, setDateEnd] = useState(demoDataManifest.selectedDates.end);
 
-  const selectedSite = demoSites.find((site) => site.id === selectedSiteId) ?? demoSites[0];
+  const selectedPlace = places.find((place) => place.id === selectedPlaceId) ?? places[0];
+  const selectedProvince = provinces.find((province) => province.code === selectedPlace.provinceCode);
+  const selectedSite = demoSites.find((site) => site.id === selectedPlaceId);
   const selectedMetric = metrics.find((metric) => metric.key === metricKey) ?? metrics[0];
-  const siteOptions = useMemo(
-    () => demoSites.filter((site) => site.provinceCode === selectedProvinceCode),
-    [selectedProvinceCode]
-  );
-  const siteRows = demoWeatherBySite[selectedSite.id] ?? [];
+  const placeOptions = places.filter((place) => place.provinceCode === selectedPlace.provinceCode);
+  const siteRows = selectedSite ? demoWeatherBySite[selectedSite.id] ?? [] : [];
   const availableDates = siteRows.map((row) => row.date);
   const visibleRows = siteRows.filter((row) => row.date >= dateStart && row.date <= dateEnd);
   const availableCount = visibleRows.filter((row) => row[metricKey] !== null).length;
@@ -49,17 +50,13 @@ function App() {
   }));
 
   const selectProvince = (code: string) => {
-    setSelectedProvinceCode(code);
-    const provinceSite = demoSites.find((site) => site.provinceCode === code);
-    if (provinceSite) setSelectedSiteId(provinceSite.id);
+    const provincePlace = places.find((place) => place.provinceCode === code);
+    if (provincePlace) setSelectedPlaceId(provincePlace.id);
   };
 
-  const selectSite = (siteId: string) => {
-    const site = demoSites.find((candidate) => candidate.id === siteId);
-    if (!site) return;
-    setSelectedSiteId(site.id);
-    setSelectedProvinceCode(site.provinceCode);
-  };
+  const summitSource = selectedPlace.volcanoNumber
+    ? `https://volcano.si.edu/volcano.cfm?vn=${selectedPlace.volcanoNumber}`
+    : null;
 
   const updateStartDate = (value: string) => {
     setDateStart(value);
@@ -87,7 +84,7 @@ function App() {
           <div>
             <span className="eyebrow">Bicol Region V · Philippines</span>
             <h1>Explore Bicol’s terrain and climate</h1>
-            <p>View the landscape in 2D or 3D and explore daily climate readings at six reference points.</p>
+            <p>Explore Bicol’s cities, towns, and volcanoes. Select a place to see its elevation and local details.</p>
           </div>
           <div className="hero-note">
             <strong>About this demo</strong>
@@ -97,46 +94,69 @@ function App() {
 
         <section className="workspace-grid">
           <MapPanel
-            sites={demoSites}
-            selectedSiteId={selectedSiteId}
-            selectedProvinceCode={selectedProvinceCode}
+            selectedPlaceId={selectedPlaceId}
             mapMode={mapMode}
             onMapModeChange={setMapMode}
-            onSiteSelect={selectSite}
+            onPlaceSelect={setSelectedPlaceId}
           />
 
           <aside className="control-card" aria-label="Explorer controls">
             <div className="card-heading">
-              <h2>Choose a reference point</h2>
+              <h2>Explore a place</h2>
             </div>
             <div className="field-group">
               <label htmlFor="province">Province</label>
-              <select id="province" value={selectedProvinceCode} onChange={(event) => selectProvince(event.target.value)}>
+              <select id="province" value={selectedPlace.provinceCode} onChange={(event) => selectProvince(event.target.value)}>
                 {provinces.map((province) => <option key={province.code} value={province.code}>{province.name}</option>)}
               </select>
             </div>
             <div className="field-group">
-              <label htmlFor="site">Site</label>
-              <select id="site" value={selectedSiteId} onChange={(event) => selectSite(event.target.value)}>
-                {siteOptions.map((site) => <option key={site.id} value={site.id}>{site.name}</option>)}
+              <label htmlFor="place">Place</label>
+              <select id="place" value={selectedPlaceId} onChange={(event) => setSelectedPlaceId(event.target.value)}>
+                {placeOptions.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}
               </select>
             </div>
-            <div className="site-fact">
-              <span className="fact-label">Coordinates</span>
-              <strong>{selectedSite.coordinates[1].toFixed(4)}° N, {selectedSite.coordinates[0].toFixed(4)}° E</strong>
-              <p>{selectedSite.rationale}</p>
-            </div>
-            <div className="boundary-notice">
-              <p>Province boundaries are unavailable in this demo.</p>
+            <div className="site-fact" aria-live="polite">
+              <div>
+                <span className="fact-label">{selectedPlace.kind} · {selectedProvince?.name}</span>
+                <h3>{selectedPlace.name}</h3>
+              </div>
+              <dl className="place-facts">
+                <div>
+                  <dt>{summitSource ? 'Summit elevation' : 'Elevation at marker'}</dt>
+                  <dd>{selectedPlace.summitMeters !== undefined
+                    ? `${number.format(selectedPlace.summitMeters)} m`
+                    : selectedPlace.elevationMeters === null ? 'Unavailable' : `≈ ${number.format(selectedPlace.elevationMeters)} m`}</dd>
+                </div>
+                {selectedPlace.population !== undefined && (
+                  <div>
+                    <dt>Population · 2024</dt>
+                    <dd>{number.format(selectedPlace.population)}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt>Coordinates</dt>
+                  <dd>{coordinatesLabel(selectedPlace.coordinates)}</dd>
+                </div>
+              </dl>
+              <p className="place-sources">
+                {summitSource ? <a href={summitSource}>Smithsonian Global Volcanism Program</a> : (
+                  <>
+                    <a href={elevationSource}>Mapzen elevation</a>
+                    <a href={selectedPlace.kind === 'City' ? citySource : municipalitySource}>PSA census</a>
+                    <a href={coordinateSource}>GeoNames</a>
+                  </>
+                )}
+              </p>
             </div>
           </aside>
         </section>
 
-        <section className="dashboard-card" aria-labelledby="climate-heading">
+        {selectedSite ? <section className="dashboard-card" aria-labelledby="climate-heading">
           <div className="dashboard-heading">
             <div>
               <h2 id="climate-heading">Daily climate readings</h2>
-              <p className="section-subtitle">{selectedSite.name} · {selectedSite.provinceName} · UTC</p>
+              <p className="section-subtitle">{selectedSite.name} · {coordinatesLabel(selectedSite.coordinates)} · UTC</p>
             </div>
             <div className="demo-badge"><span className="status-dot" /> Synthetic data</div>
           </div>
@@ -209,7 +229,16 @@ function App() {
             </table>
           </div>
           <footer className="data-footer">FieldWise synthetic dataset · {demoDataManifest.releaseId}</footer>
-        </section>
+        </section> : (
+          <section className="dashboard-card" aria-labelledby="climate-heading">
+            <div className="dashboard-heading">
+              <div>
+                <h2 id="climate-heading">Daily climate readings</h2>
+                <p className="section-subtitle">Demo climate readings are unavailable for {selectedPlace.name}.</p>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
     </>
   );

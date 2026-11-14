@@ -1,240 +1,193 @@
 import { useEffect, useRef, useState } from 'react';
-import * as maplibregl from 'maplibre-gl';
-import type { Map as MapLibreMap, Marker as MapLibreMarker } from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import type { DemoSite } from '../types';
-
-type MapMode = '2d' | '3d';
+import geography from '../data/bicol-map.json';
+import { places, waterLabels } from '../data/places';
+import { createBicolMap, RELIEF_SCALE, type MapMode } from './bicol-map';
 
 type MapPanelProps = {
-  sites: DemoSite[];
-  selectedSiteId: string;
-  selectedProvinceCode: string;
+  selectedPlaceId: string;
   mapMode: MapMode;
   onMapModeChange: (mode: MapMode) => void;
-  onSiteSelect: (siteId: string) => void;
+  onPlaceSelect: (id: string) => void;
 };
 
-const REGION_BOUNDS: [[number, number], [number, number]] = [
-  [121.5, 11.5],
-  [125.1, 15.1]
-];
-const TERRAIN_URL = import.meta.env.VITE_TERRAIN_TILEJSON_URL || 'https://tiles.mapterhorn.com/tilejson.json';
-
-const style = {
-  version: 8 as const,
-  sources: {
-    osm: {
-      type: 'raster' as const,
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      attribution: '© OpenStreetMap contributors',
-      maxzoom: 19
-    }
-  },
-  layers: [
-    {
-      id: 'osm',
-      type: 'raster' as const,
-      source: 'osm'
-    }
-  ]
-};
+type MapView = Awaited<ReturnType<ReturnType<typeof createBicolMap>['load']>>;
 
 export function MapPanel({
-  sites,
-  selectedSiteId,
-  selectedProvinceCode,
+  selectedPlaceId,
   mapMode,
   onMapModeChange,
-  onSiteSelect
+  onPlaceSelect
 }: MapPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
-  const markersRef = useRef<MapLibreMarker[]>([]);
-  const [mapReady, setMapReady] = useState(false);
-  const [webglSupported, setWebglSupported] = useState(true);
-  const [terrainState, setTerrainState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
-  const [hillshadeEnabled, setHillshadeEnabled] = useState(true);
-
-  const removeTerrain = () => {
-    const map = mapRef.current;
-    if (!map || !map.getStyle()) return;
-    if (map.getLayer('hillshade')) map.removeLayer('hillshade');
-    if (map.getSource('terrain')) map.removeSource('terrain');
-    map.setTerrain(null);
-  };
-
-  const enableTerrain = () => {
-    const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
-    setTerrainState('loading');
-    try {
-      if (!map.getSource('terrain')) {
-        map.addSource('terrain', {
-          type: 'raster-dem',
-          url: TERRAIN_URL,
-          tileSize: 256,
-          maxzoom: 14
-        });
-      }
-      if (!map.getLayer('hillshade')) {
-        map.addLayer({
-          id: 'hillshade',
-          type: 'hillshade',
-          source: 'terrain',
-          layout: { visibility: hillshadeEnabled ? 'visible' : 'none' },
-          paint: {
-            'hillshade-shadow-color': '#354a40',
-            'hillshade-highlight-color': '#f7f4df',
-            'hillshade-accent-color': '#9a8e74',
-            'hillshade-exaggeration': 0.35
-          }
-        });
-      }
-      map.setTerrain({ source: 'terrain', exaggeration: 1 });
-      map.easeTo({ pitch: 55, duration: 650 });
-      setTerrainState('ready');
-    } catch {
-      removeTerrain();
-      setTerrainState('error');
-    }
-  };
+  const compassRef = useRef<HTMLSpanElement>(null);
+  const roadOverlayRef = useRef<HTMLDivElement>(null);
+  const markers = useRef(new Map<string, HTMLButtonElement>());
+  const labels = useRef(new Map<string, HTMLElement>());
+  const lastSelection = useRef(selectedPlaceId);
+  const [view, setView] = useState<MapView | null>(null);
+  const [failure, setFailure] = useState<'webgl' | 'asset' | null>(null);
+  const [contextLost, setContextLost] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [hillshade, setHillshade] = useState(true);
+  const [roadsVisible, setRoadsVisible] = useState(true);
+  const [roadsState, setRoadsState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [roadAttempt, setRoadAttempt] = useState(0);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    const webgl2 = document.createElement('canvas').getContext('webgl2');
-    if (!webgl2) {
-      setWebglSupported(false);
+    const container = containerRef.current;
+    const compass = compassRef.current;
+    const roadOverlay = roadOverlayRef.current;
+    if (!container || !compass || !roadOverlay) return;
+    let map;
+    try {
+      map = createBicolMap(container, compass, roadOverlay, setContextLost);
+    } catch {
+      setFailure('webgl');
       return;
     }
 
-    maplibregl.setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style,
-      center: [123.3, 13.3],
-      zoom: 6.2,
-      pitch: 0,
-      bearing: 0,
-      maxBounds: [[119.5, 9.5], [127.5, 17.5]]
-    });
-    mapRef.current = map;
-
-    map.on('load', () => {
-      map.fitBounds(REGION_BOUNDS, { padding: 48, duration: 0 });
-      setMapReady(true);
-    });
-    map.on('error', (event: unknown) => {
-      const sourceId = (event as unknown as { sourceId?: string }).sourceId;
-      if (sourceId === 'terrain') {
-        map.setTerrain(null);
-        setTerrainState('error');
-      }
-    });
-
-    return () => {
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current = [];
-      map.remove();
-      mapRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current = sites.map((site) => {
-      const element = document.createElement('button');
-      element.type = 'button';
-      element.className = `site-marker${site.id === selectedSiteId ? ' is-selected' : ''}`;
-      element.setAttribute('aria-label', `Select ${site.name}, ${site.provinceName}`);
-      element.title = `${site.name} · ${site.provinceName}`;
-      element.addEventListener('click', () => onSiteSelect(site.id));
-      return new maplibregl.Marker({ element, anchor: 'center' })
-        .setLngLat(site.coordinates)
-        .addTo(map);
-    });
-    return () => {
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current = [];
-    };
-  }, [mapReady, onSiteSelect, selectedSiteId, sites]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-    const selectedSite = sites.find((site) => site.id === selectedSiteId);
-    const selectedProvinceSite = sites.find((site) => site.provinceCode === selectedProvinceCode);
-    const target = selectedSite ?? selectedProvinceSite;
-    if (target) {
-      map.flyTo({ center: target.coordinates, zoom: 8.2, duration: 800 });
-    }
-  }, [mapReady, selectedProvinceCode, selectedSiteId, sites]);
-
-  useEffect(() => {
-    if (!mapReady) return;
-    if (mapMode === '3d') {
-      enableTerrain();
-    } else {
-      removeTerrain();
-      mapRef.current?.easeTo({ pitch: 0, bearing: 0, duration: 500 });
-    }
-  }, [mapMode, mapReady]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !map.getLayer('hillshade')) return;
-    map.setLayoutProperty('hillshade', 'visibility', hillshadeEnabled ? 'visible' : 'none');
-  }, [hillshadeEnabled]);
-
-  const resetView = () => {
-    mapRef.current?.fitBounds(REGION_BOUNDS, { padding: 48, duration: 700 });
-    onMapModeChange('2d');
-  };
-
-  if (!webglSupported) {
-    return (
-      <section className="map-card map-card-fallback" aria-label="Map unavailable">
-        <div>
-          <h2>Map unavailable on this device</h2>
-          <p>You can still select a reference point and view its climate readings.</p>
-        </div>
-      </section>
+    let active = true;
+    map.load().then(
+      (loadedView) => { if (active) setView(loadedView); },
+      () => { if (active) setFailure('asset'); }
     );
-  }
+    return () => {
+      active = false;
+      map.dispose();
+    };
+  }, [attempt]);
 
+  useEffect(() => { view?.setMode(mapMode); }, [mapMode, view]);
+  useEffect(() => { view?.setHillshade(hillshade); }, [hillshade, view]);
+  useEffect(() => { view?.setRoadsVisible(roadsVisible); }, [roadsVisible, view]);
+  useEffect(() => {
+    if (!view) return;
+    let active = true;
+    view.loadRoads().then(
+      () => { if (active) setRoadsState('ready'); },
+      () => { if (active) setRoadsState('error'); }
+    );
+    return () => { active = false; };
+  }, [roadAttempt, view]);
+  useEffect(() => {
+    if (view && !contextLost) view.setPlaces(markers.current, labels.current);
+  }, [contextLost, view]);
+  useEffect(() => {
+    if (!view || contextLost) return;
+    view.selectPlace(selectedPlaceId);
+    if (lastSelection.current === selectedPlaceId) return;
+    view.focusPlace(selectedPlaceId);
+    lastSelection.current = selectedPlaceId;
+  }, [contextLost, selectedPlaceId, view]);
+
+  const mapAvailable = view !== null && !contextLost;
   return (
     <section className="map-card" aria-label="Bicol Region map">
       <div className="map-header">
         <h2>Bicol terrain map</h2>
-        <button className="quiet-button" type="button" onClick={resetView}>Reset Bicol view</button>
+        <button className="quiet-button" type="button" onClick={view?.reset} disabled={!mapAvailable}>
+          Reset Bicol view
+        </button>
       </div>
       <div className="map-viewport">
-        <div ref={containerRef} className="map-container" />
-        <div className="map-toolbar">
-          <div className="segmented-control" role="group" aria-label="Map view">
-            <button aria-pressed={mapMode === '2d'} type="button" onClick={() => onMapModeChange('2d')}>2D</button>
-            <button aria-pressed={mapMode === '3d'} type="button" onClick={() => onMapModeChange('3d')}>3D terrain</button>
-          </div>
-          <label className="switch-label">
-            <input
-              type="checkbox"
-              checked={hillshadeEnabled}
-              onChange={(event) => setHillshadeEnabled(event.target.checked)}
-            />
-            Hillshade
-          </label>
-          {terrainState === 'error' && (
-            <button className="retry-button" type="button" onClick={enableTerrain}>Retry terrain</button>
-          )}
+        <div ref={containerRef} className="map-container" aria-hidden={!mapAvailable} inert={!mapAvailable} />
+        <div ref={roadOverlayRef} className="map-route-labels" hidden={!mapAvailable} aria-hidden="true" />
+        <div className="map-compass" hidden={!mapAvailable} aria-hidden="true">
+          <span ref={compassRef}>↑</span><strong>N</strong>
         </div>
+        {mapAvailable ? (
+          <>
+            <div className="map-markers">
+              {waterLabels.map(({ name }) => (
+                <span className="water-label" key={name} aria-hidden="true" ref={(element) => {
+                  if (element) labels.current.set(name, element);
+                  else labels.current.delete(name);
+                }}>{name}</span>
+              ))}
+              {places.map((place) => (
+                <button
+                  key={place.id}
+                  ref={(element) => {
+                    if (element) markers.current.set(place.id, element);
+                    else markers.current.delete(place.id);
+                  }}
+                  type="button"
+                  className={`site-marker${place.kind === 'Volcano' ? ' is-volcano' : ''}${place.id === selectedPlaceId ? ' is-selected' : ''}`}
+                  data-label={place.name}
+                  aria-pressed={place.id === selectedPlaceId}
+                  aria-label={`Explore ${place.name}`}
+                  title={`${place.name} · ${place.kind}`}
+                  onClick={() => {
+                    if (place.id === selectedPlaceId) view.focusPlace(place.id);
+                    onPlaceSelect(place.id);
+                  }}
+                >
+                  <span aria-hidden="true" className="marker-symbol" />
+                  <span aria-hidden="true" className="marker-label">{place.name}</span>
+                </button>
+              ))}
+            </div>
+            <div className="map-toolbar">
+              <div className="segmented-control" role="group" aria-label="Map view">
+                <button aria-pressed={mapMode === '2d'} type="button" onClick={() => onMapModeChange('2d')}>2D</button>
+                <button aria-pressed={mapMode === '3d'} type="button" onClick={() => onMapModeChange('3d')}>3D terrain</button>
+              </div>
+              <label className="switch-label">
+                <input type="checkbox" checked={hillshade} onChange={(event) => setHillshade(event.target.checked)} />
+                Hillshade
+              </label>
+              {roadsState === 'error' ? (
+                <button className="quiet-button" type="button" onClick={() => {
+                  setRoadsState('loading');
+                  setRoadAttempt((count) => count + 1);
+                }}>Retry roads</button>
+              ) : roadsState === 'loading' ? (
+                <span className="switch-label" role="status">Loading roads…</span>
+              ) : (
+                <label className="switch-label">
+                  <input type="checkbox" checked={roadsVisible} onChange={(event) => setRoadsVisible(event.target.checked)} />
+                  Roads
+                </label>
+              )}
+            </div>
+            <div className="map-zoom" role="group" aria-label="Map zoom">
+              <button className="quiet-button" type="button" aria-label="Zoom in" onClick={view.zoomIn}>+</button>
+              <button className="quiet-button" type="button" aria-label="Zoom out" onClick={view.zoomOut}>−</button>
+            </div>
+          </>
+        ) : (
+          <div className="map-status" role="status">
+            {failure === 'webgl' || contextLost ? (
+              <p>Map unavailable on this device. You can still select a reference point and view its climate readings.</p>
+            ) : failure === 'asset' ? (
+              <>
+                <p>The local terrain file could not be loaded.</p>
+                <button className="quiet-button" type="button" onClick={() => {
+                  setFailure(null);
+                  setAttempt(attempt + 1);
+                }}>Retry terrain</button>
+              </>
+            ) : <p>Loading Bicol terrain…</p>}
+          </div>
+        )}
       </div>
       <div className="map-legend" aria-label="Map legend">
-        <span><i className="legend-dot" /> Reference point</span>
-        <span><i className="legend-dot legend-dot-selected" /> Selected point</span>
-        <span className="map-source">Elevation in meters · Mapterhorn</span>
+        <span><i className="legend-dot" /> City or town</span>
+        <span><i className="legend-volcano" /> Volcano</span>
+        {roadsVisible && roadsState === 'ready' && (
+          <span className="road-legend">
+            <span><i className="legend-highway" /> Highway</span>
+            <span><i className="legend-street" /> Street</span>
+            <span><i className="legend-path" /> Path</span>
+          </span>
+        )}
+        <span className="map-gesture map-gesture-mouse">{mapMode === '3d' ? 'Drag to rotate · Right-drag to pan' : 'Drag to pan'} · Scroll to zoom</span>
+        <span className="map-gesture map-gesture-touch">{mapMode === '3d' ? 'Swipe to rotate · Two fingers to pan' : 'Swipe to pan'} · Pinch to zoom</span>
+        <span className="map-source">
+          {mapMode === '3d' && `${RELIEF_SCALE}× vertical scale · `}
+          <a href={geography.attributionUrl}>Elevation · Mapzen, USGS, NOAA</a>
+          {' · '}<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>
+        </span>
       </div>
     </section>
   );
