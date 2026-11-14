@@ -23,7 +23,7 @@ type ViewBounds = { minX: number; maxX: number; minZ: number; maxZ: number };
 
 const mapAssets = `${import.meta.env.BASE_URL}maps/`;
 
-export async function loadBicolRoads(signal: AbortSignal, overlay: HTMLDivElement) {
+export async function loadBicolRoads(signal: AbortSignal, overlay: HTMLDivElement, onUpdate: () => void) {
   const [manifestResponse, dataResponse] = await Promise.all([
     fetch(`${mapAssets}bicol-roads.json`, { signal }),
     fetch(`${mapAssets}bicol-roads.bin`, { signal })
@@ -57,7 +57,6 @@ export async function loadBicolRoads(signal: AbortSignal, overlay: HTMLDivElemen
   let needed = new Set<string>();
   let span = Infinity;
   let disposed = false;
-  let redrawFrame = 0;
 
   function decodeLayers(buffer: ArrayBuffer, groups: RoadGroup[]) {
     if (new Set(groups.map(({ name }) => name)).size !== groups.length
@@ -93,7 +92,7 @@ export async function loadBicolRoads(signal: AbortSignal, overlay: HTMLDivElemen
     }
   }
 
-  async function loadTile(tile: DetailTile, onUpdate: () => void) {
+  async function loadTile(tile: DetailTile) {
     if (pending.has(tile.file) || failed.has(tile.file)) return;
     pending.add(tile.file);
     try {
@@ -108,12 +107,7 @@ export async function loadBicolRoads(signal: AbortSignal, overlay: HTMLDivElemen
       }
       cache.set(tile.file, { used: performance.now(), layers: detail });
       trimCache();
-      if (!redrawFrame) {
-        redrawFrame = requestAnimationFrame(() => {
-          redrawFrame = 0;
-          onUpdate();
-        });
-      }
+      onUpdate();
     } catch {
       if (!signal.aborted) failed.add(tile.file);
     } finally {
@@ -134,7 +128,7 @@ export async function loadBicolRoads(signal: AbortSignal, overlay: HTMLDivElemen
   return {
     group,
     routeLabels,
-    setDetail(verticalSpan: number, bounds: ViewBounds | null, onUpdate: () => void) {
+    setDetail(verticalSpan: number, bounds: ViewBounds | null) {
       span = verticalSpan;
       for (const { line, maxSpan } of layers) line.visible = span <= maxSpan;
       const tileSize = manifest.detailSizeM * 0.001;
@@ -150,13 +144,12 @@ export async function loadBicolRoads(signal: AbortSignal, overlay: HTMLDivElemen
         for (const { line, maxSpan } of entry.layers) line.visible = visible && span <= maxSpan;
       }
       for (const tile of tiles) {
-        if (!cache.has(tile.file)) void loadTile(tile, onUpdate);
+        if (!cache.has(tile.file)) void loadTile(tile);
       }
       trimCache();
     },
     dispose() {
       disposed = true;
-      cancelAnimationFrame(redrawFrame);
       group.removeFromParent();
       for (const { line } of layers) line.geometry.dispose();
       for (const entry of cache.values()) for (const { line } of entry.layers) line.geometry.dispose();

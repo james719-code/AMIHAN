@@ -75,14 +75,17 @@ export function createBicolMap(
   let selection = emptyField;
   let pickStart: { x: number; y: number; id: number } | null = null;
   let selectedPlaceId = '';
-  let focusFrame = 0;
-  let rainFrame = 0;
-  let lastRainFrame = 0;
+  let focusStep: ((now: number) => void) | null = null;
+  let frameId = 0;
+  let layoutDirty = false;
+  let sceneDirty = false;
+  let lost = false;
+  let lastRainFrame = -Infinity;
   let rainSites: { position: Vector3; amount: number }[] = [];
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const rain = createRainGlyphs();
   scene.add(rain.mesh);
-  let markers: { id: string; element: HTMLButtonElement; position: Vector3; priority: number; volcano: boolean }[] = [];
+  let markers: { id: string; element: HTMLButtonElement; position: Vector3; priority: number; order: number; volcano: boolean }[] = [];
   let climateMarkers: { id: string; element: HTMLButtonElement; position: Vector3 }[] = [];
   let contextLabels: { element: HTMLElement; position: Vector3; maxSpan: number }[] = [];
   let roads: Awaited<ReturnType<typeof loadBicolRoads>> | undefined;
@@ -109,7 +112,7 @@ export function createBicolMap(
     scene.add(model);
     model.updateMatrixWorld(true);
     loaded = true;
-    render();
+    requestRender();
 
     // Keep the terrain's triangle order intact for rendering and slope shading.
     const terrainIndex = new MeshBVH(terrain.geometry, { indirect: true });
@@ -137,31 +140,31 @@ export function createBicolMap(
         canvas.setAttribute('aria-label', active
           ? 'Field Check map. Tap two land points or press Enter to sample the center.'
           : 'Bicol map. Use arrow keys to pan.');
-        render();
+        requestRender();
       },
       clearField() {
         selection = emptyField;
         field?.setProfile(null);
         onFieldChange(selection);
-        render();
+        requestRender();
       },
       pickFieldCenter,
       async loadRoads() {
         if (roads) return;
-        roads = await loadBicolRoads(abort.signal, roadOverlay);
+        roads = await loadBicolRoads(abort.signal, roadOverlay, requestSceneRender);
         if (abort.signal.aborted) {
           roads.dispose();
           throw abort.signal.reason;
         }
         scene.add(roads.group);
-        render();
+        requestRender();
       },
       setRoadsVisible(visible: boolean) {
         roadsVisible = visible;
-        render();
+        requestRender();
       },
       setMode(nextMode: MapMode) {
-        cancelAnimationFrame(focusFrame);
+        focusStep = null;
         mode = nextMode;
         relief = mode === '3d' ? RELIEF_SCALE : 1;
         terrain.scale.y = relief;
@@ -176,16 +179,16 @@ export function createBicolMap(
       },
       setHillshade(enabled: boolean) {
         terrain.material = enabled ? shadedMaterial : flatMaterial;
-        render();
+        requestRender();
       },
       setPlaces(elements: Map<string, HTMLButtonElement>, labels: Map<string, HTMLElement>, climate: Map<string, HTMLButtonElement>) {
         markers = [];
-        for (const place of places) {
+        for (const [order, place] of places.entries()) {
           const element = elements.get(place.id);
           if (!element) continue;
           const position = terrainPosition(place.coordinates);
           const priority = place.climateSite ? 3 : place.kind !== 'Municipality' ? 2 : 0;
-          markers.push({ id: place.id, element, position, priority, volcano: place.kind === 'Volcano' });
+          markers.push({ id: place.id, element, position, priority, order, volcano: place.kind === 'Volcano' });
         }
         contextLabels = waterLabels.flatMap(({ name, coordinates, maxSpan }) => {
           const element = labels.get(name);
@@ -195,24 +198,26 @@ export function createBicolMap(
           const element = climate.get(id);
           return element ? [{ id, element, position: terrainPosition(coordinates) }] : [];
         });
-        render();
+        sortMarkers();
+        requestRender();
       },
       setClimateFrame(frame: ClimateFrame | null) {
         rainSites = frame?.metric === 'dailyRainfall' ? climateMarkers.flatMap(({ id, position }) => {
           const amount = frame.readings.get(id);
           return amount !== undefined && amount !== null && amount > 0 ? [{ position, amount }] : [];
         }) : [];
-        render();
+        requestRender();
       },
       selectPlace(id: string) {
+        if (id === selectedPlaceId) return;
         selectedPlaceId = id;
-        render();
+        sortMarkers();
+        requestRender();
       },
       focusPlace(id: string) {
         const marker = markers.find((entry) => entry.id === id);
         if (!marker) return;
         overview = false;
-        cancelAnimationFrame(focusFrame);
         const offset = camera.position.clone().sub(controls.target);
         const from = controls.target.clone();
         const target = marker.position.clone();
@@ -221,8 +226,8 @@ export function createBicolMap(
         const toZoom = Math.max(camera.zoom, (camera.top - camera.bottom) / targetSpan);
         const start = performance.now();
         const duration = reducedMotion.matches ? 0 : 440;
-        const animate = (now: number) => {
-          const progress = duration ? Math.min(1, (now - start) / duration) : 1;
+        focusStep = (now: number) => {
+          const progress = duration ? Math.max(0, Math.min(1, (now - start) / duration)) : 1;
           const eased = 1 - (1 - progress) ** 3;
           target.y = marker.position.y * relief;
           controls.target.lerpVectors(from, target, eased);
@@ -230,9 +235,10 @@ export function createBicolMap(
           camera.zoom = fromZoom + (toZoom - fromZoom) * eased;
           camera.updateProjectionMatrix();
           controls.update();
-          if (progress < 1) focusFrame = requestAnimationFrame(animate);
+          layoutDirty = true;
+          if (progress === 1) focusStep = null;
         };
-        animate(start);
+        scheduleFrame();
       },
       reset: fitOverview,
       zoomIn() {
@@ -252,11 +258,12 @@ export function createBicolMap(
       : new Vector3(0, CAMERA_DISTANCE, 0);
     camera.position.copy(controls.target).add(offset);
     controls.update();
-    render();
+    camera.updateMatrixWorld();
+    requestRender();
   }
 
   function fitOverview() {
-    cancelAnimationFrame(focusFrame);
+    focusStep = null;
     overview = true;
     camera.zoom = 1;
     camera.updateProjectionMatrix();
@@ -286,11 +293,12 @@ export function createBicolMap(
 
   function startNavigation() {
     overview = false;
-    cancelAnimationFrame(focusFrame);
+    focusStep = null;
   }
 
   function pickField(clientX: number, clientY: number) {
     if (!fieldActive || !field) return;
+    camera.updateMatrixWorld();
     const bounds = canvas.getBoundingClientRect();
     const screen = new Vector3(
       (clientX - bounds.left) / bounds.width * 2 - 1,
@@ -309,7 +317,7 @@ export function createBicolMap(
     selection = start ? { start, profile: field.makeProfile(start, picked) } : { start: picked, profile: null };
     field.setProfile(selection.profile);
     onFieldChange(selection);
-    render();
+    requestRender();
   }
 
   function fieldPointerDown(event: PointerEvent) {
@@ -343,32 +351,44 @@ export function createBicolMap(
     pickField(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
   }
 
-  function updateRain(span: number) {
-    const visible = mode === '3d' && rainSites.length > 0;
-    rain.mesh.visible = visible;
-    if (!visible || reducedMotion.matches) {
-      cancelAnimationFrame(rainFrame);
-      rainFrame = 0;
-    } else if (!rainFrame) {
-      rainFrame = requestAnimationFrame(animateRain);
-    }
-    if (visible) rain.update(rainSites, span, relief, reducedMotion.matches ? 0 : performance.now() / 1000);
-  }
-
-  function animateRain(now: number) {
-    rainFrame = 0;
-    if (now - lastRainFrame >= 40) {
-      lastRainFrame = now;
-      updateRain((camera.top - camera.bottom) / camera.zoom);
-      renderer.render(scene, camera);
-    } else {
-      rainFrame = requestAnimationFrame(animateRain);
+  function scheduleFrame() {
+    if (loaded && !lost && !frameId && !abort.signal.aborted) {
+      frameId = requestAnimationFrame(drawFrame);
     }
   }
 
-  function render() {
-    if (!loaded) return;
+  function requestRender() {
+    layoutDirty = true;
+    scheduleFrame();
+  }
+
+  function requestSceneRender() {
+    sceneDirty = true;
+    scheduleFrame();
+  }
+
+  function drawFrame(now: number) {
+    focusStep?.(now);
     const verticalSpan = (camera.top - camera.bottom) / camera.zoom;
+    const rainVisible = mode === '3d' && rainSites.length > 0;
+    const animateRain = rainVisible && !reducedMotion.matches;
+    const rainDue = animateRain && now - lastRainFrame >= 40;
+
+    if (layoutDirty) updateLayers(verticalSpan);
+    if (layoutDirty || rainDue) {
+      rain.mesh.visible = rainVisible;
+      if (rainVisible) rain.update(rainSites, verticalSpan, relief, animateRain ? now / 1000 : 0);
+      if (rainDue) lastRainFrame = now;
+    }
+    if (layoutDirty || sceneDirty || rainDue) renderer.render(scene, camera);
+    if (layoutDirty) positionOverlays(verticalSpan);
+    layoutDirty = false;
+    sceneDirty = false;
+    frameId = 0;
+    if (focusStep || animateRain) scheduleFrame();
+  }
+
+  function updateLayers(verticalSpan: number) {
     if (fieldActive) field?.update(selection, relief, verticalSpan);
     if (roads) {
       roads.group.scale.y = relief;
@@ -382,10 +402,20 @@ export function createBicolMap(
       const north = Math.abs(Math.sin(azimuth)) * halfWidth + Math.abs(Math.cos(azimuth)) * halfDepth + 5;
       roads.setDetail(verticalSpan, roadsVisible ? {
         minX: x - east, maxX: x + east, minZ: z - north, maxZ: z + north
-      } : null, () => renderer.render(scene, camera));
+      } : null);
     }
-    updateRain(verticalSpan);
-    renderer.render(scene, camera);
+  }
+
+  function sortMarkers() {
+    const priority = (marker: (typeof markers)[number]) => marker.id === selectedPlaceId ? 4 : marker.priority;
+    markers.sort((a, b) => priority(b) - priority(a) || a.order - b.order);
+  }
+
+  function positionOverlays(verticalSpan: number) {
+    // Read all climate label dimensions before moving any overlays.
+    const climateLabels = climateMarkers.filter(({ element }) => !element.hidden).map(({ position, element }) => ({
+      position, element, halfWidth: element.offsetWidth / 2, labelHeight: element.offsetHeight
+    }));
     const azimuth = controls.getAzimuthalAngle();
     const northAngle = Math.atan2(Math.sin(azimuth), Math.cos(azimuth) * Math.cos(controls.getPolarAngle()));
     compass.style.rotate = `${northAngle}rad`;
@@ -393,14 +423,12 @@ export function createBicolMap(
       [width - 48, 0, width, 59], [width - 94, height - 56, width, height]
     ];
     if (fieldActive) occupied.push([0, height - 54, 126, height]);
-    for (const { position, element } of climateMarkers) {
-      if (element.hidden) continue;
+    for (const { position, element, halfWidth, labelHeight } of climateLabels) {
       projected.set(position.x, position.y * relief + 0.05, position.z).project(camera);
       const x = (projected.x + 1) * width / 2;
       const y = (1 - projected.y) * height / 2;
-      const halfWidth = element.offsetWidth / 2;
-      const top = y - element.offsetHeight - 8;
-      const bottom = y + element.offsetHeight + 8;
+      const top = y - labelHeight - 8;
+      const bottom = y + labelHeight + 8;
       const above = top > 4 && !overlaps(x - halfWidth, top, x + halfWidth, y - 7);
       const below = !above && bottom < height - 4 && !overlaps(x - halfWidth, y + 7, x + halfWidth, bottom);
       const visible = x > halfWidth + 4 && x < width - halfWidth - 4 && y > 5 && y < height - 5 && (above || below);
@@ -408,23 +436,19 @@ export function createBicolMap(
       placeElement(element, x, y, visible);
       if (visible) occupied.push([x - halfWidth, below ? y + 7 : top, x + halfWidth, below ? bottom : y - 7]);
     }
-    const ordered = [...markers].sort((a, b) => {
-      const priority = (marker: typeof a) => marker.id === selectedPlaceId ? 4 : marker.priority;
-      return priority(b) - priority(a);
-    });
-    const screenMarkers = ordered.map((marker) => {
-      const { position } = marker;
+    const close = verticalSpan <= 105;
+    const visibleMarkers = [];
+    for (const { position, element, id, priority } of markers) {
+      const selected = id === selectedPlaceId;
+      if (!selected && !priority && !close) {
+        element.style.visibility = 'hidden';
+        continue;
+      }
       projected.set(position.x, position.y * relief + 0.35, position.z).project(camera);
       const x = (projected.x + 1) * width / 2;
       const y = (1 - projected.y) * height / 2;
-      return { ...marker, x, y };
-    });
-    const close = verticalSpan <= 105;
-    const visibleMarkers = [];
-    for (const { element, x, y, id, priority } of screenMarkers) {
-      const selected = id === selectedPlaceId;
       const visible = x > 13 && x < width - 13 && y > 15 && y < height - 15
-        && (selected || priority > 0 || close) && !overlaps(x - 6, y - 6, x + 6, y + 6);
+        && !overlaps(x - 6, y - 6, x + 6, y + 6);
       placeElement(element, x, y, visible);
       if (visible) {
         occupied.push([x - 7, y - 7, x + 7, y + 7]);
@@ -470,8 +494,7 @@ export function createBicolMap(
 
   function placeElement(element: HTMLElement, x: number, y: number, visible: boolean) {
     element.style.visibility = visible ? 'visible' : 'hidden';
-    element.style.left = `${x}px`;
-    element.style.top = `${y}px`;
+    if (visible) element.style.translate = `${x}px ${y}px`;
   }
 
   function resize() {
@@ -486,7 +509,7 @@ export function createBicolMap(
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
     if (loaded && overview) fitOverview();
-    else render();
+    else requestRender();
   }
 
   function disposeModel(model: Object3D) {
@@ -500,21 +523,25 @@ export function createBicolMap(
 
   function contextLost(event: Event) {
     event.preventDefault();
-    cancelAnimationFrame(rainFrame);
-    rainFrame = 0;
+    lost = true;
+    focusStep = null;
+    cancelAnimationFrame(frameId);
+    frameId = 0;
     onContextChange(true);
   }
 
   function contextRestored() {
+    lost = false;
     onContextChange(false);
-    render();
+    requestRender();
   }
 
   const observer = new ResizeObserver(resize);
   observer.observe(container);
   resize();
-  controls.addEventListener('change', render);
+  controls.addEventListener('change', requestRender);
   controls.addEventListener('start', startNavigation);
+  reducedMotion.addEventListener('change', requestRender);
   canvas.addEventListener('webglcontextlost', contextLost);
   canvas.addEventListener('webglcontextrestored', contextRestored);
   canvas.addEventListener('pointerdown', fieldPointerDown);
@@ -525,10 +552,10 @@ export function createBicolMap(
     load,
     dispose() {
       abort.abort();
-      cancelAnimationFrame(focusFrame);
-      cancelAnimationFrame(rainFrame);
+      cancelAnimationFrame(frameId);
       observer.disconnect();
       controls.dispose();
+      reducedMotion.removeEventListener('change', requestRender);
       canvas.removeEventListener('webglcontextlost', contextLost);
       canvas.removeEventListener('webglcontextrestored', contextRestored);
       canvas.removeEventListener('pointerdown', fieldPointerDown);

@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import geography from '../data/bicol-map.json';
 import { places, waterLabels } from '../data/places';
 import { climateFrameFor, climateLayers, readingColor, type ClimateLayer } from '../data/climate-map';
 import { climateSites, daysInYear, formatReading, lastClimateYear } from '../data/historical-climate';
 import { createBicolMap, RELIEF_SCALE, type MapMode } from './bicol-map';
 import { ClimateMapControls } from './ClimateMapControls';
-import { FieldCheck } from './FieldCheck';
 import { MapToolPanel } from './MapToolPanel';
 import type { FieldSelection } from './field-terrain';
+
+const FieldCheck = lazy(() => import('./FieldCheck').then(({ FieldCheck }) => ({ default: FieldCheck })));
 
 export type MapTool = 'field' | 'climate';
 
@@ -310,8 +311,10 @@ export function MapPanel({
       {mapAvailable && fieldActive && (
         <MapToolPanel id="field-tool-panel" title="Field Check" visible={toolsExpanded && toolPanelVisible}
           onMinimize={onToolMinimize} onClose={() => onToolChange(null)}>
-          <FieldCheck selection={fieldSelection} slopeVisible={showSlope} missed={fieldMiss}
-            onSlopeChange={setShowSlope} onClear={view.clearField} onSampleCenter={view.pickFieldCenter} />
+          <Suspense fallback={<p role="status">Loading Field Check…</p>}>
+            <FieldCheck selection={fieldSelection} slopeVisible={showSlope} missed={fieldMiss}
+              onSlopeChange={setShowSlope} onClear={view.clearField} onSampleCenter={view.pickFieldCenter} />
+          </Suspense>
         </MapToolPanel>
       )}
       {mapAvailable && climateVisible && (

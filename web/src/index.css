@@ -138,6 +138,7 @@ button { cursor: pointer; }
 .map-container canvas:active { cursor: grabbing; }
 .map-container canvas:focus-visible { outline-offset: -3px; }
 .map-markers, .map-route-labels { overflow: hidden; pointer-events: none; }
+.climate-reading, .road-shield, .site-marker, .water-label { top: 0; left: 0; }
 .map-compass {
   position: absolute;
   top: 12px;

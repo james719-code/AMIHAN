@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { WorkspacePanel } from './components/WorkspacePanel';
 import { WorkspaceMenu, type WorkspaceView } from './components/WorkspaceMenu';
-import { ClimateHistory } from './components/ClimateHistory';
 import { climateSiteFor, coordinatesLabel } from './data/historical-climate';
 import { provinces } from './data/sites';
 import { citySource, coordinateSource, elevationSource, municipalitySource, places } from './data/places';
@@ -11,6 +10,8 @@ import { RotationPlanner } from './components/RotationPlanner';
 import { emptyField, type FieldSelection } from './components/field-terrain';
 
 const number = new Intl.NumberFormat('en-PH');
+const ClimateHistory = lazy(() => import('./components/ClimateHistory')
+  .then(({ ClimateHistory }) => ({ default: ClimateHistory })));
 
 function App() {
   const [activePanel, setActivePanel] = useState<WorkspaceView | null>('explore');
@@ -153,7 +154,9 @@ function App() {
         </WorkspacePanel>
 
         <WorkspacePanel id="climate-panel" open={activePanel === 'climate' && !mobileToolOpen} title="Climate readings" onClose={() => setActivePanel(null)}>
-          <ClimateHistory site={selectedSite} place={selectedPlace} />
+          <Suspense fallback={<p role="status">Loading climate readings…</p>}>
+            <ClimateHistory site={selectedSite} place={selectedPlace} />
+          </Suspense>
         </WorkspacePanel>
       </main>
     </>
