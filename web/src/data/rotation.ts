@@ -3,24 +3,16 @@ const bicolMungbean = {
   url: 'https://www.pcaarrd.dost.gov.ph/index.php/quick-information-dispatch-qid-articles/wise-farming-options-enhance-bicol-region-s-mungbean-production'
 };
 const mungbeanGuide = {
-  label: 'DA–BPI mungbean guide',
-  url: 'https://library.buplant.da.gov.ph/images/1640929884The%20Mungbean%20Plant.pdf'
+  label: 'DA mungbean production guide',
+  url: 'https://hvcdp.da.gov.ph/wp-content/uploads/2022/05/Mungbean-Production-Guide.pdf'
 };
-
-export const previousCrops = [
-  { id: '', label: 'Unknown' },
-  { id: 'rice', label: 'Rice (palay)' },
-  { id: 'corn', label: 'Corn (mais)' },
-  { id: 'legume', label: 'Mungbean, peanut, or other legume' },
-  { id: 'other', label: 'Other crop or fallow' }
-] as const;
-export type PreviousCrop = typeof previousCrops[number]['id'];
 
 export const rotationGuides = [
   {
     id: 'rice-mungbean',
     previous: 'rice',
     crops: ['Rice', 'Mungbean'],
+    placeIds: ['0501726000'],
     location: 'Pamplona, Camarines Sur',
     detail: 'DA Region V tested short-duration mungbean after rainfed rice.',
     fieldCheck: 'Check that the paddy has drained after harvest and that there is enough soil moisture for establishment.',
@@ -30,6 +22,7 @@ export const rotationGuides = [
     id: 'corn-mungbean',
     previous: 'corn',
     crops: ['Corn', 'Mungbean'],
+    placeIds: ['0504101000', '0504105000'],
     location: 'Aroroy and Cataingan, Masbate',
     detail: 'DA Region V evaluated mungbean in corn-based rotations in both municipalities.',
     fieldCheck: 'Check drainage and soil moisture after corn harvest. Ask the local agriculture office about varieties and timing.',
@@ -48,3 +41,9 @@ export const rotationGuides = [
     ]
   }
 ] as const;
+
+export type RotationGuide = typeof rotationGuides[number];
+
+export function findRotationGuide(previous: string, next: string) {
+  return rotationGuides.find(({ crops }) => crops.length === 2 && crops[0] === previous && crops[1] === next);
+}

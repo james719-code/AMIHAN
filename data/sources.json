@@ -2,6 +2,39 @@
   "schemaVersion": "1.0.0",
   "sources": [
     {
+      "id": "smap-root-zone-bicol-2016-2025",
+      "publisher": "NASA POWER and NASA SMAP",
+      "url": "https://power.larc.nasa.gov/docs/methodology/data/sources_hydrology/",
+      "product": "Daily SMAP L4 root-zone soil moisture (RZMC), monthly comparison for the Planner",
+      "coverage": "2016–2025, 92 Bicol grid cells",
+      "timeStandard": "UTC",
+      "localFile": "raw/field-planning/smap-root-zone-2016-2025/",
+      "derivedFile": "../web/src/data/smap-seasonal-bicol.json",
+      "status": "published"
+    },
+    {
+      "id": "gpm-imerg-bicol-2021-2025",
+      "publisher": "NASA POWER and NASA GPM IMERG",
+      "url": "https://power.larc.nasa.gov/docs/methodology/data/sources_meteorology/#imerg",
+      "product": "Daily IMERG_PRECTOT at 0.1° native resolution, averaged by calendar month for the Planner",
+      "coverage": "2021–2025, 806 Bicol grid cells",
+      "timeStandard": "UTC",
+      "localFile": "raw/field-planning/space-apps-bicol-imerg/",
+      "derivedFile": "../web/src/data/imerg-seasonal-bicol.json",
+      "status": "published"
+    },
+    {
+      "id": "pagasa-modified-coronas-1951-2010",
+      "publisher": "DOST–PAGASA",
+      "url": "https://pubfiles.pagasa.dost.gov.ph/pagasaweb/files/climate/climate-final-3.jpg",
+      "product": "Climate Map of the Philippines, Modified Coronas classification (1951–2010)",
+      "sourceUpdated": "2014-08",
+      "localFile": "raw/field-planning/pagasa-climate-map-1951-2010.jpg",
+      "derivedFile": "../web/src/data/pagasa-climate-types.json",
+      "coverage": "Bicol town and city markers, plus a coordinate grid for field pins",
+      "status": "downloaded"
+    },
+    {
       "id": "bswm-soil-series",
       "publisher": "Department of Agriculture – Bureau of Soils and Water Management",
       "url": "https://www.bswm.da.gov.ph/download/philippine-soil-series/",
@@ -11,6 +44,24 @@
       "sourceUpdated": "2026-04-24",
       "crs": "Luzon 1911 (EPSG:4253)",
       "localFile": "raw/field-planning/bswm-philippine-soil-series.zip",
+      "status": "downloaded"
+    },
+    {
+      "id": "bswm-camarines-sur-rice-suitability",
+      "publisher": "DA–BSWM",
+      "url": "https://bswm.da.gov.ph/wp-content/uploads/Camarines-Sur_Suitability-rice.pdf",
+      "product": "Rice Suitability Map, key rice areas of Camarines Sur",
+      "coverage": "1:140,000 provincial reference map of rice suitability and limiting factors",
+      "localFile": "raw/field-planning/bswm-camarines-sur-rice-suitability.pdf",
+      "status": "downloaded"
+    },
+    {
+      "id": "bswm-camarines-sur-soil-survey",
+      "publisher": "DA–BSWM",
+      "url": "https://bswm.da.gov.ph/wp-content/uploads/Camarines-Sur.pdf",
+      "product": "Soil Survey of Camarines Sur Province",
+      "coverage": "Provincial soil series descriptions, including drainage and flooding in parts of the Bicol River floodplain",
+      "localFile": "raw/field-planning/bswm-camarines-sur-soil-survey.pdf",
       "status": "downloaded"
     },
     {
@@ -40,6 +91,15 @@
       "product": "PRiSM rice planting season observations",
       "coverage": "Bicol Region, 2021",
       "localFile": "raw/field-planning/philrice-bicol-rd-highlights-2021.pdf",
+      "status": "downloaded"
+    },
+    {
+      "id": "philrice-prism-2024-report",
+      "publisher": "DA–PhilRice",
+      "url": "https://www.philrice.gov.ph/wp-content/uploads/2025/11/2024-RandD-Highlights-ASPPD.pdf",
+      "product": "2024 PRiSM reporting on rice planting, estimated yield, and flood and drought damage",
+      "coverage": "National report with regional results, including Bicol",
+      "localFile": "raw/field-planning/philrice-prism-2024-report.pdf",
       "status": "downloaded"
     },
     {

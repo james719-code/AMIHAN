@@ -3,13 +3,15 @@ import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { PNG } from 'pngjs';
 import Delaunator from 'delaunator';
 import {
-  BufferGeometry, Color, Float32BufferAttribute, Uint8BufferAttribute, Mesh, MeshBasicMaterial,
-  MeshStandardMaterial, PlaneGeometry, Scene
+  BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Uint8BufferAttribute, Mesh, MeshBasicMaterial,
+  MeshStandardMaterial, PlaneGeometry, Ray, Scene, Vector3
 } from 'three';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { MeshBVH } from 'three-mesh-bvh';
 import geography from '../src/data/bicol-map.json' with { type: 'json' };
 import places from '../src/data/places.json' with { type: 'json' };
 import municipalities from '../src/data/municipalities.json' with { type: 'json' };
+import climateHistory from '../src/data/historical-climate.json' with { type: 'json' };
 
 // GLTFExporter uses FileReader for binary output. Node supplies Blob but no FileReader.
 globalThis.FileReader = class {
@@ -203,6 +205,27 @@ terrainGeometry.computeVertexNormals();
 const terrain = new Mesh(terrainGeometry, new MeshStandardMaterial({ vertexColors: true }));
 terrain.name = 'Terrain';
 
+const terrainIndex = new MeshBVH(terrainGeometry, { indirect: true });
+const groundRay = new Ray(new Vector3(), new Vector3(0, -1, 0));
+const terrainElevations = {};
+for (const place of [...places, ...municipalities]) {
+  const [longitude, latitude] = place.coordinates;
+  const x = (longitude - origin[0]) * metersPerLongitude;
+  const z = (origin[1] - latitude) * metersPerDegree;
+  groundRay.origin.set(x, 50000, z);
+  const hit = terrainIndex.raycastFirst(groundRay, DoubleSide);
+  terrainElevations[place.id] = Math.max(0, hit?.point.y ?? 0);
+}
+for (const site of climateHistory.sites) {
+  const [longitude, latitude] = site.coordinates;
+  const x = (longitude - origin[0]) * metersPerLongitude;
+  const z = (origin[1] - latitude) * metersPerDegree;
+  groundRay.origin.set(x, 50000, z);
+  const hit = terrainIndex.raycastFirst(groundRay, DoubleSide);
+  terrainElevations[`climate_${site.id}`] = Math.max(0, hit?.point.y ?? 0);
+}
+await writeAsset('../src/data/terrain-elevations.json', JSON.stringify(terrainElevations, null, 2) + '\n');
+
 const waterGeometry = new PlaneGeometry(
   (bounds.east - bounds.west) * metersPerLongitude,
   (bounds.north - bounds.south) * metersPerDegree
@@ -224,4 +247,4 @@ scene.add(terrain, water);
 const binary = await new GLTFExporter().parseAsync(scene, { binary: true });
 
 await writeAsset('../public/maps/bicol.glb', Buffer.from(binary));
-console.log(`Saved Bicol terrain (${positions.length / 3} vertices, ${indices.length / 3} triangles) and place elevations`);
+console.log(`Saved Bicol terrain (${positions.length / 3} vertices, ${indices.length / 3} triangles) and place elevations`);F

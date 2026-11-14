@@ -11,10 +11,13 @@
     "build": "tsc -b && vite build",
     "lint": "tsc -b --pretty false",
     "generate:terrain": "node scripts/generate-bicol-terrain.mjs",
+    "generate:flat-map": "node scripts/generate-bicol-flat-map.mjs",
     "generate:roads": "node scripts/generate-bicol-roads.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.0",
+    "geotiff": "^3.0.5",
+    "proj4": "^2.23.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^3.0.0",

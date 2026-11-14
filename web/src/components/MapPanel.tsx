@@ -53,8 +53,10 @@ export function MapPanel({
   const [contextLost, setContextLost] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [hillshade, setHillshade] = useState(true);
+  const [hillshadeAttempt, setHillshadeAttempt] = useState(0);
+  const [hillshadeFailed, setHillshadeFailed] = useState(false);
   const [roadsVisible, setRoadsVisible] = useState(true);
-  const [roadsState, setRoadsState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [roadsState, setRoadsState] = useState<'idle' | 'loading' | 'ready' | 'error'>('loading');
   const [roadAttempt, setRoadAttempt] = useState(0);
   const climateVisible = activeTool === 'climate';
   const [climateMetric, setClimateMetric] = useState<ClimateLayer>('dailyRainfall');
@@ -63,7 +65,8 @@ export function MapPanel({
   const [playing, setPlaying] = useState(false);
   const fieldActive = activeTool === 'field';
   const [toolsExpanded, setToolsExpanded] = useState(true);
-  const [showSlope, setShowSlope] = useState(true);
+  // The slope overlay expands the terrain into a second mesh, so keep it opt-in.
+  const [showSlope, setShowSlope] = useState(false);
   const [fieldMiss, setFieldMiss] = useState(false);
   const climateFrame = useMemo(() => climateFrameFor(climateMetric, climateYear, climatePeriod), [climateMetric, climateYear, climatePeriod]);
   const climateLayer = climateLayers[climateMetric];
@@ -117,18 +120,35 @@ export function MapPanel({
   }, [attempt, onFieldSelection]);
 
   useEffect(() => { view?.setMode(mapMode); }, [mapMode, view]);
-  useEffect(() => { view?.setHillshade(hillshade); }, [hillshade, view]);
-  useEffect(() => { view?.setRoadsVisible(roadsVisible); }, [roadsVisible, view]);
-  useEffect(() => { view?.setFieldCheck(fieldActive, showSlope); }, [fieldActive, showSlope, view]);
   useEffect(() => {
     if (!view) return;
     let active = true;
-    view.loadRoads().then(
-      () => { if (active) setRoadsState('ready'); },
-      () => { if (active) setRoadsState('error'); }
-    );
+    setHillshadeFailed(false);
+    view.setHillshade(hillshade).catch(() => { if (active) setHillshadeFailed(true); });
     return () => { active = false; };
-  }, [roadAttempt, view]);
+  }, [hillshade, hillshadeAttempt, view]);
+  useEffect(() => { view?.setRoadsVisible(roadsVisible); }, [roadsVisible, view]);
+  useEffect(() => {
+    if (!view) return;
+    let active = true;
+    view.setFieldCheck(fieldActive, showSlope).catch(() => { if (active) setShowSlope(false); });
+    return () => { active = false; };
+  }, [fieldActive, showSlope, view]);
+  useEffect(() => {
+    if (!view || !roadsVisible) return;
+    let active = true;
+    setRoadsState('loading');
+    const timer = window.setTimeout(() => {
+      view.loadRoads().then(
+        () => { if (active) setRoadsState('ready'); },
+        () => { if (active) setRoadsState('error'); }
+      );
+    }, 60);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [roadAttempt, roadsVisible, view]);
   useEffect(() => {
     if (view && !contextLost) view.setPlaces(markers.current, labels.current, climateMarkers.current);
   }, [contextLost, view]);
@@ -153,6 +173,7 @@ export function MapPanel({
   }, [contextLost, selectedPlaceId, view]);
 
   const mapAvailable = view !== null && !contextLost;
+  const displayedMode = view?.supports3D ? mapMode : '2d';
   return (
     <section className="map-card" aria-label="Bicol Region map">
       <div ref={toolsRef} className="map-header">
@@ -198,11 +219,15 @@ export function MapPanel({
         {mapAvailable && (
             <div className="map-toolbar">
               <div className="map-mode-controls" role="group" aria-label="Map view">
-                <button className="quiet-button map-tool-toggle" aria-pressed={mapMode === '2d'} type="button" onClick={() => onMapModeChange('2d')}>2D</button>
-                <button className="quiet-button map-tool-toggle" aria-pressed={mapMode === '3d'} type="button" onClick={() => onMapModeChange('3d')}>3D</button>
+                <button className="quiet-button map-tool-toggle" aria-pressed={displayedMode === '2d'} type="button" onClick={() => onMapModeChange('2d')}>2D</button>
+                <button className="quiet-button map-tool-toggle" aria-pressed={displayedMode === '3d'} type="button" disabled={!view.supports3D}
+                  title={view.supports3D ? undefined : '3D requires hardware acceleration'} onClick={() => onMapModeChange('3d')}>3D</button>
               </div>
               <label className="switch-label">
-                <input type="checkbox" checked={hillshade} onChange={(event) => setHillshade(event.target.checked)} />
+                <input type="checkbox" checked={hillshadeFailed ? !hillshade : hillshade} onChange={(event) => {
+                  setHillshade(event.target.checked);
+                  if (hillshadeFailed) setHillshadeAttempt((count) => count + 1);
+                }} />
                 Hillshade
               </label>
               {roadsState === 'error' ? (
@@ -356,10 +381,11 @@ export function MapPanel({
             <span><i className="legend-path" /> Path</span>
           </span>
         )}
-        <span className="map-gesture map-gesture-mouse">{mapMode === '3d' ? 'Drag to rotate · Right-drag to pan' : 'Drag to pan'} · Scroll to zoom</span>
-        <span className="map-gesture map-gesture-touch">{mapMode === '3d' ? 'Swipe to rotate · Two fingers to pan' : 'Swipe to pan'} · Pinch to zoom</span>
+        {mapAvailable && !view.supports3D && <span>2D mode</span>}
+        <span className="map-gesture map-gesture-mouse">{displayedMode === '3d' ? 'Drag to rotate · Right-drag to pan' : 'Drag to pan'} · Scroll to zoom</span>
+        <span className="map-gesture map-gesture-touch">{displayedMode === '3d' ? 'Swipe to rotate · Two fingers to pan' : 'Swipe to pan'} · Pinch to zoom</span>
         <span className="map-source">
-          {mapMode === '3d' && `${RELIEF_SCALE}× vertical scale · `}
+          {displayedMode === '3d' && `${RELIEF_SCALE}× vertical scale · `}
           <a href={geography.attributionUrl}>Elevation · Mapzen, USGS, NOAA</a>
           {' · '}<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>
         </span>

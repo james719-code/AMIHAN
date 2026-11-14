@@ -4,17 +4,22 @@ import { WorkspaceMenu, type WorkspaceView } from './components/WorkspaceMenu';
 import { climateSiteFor, coordinatesLabel } from './data/historical-climate';
 import { provinces } from './data/sites';
 import { citySource, coordinateSource, elevationSource, municipalitySource, places } from './data/places';
-import { MapPanel, type MapTool } from './components/MapPanel';
+import type { MapTool } from './components/MapPanel';
 import { useMediaQuery } from './hooks/useMediaQuery';
-import { RotationPlanner } from './components/RotationPlanner';
-import { emptyField, type FieldSelection } from './components/field-terrain';
+import type { FieldSelection } from './components/field-terrain';
 
 const number = new Intl.NumberFormat('en-PH');
 const ClimateHistory = lazy(() => import('./components/ClimateHistory')
   .then(({ ClimateHistory }) => ({ default: ClimateHistory })));
+const MapPanel = lazy(() => import('./components/MapPanel')
+  .then(({ MapPanel }) => ({ default: MapPanel })));
+const RotationPlanner = lazy(() => import('./components/RotationPlanner')
+  .then(({ RotationPlanner }) => ({ default: RotationPlanner })));
+const emptyField: FieldSelection = { start: null, profile: null };
 
 function App() {
   const [activePanel, setActivePanel] = useState<WorkspaceView | null>('explore');
+  const [plannerOpened, setPlannerOpened] = useState(false);
   const [activeTool, setActiveTool] = useState<MapTool | null>(null);
   const [toolMinimized, setToolMinimized] = useState(false);
   const isMobile = useMediaQuery('(max-width: 650px)');
@@ -24,6 +29,7 @@ function App() {
   const [mapMode, setMapMode] = useState<'2d' | '3d'>('3d');
 
   const selectWorkspace = (view: WorkspaceView) => {
+    if (view === 'rotation') setPlannerOpened(true);
     setActivePanel((current) => current === view && !mobileToolOpen ? null : view);
     if (isMobile) setToolMinimized(true);
   };
@@ -73,18 +79,20 @@ function App() {
         </div>
       </header>
       <main className="app-shell" aria-label="AMIHAN map workspace">
-          <MapPanel
-            selectedPlaceId={selectedPlaceId}
-            activeTool={activeTool}
-            toolPanelVisible={!toolMinimized}
-            onToolChange={selectMapTool}
-            onToolMinimize={() => setToolMinimized(true)}
-            mapMode={mapMode}
-            onMapModeChange={setMapMode}
-            onPlaceSelect={(id) => { setSelectedPlaceId(id); setActivePanel('explore'); if (isMobile) setToolMinimized(true); }}
-            fieldSelection={fieldSelection}
-            onFieldSelection={setFieldSelection}
-          />
+          <Suspense fallback={<section className="map-card map-status" role="status"><p>Loading Bicol terrain…</p></section>}>
+            <MapPanel
+              selectedPlaceId={selectedPlaceId}
+              activeTool={activeTool}
+              toolPanelVisible={!toolMinimized}
+              onToolChange={selectMapTool}
+              onToolMinimize={() => setToolMinimized(true)}
+              mapMode={mapMode}
+              onMapModeChange={setMapMode}
+              onPlaceSelect={(id) => { setSelectedPlaceId(id); setActivePanel('explore'); if (isMobile) setToolMinimized(true); }}
+              fieldSelection={fieldSelection}
+              onFieldSelection={setFieldSelection}
+            />
+          </Suspense>
 
           <aside id="place-sidebar" className="control-card place-sidebar" aria-label="Explorer controls" hidden={activePanel !== 'explore' || mobileToolOpen}>
             <div className="panel-heading">
@@ -162,8 +170,13 @@ function App() {
             </div>
           </aside>
 
-        <WorkspacePanel id="rotation-panel" open={activePanel === 'rotation' && !mobileToolOpen} title="Crop rotation planner" onClose={() => setActivePanel(null)} keepMounted>
-          <RotationPlanner place={selectedPlace} site={selectedSite} fieldSelection={fieldSelection} onOpenClimate={() => selectWorkspace('climate')} />
+        <WorkspacePanel id="rotation-panel" open={activePanel === 'rotation' && !mobileToolOpen} title="Crop rotation planner" onClose={() => setActivePanel(null)} keepMounted={plannerOpened}>
+          <Suspense fallback={<p role="status">Loading crop rotation planner…</p>}>
+            <RotationPlanner place={selectedPlace} fieldSelection={fieldSelection} onOpenClimate={(id) => {
+              setSelectedPlaceId(id);
+              selectWorkspace('climate');
+            }} />
+          </Suspense>
         </WorkspacePanel>
 
         <WorkspacePanel id="climate-panel" open={activePanel === 'climate' && !mobileToolOpen} title="Climate readings" onClose={() => setActivePanel(null)}>

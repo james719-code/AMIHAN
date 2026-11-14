@@ -25,6 +25,9 @@ const sites: Partial<Record<string, WeatherSite>> = manifest.places;
 const artifacts = import.meta.glob<Record<string, WeatherCell>>(
   './power-municipal-2024/{merra2,ceres,imerg,smap}.json', { import: 'default' }
 );
+// Dynamic imports are cached by the browser, but retaining the in-flight promise here also
+// coalesces rapid metric changes before the first import has finished.
+const weatherCells = new Map<string, Promise<WeatherCell>>();
 
 export const powerWeatherYear = manifest.year;
 export const powerDailyUrl = 'https://power.larc.nasa.gov/docs/services/api/temporal/daily/';
@@ -35,9 +38,17 @@ export function powerWeatherSite(id: string) {
   return sites[id];
 }
 
-export async function loadPowerWeather(product: Product, cellKey: string) {
+export function loadPowerWeather(product: Product, cellKey: string) {
+  const cacheKey = `${product}/${cellKey}`;
+  const cached = weatherCells.get(cacheKey);
+  if (cached) return cached;
   const load = artifacts[`./power-municipal-2024/${product}.json`];
-  const cell = (await load())[cellKey];
-  if (!cell) throw new Error(`Missing NASA POWER grid cell ${cellKey}.`);
-  return cell;
+  const request = load().then((cells) => {
+    const cell = cells[cellKey];
+    if (!cell) throw new Error(`Missing NASA POWER grid cell ${cellKey}.`);
+    return cell;
+  });
+  weatherCells.set(cacheKey, request);
+  void request.catch(() => weatherCells.delete(cacheKey));
+  return request;
 }

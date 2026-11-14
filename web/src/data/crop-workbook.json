@@ -1,0 +1,290 @@
+[
+  {
+    "crop": "Abaca",
+    "temperature": "20–27 (optimum)",
+    "water": "2,000–3,000",
+    "timing": "480–730 to first harvest"
+  },
+  {
+    "crop": "Coconut",
+    "temperature": "About 27 (range 23–34)",
+    "water": "1,300–2,300",
+    "timing": "Tall: 1,825–2,555 to bearing; dwarf: about 1,095"
+  },
+  {
+    "crop": "Pili",
+    "temperature": "24–32",
+    "water": "2,000–3,000",
+    "timing": "Seedlings: 1,825–2,190 to bearing; clonal: 1,095–1,460"
+  },
+  {
+    "crop": "Banana",
+    "temperature": "15–35 (optimum 27–30)",
+    "water": "About 2,400–2,600",
+    "timing": "Cavendish: 180–240 to harvest"
+  },
+  {
+    "crop": "Papaya",
+    "temperature": "21–33",
+    "water": "At least 1,200",
+    "timing": "Flowers 90–120 after planting; fruit about 270"
+  },
+  {
+    "crop": "Ampalaya",
+    "temperature": "12.5–25",
+    "water": "480–4,100 (wide range)",
+    "timing": "60–75 to harvest"
+  },
+  {
+    "crop": "Sweet potato",
+    "temperature": "About 25–30",
+    "water": "600–1,600",
+    "timing": "110–130 to harvest"
+  },
+  {
+    "crop": "Rice",
+    "temperature": "20–35",
+    "water": "Water need about 1,050–1,250 per crop (not rainfall)",
+    "timing": "105–125 per crop"
+  },
+  {
+    "crop": "Corn",
+    "temperature": "Yield optimum 29–30 (not a growth range)",
+    "water": "400–600 (growing-season total, one crop)",
+    "timing": "About 120"
+  },
+  {
+    "crop": "Ginger",
+    "temperature": "25–35",
+    "water": "2,000–3,000 (200–300 cm, evenly distributed)",
+    "timing": "150–330 (5–11 months, depends on use)"
+  },
+  {
+    "crop": "Pineapple",
+    "temperature": "24–30",
+    "water": "1,000–1,500 (100–150 cm, evenly distributed)",
+    "timing": "540–730 (18–24 months)"
+  },
+  {
+    "crop": "Cacao",
+    "temperature": "Mean max 30–32; mean min 18",
+    "water": "1,250–3,000",
+    "timing": "480–510 to first flowering"
+  },
+  {
+    "crop": "Arrowroot (urard)",
+    "temperature": "20–30",
+    "water": "950–1,500 (95–150 cm, evenly distributed)",
+    "timing": "240–300 (8–10 months)"
+  },
+  {
+    "crop": "Cassava (kamoteng kahoy)",
+    "temperature": "25–29 (FAO optimum; below 10 stops growth)",
+    "water": "1,000–1,500 (FAO, well-distributed)",
+    "timing": "180–210 (6–7 months)"
+  },
+  {
+    "crop": "Tomato (kamatis)",
+    "temperature": "21–24 (DA optimum)",
+    "water": "Not found (FAO water need 400–600 per crop, not rainfall)",
+    "timing": "60–110 (60–90 hot season; 90–110 cool)"
+  },
+  {
+    "crop": "Mungbean (monggo)",
+    "temperature": "20–30",
+    "water": "Water need about 210–245 per crop (not rainfall)",
+    "timing": "60–72 (harvest)"
+  },
+  {
+    "crop": "Sweet Corn",
+    "temperature": "24–30",
+    "water": "1,000–1,500",
+    "timing": "70–80"
+  },
+  {
+    "crop": "Peanut (Mani)",
+    "temperature": "25–30",
+    "water": "1,000–1,250",
+    "timing": "90–110"
+  },
+  {
+    "crop": "Eggplant (Talong)",
+    "temperature": "25–32",
+    "water": "1,000–1,500",
+    "timing": "65–80"
+  },
+  {
+    "crop": "Okra",
+    "temperature": "25–35",
+    "water": "1,000–1,500",
+    "timing": "45–55"
+  },
+  {
+    "crop": "Squash (Kalabasa)",
+    "temperature": "24–30",
+    "water": "1,000–1,500",
+    "timing": "85–100"
+  },
+  {
+    "crop": "String Beans (Sitaw)",
+    "temperature": "24–30",
+    "water": "1,000–1,500",
+    "timing": "50–60"
+  },
+  {
+    "crop": "Bottle Gourd (Upo)",
+    "temperature": "24–30",
+    "water": "1,200–1,800",
+    "timing": "60–75"
+  },
+  {
+    "crop": "Sponge Gourd (Patola)",
+    "temperature": "25–30",
+    "water": "1,200–1,800",
+    "timing": "55–65"
+  },
+  {
+    "crop": "Chayote (Sayote)",
+    "temperature": "18–24",
+    "water": "1,500–2,500",
+    "timing": "120–150"
+  },
+  {
+    "crop": "Pechay",
+    "temperature": "20–28",
+    "water": "1,000–1,500",
+    "timing": "25–35"
+  },
+  {
+    "crop": "Mustard (Mustasa)",
+    "temperature": "20–28",
+    "water": "1,000–1,500",
+    "timing": "30–40"
+  },
+  {
+    "crop": "Water Spinach (Kangkong)",
+    "temperature": "25–32",
+    "water": "1,500–2,500",
+    "timing": "25–30"
+  },
+  {
+    "crop": "Sweet Pepper (Atzal)",
+    "temperature": "20–28",
+    "water": "1,000–1,500",
+    "timing": "70–85"
+  },
+  {
+    "crop": "Cabbage",
+    "temperature": "16–24",
+    "water": "1,200–1,800",
+    "timing": "65–85"
+  },
+  {
+    "crop": "Malabar Spinach (Alugbati)",
+    "temperature": "25–32",
+    "water": "1,500–2,500",
+    "timing": "35–45"
+  },
+  {
+    "crop": "Malunggay",
+    "temperature": "25–35",
+    "water": "1,000–2,000",
+    "timing": "180–240"
+  },
+  {
+    "crop": "Chili (Siling Labuyo / Haba)",
+    "temperature": "24–32",
+    "water": "1,000–1,500",
+    "timing": "75–90"
+  },
+  {
+    "crop": "Turmeric (Luyang Dilaw)",
+    "temperature": "24–30",
+    "water": "1,500–2,500",
+    "timing": "240–300"
+  },
+  {
+    "crop": "Lemongrass (Tanglad)",
+    "temperature": "24–32",
+    "water": "1,500–2,500",
+    "timing": "120–180"
+  },
+  {
+    "crop": "Spring Onion",
+    "temperature": "20–28",
+    "water": "1,000–1,500",
+    "timing": "45–60"
+  },
+  {
+    "crop": "Taro (Gabi)",
+    "temperature": "24–30",
+    "water": "2,000–3,000",
+    "timing": "180–240"
+  },
+  {
+    "crop": "Purple Yam (Ube)",
+    "temperature": "25–30",
+    "water": "1,500–2,500",
+    "timing": "240–300"
+  },
+  {
+    "crop": "Calamansi",
+    "temperature": "24–30",
+    "water": "1,500–2,500",
+    "timing": "730–1,095"
+  },
+  {
+    "crop": "Jackfruit (Langka)",
+    "temperature": "24–32",
+    "water": "1,500–2,500",
+    "timing": "1,095–1,460"
+  },
+  {
+    "crop": "Mango",
+    "temperature": "24–32",
+    "water": "1,000–1,800",
+    "timing": "1,460–1,825"
+  },
+  {
+    "crop": "Rambutan",
+    "temperature": "24–30",
+    "water": "2,000–3,000",
+    "timing": "1,460–1,825"
+  },
+  {
+    "crop": "Lanzones",
+    "temperature": "24–30",
+    "water": "2,000–3,000",
+    "timing": "1,825–2,555"
+  },
+  {
+    "crop": "Dragon Fruit",
+    "temperature": "25–32",
+    "water": "1,000–1,500",
+    "timing": "365–540"
+  },
+  {
+    "crop": "Watermelon / Melon",
+    "temperature": "25–32",
+    "water": "600–1,000",
+    "timing": "70–85"
+  },
+  {
+    "crop": "Coffee (Robusta)",
+    "temperature": "22–28",
+    "water": "1,500–2,500",
+    "timing": "730–1,095"
+  },
+  {
+    "crop": "Sugarcane",
+    "temperature": "25–32",
+    "water": "1,500–2,000",
+    "timing": "300–365"
+  },
+  {
+    "crop": "Tiger Grass (Tambo)",
+    "temperature": "20–28",
+    "water": "2,000–3,000",
+    "timing": "365–450"
+  }
+]

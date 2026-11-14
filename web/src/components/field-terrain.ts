@@ -8,13 +8,9 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import type { MeshBVH } from 'three-mesh-bvh';
 import geography from '../data/bicol-map.json';
+import slopeBands from '../data/slope-bands.json';
 
-export const slopeBands = [
-  { max: 3, label: 'Below 3%', color: '#8fb28c' },
-  { max: 8, label: '3–<8%', color: '#e8cc79' },
-  { max: 15, label: '8–<15%', color: '#d98a53' },
-  { max: Infinity, label: '15%+', color: '#984858' }
-];
+export { slopeBands };
 
 export type FieldPoint = {
   x: number;
@@ -42,23 +38,8 @@ const region = {
 };
 export const profileSpacingKm = detailStepDegrees * metersPerDegree / 1000;
 
-export function createFieldTerrain(terrain: TerrainMesh, index: MeshBVH) {
-  const group = new Group();
-  group.name = 'Field Check';
-  group.visible = false;
+export function createFieldSampler(index: MeshBVH) {
   const ray = new Ray(new Vector3(), new Vector3(0, -1, 0));
-  const pointGeometry = new SphereGeometry(1, 12, 8);
-  const pointMaterial = new MeshBasicMaterial({ color: '#183a2d', depthTest: false, depthWrite: false, transparent: true });
-  const endMaterial = new MeshBasicMaterial({ color: '#9b5a28', depthTest: false, depthWrite: false, transparent: true });
-  const endpointMeshes = [new Mesh(pointGeometry, pointMaterial), new Mesh(pointGeometry, endMaterial)];
-  const profileLine = new Line2(new LineGeometry(), new LineMaterial({
-    color: '#24382c', linewidth: 3, depthTest: false, depthWrite: false, transparent: true
-  }));
-  profileLine.renderOrder = 12;
-  for (const mesh of endpointMeshes) mesh.renderOrder = 13;
-  group.add(profileLine, ...endpointMeshes);
-  let slope: Mesh<BufferGeometry, MeshBasicMaterial> | undefined;
-
   function sample(x: number, z: number): FieldPoint | null {
     if (x < region.west || x > region.east || z < region.north || z > region.south) return null;
     ray.origin.set(x * 1000, 10000, z * 1000);
@@ -69,45 +50,7 @@ export function createFieldTerrain(terrain: TerrainMesh, index: MeshBVH) {
     return { x, z, elevationM: hit.point.y, slopePercent };
   }
 
-  function createSlopeLayer() {
-    const positions = terrain.geometry.getAttribute('position');
-    const triangles = terrain.geometry.getIndex()!;
-    const values: number[] = [];
-    const colors: number[] = [];
-    const palette = slopeBands.map(({ color }) => new Color(color));
-    const a = new Vector3(), b = new Vector3(), c = new Vector3();
-    const ab = new Vector3(), ac = new Vector3();
-    for (let i = 0; i < triangles.count; i += 3) {
-      a.fromBufferAttribute(positions, triangles.getX(i));
-      b.fromBufferAttribute(positions, triangles.getX(i + 1));
-      c.fromBufferAttribute(positions, triangles.getX(i + 2));
-      if (Math.max(a.y, b.y, c.y) <= 0) continue;
-      const x = (a.x + b.x + c.x) / 3000;
-      const z = (a.z + b.z + c.z) / 3000;
-      if (x < region.west || x > region.east || z < region.north || z > region.south) continue;
-      ab.subVectors(b, a).cross(ac.subVectors(c, a));
-      const percent = 100 * Math.hypot(ab.x, ab.z) / Math.max(0.00001, Math.abs(ab.y));
-      const color = palette[slopeBands.findIndex(({ max }) => percent < max)];
-      for (const point of [a, b, c]) {
-        values.push(point.x / 1000, point.y / 1000, point.z / 1000);
-        colors.push(color.r, color.g, color.b);
-      }
-    }
-    const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new Float32BufferAttribute(values, 3));
-    geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
-    const material = new MeshBasicMaterial({
-      vertexColors: true, transparent: true, opacity: 0.77, depthWrite: false,
-      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2
-    });
-    const mesh = new Mesh(geometry, material);
-    mesh.renderOrder = 2;
-    group.add(mesh);
-    return mesh;
-  }
-
   return {
-    group,
     pick(screen: Vector3, direction: Vector3, relief: number) {
       const origin = screen.clone().addScaledVector(direction, -1200);
       ray.origin.set(origin.x * 1000, origin.y * 1000 / relief, origin.z * 1000);
@@ -127,7 +70,72 @@ export function createFieldTerrain(terrain: TerrainMesh, index: MeshBVH) {
         return sample(start.x + (end.x - start.x) * fraction, start.z + (end.z - start.z) * fraction)?.elevationM ?? null;
       });
       return { start, end, lengthKm, samples };
-    },
+    }
+  };
+}
+
+export function createFieldTerrain(terrain: TerrainMesh) {
+  const group = new Group();
+  group.name = 'Field Check';
+  group.visible = false;
+  const pointGeometry = new SphereGeometry(1, 12, 8);
+  const pointMaterial = new MeshBasicMaterial({ color: '#183a2d', depthTest: false, depthWrite: false, transparent: true });
+  const endMaterial = new MeshBasicMaterial({ color: '#9b5a28', depthTest: false, depthWrite: false, transparent: true });
+  const endpointMeshes = [new Mesh(pointGeometry, pointMaterial), new Mesh(pointGeometry, endMaterial)];
+  const profileLine = new Line2(new LineGeometry(), new LineMaterial({
+    color: '#24382c', linewidth: 3, depthTest: false, depthWrite: false, transparent: true
+  }));
+  profileLine.renderOrder = 12;
+  for (const mesh of endpointMeshes) mesh.renderOrder = 13;
+  group.add(profileLine, ...endpointMeshes);
+  let slope: Mesh<BufferGeometry, MeshBasicMaterial> | undefined;
+
+  function createSlopeLayer() {
+    const positions = terrain.geometry.getAttribute('position');
+    const triangles = terrain.geometry.getIndex()!;
+    const maxFloats = triangles.count * 3;
+    const values = new Float32Array(maxFloats);
+    const colors = new Float32Array(maxFloats);
+    let offset = 0;
+    const palette = slopeBands.map(({ color }) => new Color(color));
+    const a = new Vector3(), b = new Vector3(), c = new Vector3();
+    const ab = new Vector3(), ac = new Vector3();
+    for (let i = 0; i < triangles.count; i += 3) {
+      a.fromBufferAttribute(positions, triangles.getX(i));
+      b.fromBufferAttribute(positions, triangles.getX(i + 1));
+      c.fromBufferAttribute(positions, triangles.getX(i + 2));
+      if (Math.max(a.y, b.y, c.y) <= 0) continue;
+      const x = (a.x + b.x + c.x) / 3000;
+      const z = (a.z + b.z + c.z) / 3000;
+      if (x < region.west || x > region.east || z < region.north || z > region.south) continue;
+      ab.subVectors(b, a).cross(ac.subVectors(c, a));
+      const percent = 100 * Math.hypot(ab.x, ab.z) / Math.max(0.00001, Math.abs(ab.y));
+      const color = palette[slopeBands.findIndex(({ max }) => max === null || percent < max)];
+      for (const point of [a, b, c]) {
+        values[offset] = point.x / 1000;
+        values[offset + 1] = point.y / 1000;
+        values[offset + 2] = point.z / 1000;
+        colors[offset] = color.r;
+        colors[offset + 1] = color.g;
+        colors[offset + 2] = color.b;
+        offset += 3;
+      }
+    }
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new Float32BufferAttribute(values.subarray(0, offset), 3));
+    geometry.setAttribute('color', new Float32BufferAttribute(colors.subarray(0, offset), 3));
+    const material = new MeshBasicMaterial({
+      vertexColors: true, transparent: true, opacity: 0.77, depthWrite: false,
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2
+    });
+    const mesh = new Mesh(geometry, material);
+    mesh.renderOrder = 2;
+    group.add(mesh);
+    return mesh;
+  }
+
+  return {
+    group,
     showSlope(visible: boolean) {
       if (visible && !slope) slope = createSlopeLayer();
       if (slope) slope.visible = visible;
