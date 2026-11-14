@@ -1,6 +1,7 @@
 import geography from './bicol-map.json';
 import records from './places.json';
 import elevations from './place-elevations.json';
+import municipalities from './municipalities.json';
 
 type PlaceKind = 'City' | 'Municipality' | 'Volcano';
 
@@ -15,13 +16,24 @@ export type MapPlace = {
   summitMeters?: number;
   volcanoNumber?: number;
   elevationMeters: number | null;
+  geonamesId?: string;
+  coordinateUrl?: string;
+  psgc?: string;
 };
 
-export const places: MapPlace[] = records.map((place) => ({
-  ...place,
-  kind: place.kind as PlaceKind,
-  elevationMeters: elevations[place.id as keyof typeof elevations] ?? null
-}));
+export const places: MapPlace[] = [
+  ...records.filter(({ kind }) => kind !== 'Municipality').map((place) => ({
+    ...place,
+    kind: place.kind as PlaceKind,
+    elevationMeters: elevations[place.id as keyof typeof elevations] ?? null
+  })),
+  ...municipalities.map((place): MapPlace => ({
+    ...place,
+    kind: 'Municipality',
+    climateSite: records.some((record) => record.id === place.id && record.climateSite),
+    elevationMeters: elevations[place.id as keyof typeof elevations] ?? null
+  }))
+];
 
 export const waterLabels = [
   { name: 'Philippine Sea', coordinates: [124.68, 14.05], maxSpan: Infinity },

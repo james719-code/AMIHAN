@@ -8,7 +8,996 @@
     "east": 124.65,
     "north": 14.65
   },
-  "localStreetRadius": "Approximately 5–6 km around each city or town",
+  "localStreetRadius": "Approximately 5–6 km around the seven cities and 107 municipality centers",
+  "detailSizeM": 25000,
+  "detailTiles": [
+    {
+      "file": "road-detail/-1_-1.bin",
+      "x": -25000,
+      "z": -25000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 6018
+        },
+        {
+          "name": "paths",
+          "values": 768
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-1_-2.bin",
+      "x": -25000,
+      "z": -50000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 46254
+        },
+        {
+          "name": "paths",
+          "values": 6192
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-1_-3.bin",
+      "x": -25000,
+      "z": -75000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 90720
+        },
+        {
+          "name": "paths",
+          "values": 8142
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-1_-4.bin",
+      "x": -25000,
+      "z": -100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 5184
+        },
+        {
+          "name": "paths",
+          "values": 2244
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-1_-5.bin",
+      "x": -25000,
+      "z": -125000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 708
+        },
+        {
+          "name": "paths",
+          "values": 336
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-1_0.bin",
+      "x": -25000,
+      "z": 0,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 240
+        },
+        {
+          "name": "paths",
+          "values": 66
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-1_1.bin",
+      "x": -25000,
+      "z": 25000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 2628
+        },
+        {
+          "name": "paths",
+          "values": 966
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-1_2.bin",
+      "x": -25000,
+      "z": 50000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 168
+        },
+        {
+          "name": "paths",
+          "values": 108
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-1_3.bin",
+      "x": -25000,
+      "z": 75000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 1626
+        },
+        {
+          "name": "paths",
+          "values": 876
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-1_4.bin",
+      "x": -25000,
+      "z": 100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 4560
+        },
+        {
+          "name": "paths",
+          "values": 1314
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-1_5.bin",
+      "x": -25000,
+      "z": 125000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 852
+        },
+        {
+          "name": "paths",
+          "values": 180
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-2_-1.bin",
+      "x": -50000,
+      "z": -25000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 840
+        },
+        {
+          "name": "paths",
+          "values": 3030
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-2_-2.bin",
+      "x": -50000,
+      "z": -50000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 12606
+        },
+        {
+          "name": "paths",
+          "values": 2322
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-2_-3.bin",
+      "x": -50000,
+      "z": -75000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 33102
+        },
+        {
+          "name": "paths",
+          "values": 4878
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-2_-4.bin",
+      "x": -50000,
+      "z": -100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 5862
+        },
+        {
+          "name": "paths",
+          "values": 1212
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-2_-5.bin",
+      "x": -50000,
+      "z": -125000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 54954
+        },
+        {
+          "name": "paths",
+          "values": 9942
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-2_0.bin",
+      "x": -50000,
+      "z": 0,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 2514
+        },
+        {
+          "name": "paths",
+          "values": 2394
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-3_-3.bin",
+      "x": -75000,
+      "z": -75000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 8616
+        },
+        {
+          "name": "paths",
+          "values": 552
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-3_-4.bin",
+      "x": -75000,
+      "z": -100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 10200
+        },
+        {
+          "name": "paths",
+          "values": 2430
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-3_-5.bin",
+      "x": -75000,
+      "z": -125000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 31236
+        },
+        {
+          "name": "paths",
+          "values": 8826
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-3_-6.bin",
+      "x": -75000,
+      "z": -150000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 23976
+        },
+        {
+          "name": "paths",
+          "values": 14724
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-4_-4.bin",
+      "x": -100000,
+      "z": -100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 10932
+        },
+        {
+          "name": "paths",
+          "values": 954
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-4_-5.bin",
+      "x": -100000,
+      "z": -125000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 126
+        },
+        {
+          "name": "paths",
+          "values": 414
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-4_-6.bin",
+      "x": -100000,
+      "z": -150000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 6750
+        },
+        {
+          "name": "paths",
+          "values": 252
+        }
+      ]
+    },
+    {
+      "file": "road-detail/-5_-5.bin",
+      "x": -125000,
+      "z": -125000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 8034
+        },
+        {
+          "name": "paths",
+          "values": 642
+        }
+      ]
+    },
+    {
+      "file": "road-detail/0_-1.bin",
+      "x": 0,
+      "z": -25000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 58134
+        },
+        {
+          "name": "paths",
+          "values": 4614
+        }
+      ]
+    },
+    {
+      "file": "road-detail/0_-2.bin",
+      "x": 0,
+      "z": -50000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 68874
+        },
+        {
+          "name": "paths",
+          "values": 7038
+        }
+      ]
+    },
+    {
+      "file": "road-detail/0_-3.bin",
+      "x": 0,
+      "z": -75000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 52362
+        },
+        {
+          "name": "paths",
+          "values": 6378
+        }
+      ]
+    },
+    {
+      "file": "road-detail/0_-4.bin",
+      "x": 0,
+      "z": -100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 462
+        },
+        {
+          "name": "paths",
+          "values": 588
+        }
+      ]
+    },
+    {
+      "file": "road-detail/0_0.bin",
+      "x": 0,
+      "z": 0,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 13212
+        },
+        {
+          "name": "paths",
+          "values": 2700
+        }
+      ]
+    },
+    {
+      "file": "road-detail/0_2.bin",
+      "x": 0,
+      "z": 50000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 15630
+        },
+        {
+          "name": "paths",
+          "values": 9396
+        }
+      ]
+    },
+    {
+      "file": "road-detail/0_3.bin",
+      "x": 0,
+      "z": 75000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 6738
+        },
+        {
+          "name": "paths",
+          "values": 5022
+        }
+      ]
+    },
+    {
+      "file": "road-detail/0_4.bin",
+      "x": 0,
+      "z": 100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 2796
+        },
+        {
+          "name": "paths",
+          "values": 1758
+        }
+      ]
+    },
+    {
+      "file": "road-detail/1_-1.bin",
+      "x": 25000,
+      "z": -25000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 124548
+        },
+        {
+          "name": "paths",
+          "values": 18390
+        }
+      ]
+    },
+    {
+      "file": "road-detail/1_-2.bin",
+      "x": 25000,
+      "z": -50000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 25302
+        },
+        {
+          "name": "paths",
+          "values": 3942
+        }
+      ]
+    },
+    {
+      "file": "road-detail/1_-3.bin",
+      "x": 25000,
+      "z": -75000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 2634
+        },
+        {
+          "name": "paths",
+          "values": 96
+        }
+      ]
+    },
+    {
+      "file": "road-detail/1_-4.bin",
+      "x": 25000,
+      "z": -100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 3066
+        },
+        {
+          "name": "paths",
+          "values": 3408
+        }
+      ]
+    },
+    {
+      "file": "road-detail/1_0.bin",
+      "x": 25000,
+      "z": 0,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 42924
+        },
+        {
+          "name": "paths",
+          "values": 36018
+        }
+      ]
+    },
+    {
+      "file": "road-detail/1_1.bin",
+      "x": 25000,
+      "z": 25000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 3654
+        },
+        {
+          "name": "paths",
+          "values": 9660
+        }
+      ]
+    },
+    {
+      "file": "road-detail/1_2.bin",
+      "x": 25000,
+      "z": 50000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 9372
+        },
+        {
+          "name": "paths",
+          "values": 2550
+        }
+      ]
+    },
+    {
+      "file": "road-detail/1_3.bin",
+      "x": 25000,
+      "z": 75000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 20502
+        },
+        {
+          "name": "paths",
+          "values": 4710
+        }
+      ]
+    },
+    {
+      "file": "road-detail/1_4.bin",
+      "x": 25000,
+      "z": 100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 2238
+        },
+        {
+          "name": "paths",
+          "values": 2082
+        }
+      ]
+    },
+    {
+      "file": "road-detail/1_5.bin",
+      "x": 25000,
+      "z": 125000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 6126
+        },
+        {
+          "name": "paths",
+          "values": 438
+        }
+      ]
+    },
+    {
+      "file": "road-detail/2_-1.bin",
+      "x": 50000,
+      "z": -25000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 2916
+        },
+        {
+          "name": "paths",
+          "values": 336
+        }
+      ]
+    },
+    {
+      "file": "road-detail/2_-3.bin",
+      "x": 50000,
+      "z": -75000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 3012
+        },
+        {
+          "name": "paths",
+          "values": 1782
+        }
+      ]
+    },
+    {
+      "file": "road-detail/2_-4.bin",
+      "x": 50000,
+      "z": -100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 912
+        },
+        {
+          "name": "paths",
+          "values": 234
+        }
+      ]
+    },
+    {
+      "file": "road-detail/2_0.bin",
+      "x": 50000,
+      "z": 0,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 27678
+        },
+        {
+          "name": "paths",
+          "values": 23538
+        }
+      ]
+    },
+    {
+      "file": "road-detail/2_1.bin",
+      "x": 50000,
+      "z": 25000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 28470
+        },
+        {
+          "name": "paths",
+          "values": 32400
+        }
+      ]
+    },
+    {
+      "file": "road-detail/2_2.bin",
+      "x": 50000,
+      "z": 50000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 7908
+        },
+        {
+          "name": "paths",
+          "values": 12438
+        }
+      ]
+    },
+    {
+      "file": "road-detail/2_3.bin",
+      "x": 50000,
+      "z": 75000,
+      "groups": [
+        {
+          "name": "paths",
+          "values": 1248
+        }
+      ]
+    },
+    {
+      "file": "road-detail/2_4.bin",
+      "x": 50000,
+      "z": 100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 15918
+        },
+        {
+          "name": "paths",
+          "values": 13440
+        }
+      ]
+    },
+    {
+      "file": "road-detail/2_5.bin",
+      "x": 50000,
+      "z": 125000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 12060
+        },
+        {
+          "name": "paths",
+          "values": 7350
+        }
+      ]
+    },
+    {
+      "file": "road-detail/2_6.bin",
+      "x": 50000,
+      "z": 150000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 948
+        },
+        {
+          "name": "paths",
+          "values": 6
+        }
+      ]
+    },
+    {
+      "file": "road-detail/3_-1.bin",
+      "x": 75000,
+      "z": -25000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 618
+        },
+        {
+          "name": "paths",
+          "values": 3258
+        }
+      ]
+    },
+    {
+      "file": "road-detail/3_-2.bin",
+      "x": 75000,
+      "z": -50000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 6690
+        },
+        {
+          "name": "paths",
+          "values": 2658
+        }
+      ]
+    },
+    {
+      "file": "road-detail/3_-3.bin",
+      "x": 75000,
+      "z": -75000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 17976
+        },
+        {
+          "name": "paths",
+          "values": 6780
+        }
+      ]
+    },
+    {
+      "file": "road-detail/3_-4.bin",
+      "x": 75000,
+      "z": -100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 6702
+        },
+        {
+          "name": "paths",
+          "values": 2970
+        }
+      ]
+    },
+    {
+      "file": "road-detail/3_-5.bin",
+      "x": 75000,
+      "z": -125000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 6066
+        },
+        {
+          "name": "paths",
+          "values": 3990
+        }
+      ]
+    },
+    {
+      "file": "road-detail/3_0.bin",
+      "x": 75000,
+      "z": 0,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 15966
+        },
+        {
+          "name": "paths",
+          "values": 15564
+        }
+      ]
+    },
+    {
+      "file": "road-detail/3_1.bin",
+      "x": 75000,
+      "z": 25000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 19242
+        },
+        {
+          "name": "paths",
+          "values": 10764
+        }
+      ]
+    },
+    {
+      "file": "road-detail/3_2.bin",
+      "x": 75000,
+      "z": 50000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 7392
+        },
+        {
+          "name": "paths",
+          "values": 13674
+        }
+      ]
+    },
+    {
+      "file": "road-detail/3_5.bin",
+      "x": 75000,
+      "z": 125000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 1410
+        },
+        {
+          "name": "paths",
+          "values": 366
+        }
+      ]
+    },
+    {
+      "file": "road-detail/3_6.bin",
+      "x": 75000,
+      "z": 150000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 2520
+        },
+        {
+          "name": "paths",
+          "values": 330
+        }
+      ]
+    },
+    {
+      "file": "road-detail/4_-2.bin",
+      "x": 100000,
+      "z": -50000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 1278
+        },
+        {
+          "name": "paths",
+          "values": 396
+        }
+      ]
+    },
+    {
+      "file": "road-detail/4_-3.bin",
+      "x": 100000,
+      "z": -75000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 19794
+        },
+        {
+          "name": "paths",
+          "values": 11778
+        }
+      ]
+    },
+    {
+      "file": "road-detail/4_-4.bin",
+      "x": 100000,
+      "z": -100000,
+      "groups": [
+        {
+          "name": "streets",
+          "values": 10932
+        },
+        {
+          "name": "paths",
+          "values": 7308
+        }
+      ]
+    }
+  ],
   "groups": [
     {
       "name": "highways",
@@ -17,14 +1006,6 @@
     {
       "name": "regional",
       "values": 327942
-    },
-    {
-      "name": "streets",
-      "values": 301752
-    },
-    {
-      "name": "paths",
-      "values": 37824
     }
   ],
   "routeMarkers": [

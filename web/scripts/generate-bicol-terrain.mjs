@@ -9,6 +9,7 @@ import {
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import geography from '../src/data/bicol-map.json' with { type: 'json' };
 import places from '../src/data/places.json' with { type: 'json' };
+import municipalities from '../src/data/municipalities.json' with { type: 'json' };
 
 // GLTFExporter uses FileReader for binary output. Node supplies Blob but no FileReader.
 globalThis.FileReader = class {
@@ -25,6 +26,8 @@ const placeZoom = 12;
 const tileSize = 256;
 const source = 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium';
 const tiles = new Map();
+const placesOnly = process.argv.includes('--places-only');
+const elevationPlaces = [...places.filter(({ kind }) => kind === 'City'), ...municipalities];
 
 function pixelCoordinates(longitude, latitude, zoom) {
   const worldSize = tileSize * 2 ** zoom;
@@ -45,9 +48,9 @@ function queueTiles(zoom, west, south, east, north) {
     }
   }
 }
-queueTiles(terrainZoom, bounds.west, bounds.south, bounds.east, bounds.north);
-for (const { coordinates: [longitude, latitude], kind } of places) {
-  if (kind !== 'Volcano') queueTiles(placeZoom, longitude, latitude, longitude, latitude);
+if (!placesOnly) queueTiles(terrainZoom, bounds.west, bounds.south, bounds.east, bounds.north);
+for (const { coordinates: [longitude, latitude] } of elevationPlaces) {
+  queueTiles(placeZoom, longitude, latitude, longitude, latitude);
 }
 const tileQueue = [...tilePaths];
 console.log(`Sampling ${tileQueue.length} source tiles`);
@@ -79,6 +82,28 @@ function sampleElevation(longitude, latitude, zoom) {
   const top = elevationAtPixel(x, y, zoom) * (1 - fractionX) + elevationAtPixel(x + 1, y, zoom) * fractionX;
   const bottom = elevationAtPixel(x, y + 1, zoom) * (1 - fractionX) + elevationAtPixel(x + 1, y + 1, zoom) * fractionX;
   return top * (1 - fractionY) + bottom * fractionY;
+}
+
+async function writeAsset(path, data) {
+  const output = new URL(path, import.meta.url);
+  await mkdir(new URL('.', output), { recursive: true });
+  const temporary = new URL(`bicol-${randomUUID()}.tmp`, output);
+  try {
+    await writeFile(temporary, data);
+    await rename(temporary, output);
+  } finally {
+    await rm(temporary, { force: true });
+  }
+}
+
+const placeElevations = Object.fromEntries(elevationPlaces.map(({ id, coordinates }) => {
+  const elevation = sampleElevation(...coordinates, placeZoom);
+  return [id, elevation < 0 ? null : Math.round(elevation)];
+}));
+await writeAsset('../src/data/place-elevations.json', JSON.stringify(placeElevations, null, 2) + '\n');
+if (placesOnly) {
+  console.log(`Saved ${elevationPlaces.length} city and municipality elevations`);
+  process.exit(0);
 }
 
 function axisSamples(start, end, step) {
@@ -198,22 +223,5 @@ scene.add(terrain, water);
 
 const binary = await new GLTFExporter().parseAsync(scene, { binary: true });
 
-async function writeAsset(path, data) {
-  const output = new URL(path, import.meta.url);
-  await mkdir(new URL('.', output), { recursive: true });
-  const temporary = new URL(`bicol-${randomUUID()}.tmp`, output);
-  try {
-    await writeFile(temporary, data);
-    await rename(temporary, output);
-  } finally {
-    await rm(temporary, { force: true });
-  }
-}
-
-const placeElevations = Object.fromEntries(places.filter(({ kind }) => kind !== 'Volcano').map(({ id, coordinates }) => {
-  const elevation = sampleElevation(...coordinates, placeZoom);
-  return [id, elevation < 0 ? null : Math.round(elevation)];
-}));
 await writeAsset('../public/maps/bicol.glb', Buffer.from(binary));
-await writeAsset('../src/data/place-elevations.json', JSON.stringify(placeElevations, null, 2) + '\n');
 console.log(`Saved Bicol terrain (${positions.length / 3} vertices, ${indices.length / 3} triangles) and place elevations`);

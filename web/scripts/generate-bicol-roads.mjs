@@ -8,6 +8,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshBVH } from 'three-mesh-bvh';
 import geography from '../src/data/bicol-map.json' with { type: 'json' };
 import places from '../src/data/places.json' with { type: 'json' };
+import municipalities from '../src/data/municipalities.json' with { type: 'json' };
 
 const snapshot = process.argv[2] ?? 'https://build.protomaps.com/20261113.pmtiles';
 const archive = new PMTiles(snapshot);
@@ -15,6 +16,8 @@ const { origin, metersPerDegree, metersPerLongitude, detailBounds } = geography;
 const groups = ['highways', 'regional', 'streets', 'paths'];
 const segmentData = Object.fromEntries(groups.map((group) => [group, []]));
 const seen = Object.fromEntries(groups.map((group) => [group, new Set()]));
+const detailSizeM = 25000;
+const localDetails = new Map();
 const roadClasses = new Map([
   ...['motorway', 'trunk', 'primary'].map((kind) => [kind, 'highways']),
   ...['secondary', 'tertiary'].map((kind) => [kind, 'regional']),
@@ -89,6 +92,14 @@ function segment(group, a, b) {
   const key = start < end ? `${start}/${end}` : `${end}/${start}`;
   if (seen[group].has(key)) return;
   seen[group].add(key);
+  let data = segmentData[group];
+  if (group === 'streets' || group === 'paths') {
+    const tileX = Math.floor((ax + bx) / 2 / detailSizeM);
+    const tileZ = Math.floor((az + bz) / 2 / detailSizeM);
+    const tileKey = `${tileX}_${tileZ}`;
+    if (!localDetails.has(tileKey)) localDetails.set(tileKey, { tileX, tileZ, streets: [], paths: [] });
+    data = localDetails.get(tileKey)[group];
+  }
   const steps = Math.ceil(Math.hypot(bx - ax, bz - az) / 160);
   const position = (x, z) => {
     ray.origin.set(x, 10000, z);
@@ -98,12 +109,12 @@ function segment(group, a, b) {
   let last = position(ax, az);
   for (let step = 1; step <= steps; step++) {
     const next = position(Math.round(ax + (bx - ax) * step / steps), Math.round(az + (bz - az) * step / steps));
-    segmentData[group].push(...last, ...next);
+    data.push(...last, ...next);
     last = next;
   }
 }
 
-const urbanAreas = places.filter(({ kind }) => kind !== 'Volcano').map(({ coordinates: [lon, lat] }) => ({
+const urbanAreas = [...places.filter(({ kind }) => kind === 'City'), ...municipalities].map(({ coordinates: [lon, lat] }) => ({
   west: lon - 0.055, south: lat - 0.048, east: lon + 0.055, north: lat + 0.048
 }));
 
@@ -111,8 +122,9 @@ async function extract(zoom, areas, allowedGroups) {
   const tiles = [...new Map(areas.flatMap((area) => tilesFor(zoom, area)).map((tile) => [tile.join('/'), tile])).values()];
   let tileCount = 0;
   console.log(`Reading ${tiles.length} source tiles at zoom ${zoom}`);
-  for (let batch = 0; batch < tiles.length; batch += 5) {
-    const results = await Promise.all(tiles.slice(batch, batch + 5).map(async ([x, y]) =>
+  const batchSize = 16;
+  for (let batch = 0; batch < tiles.length; batch += batchSize) {
+    const results = await Promise.all(tiles.slice(batch, batch + batchSize).map(async ([x, y]) =>
       ({ x, y, tile: await archive.getZxy(zoom, x, y) })
     ));
     for (const { x, y, tile } of results) {
@@ -145,6 +157,7 @@ async function extract(zoom, areas, allowedGroups) {
         }
       }
     }
+    if (batch && batch % 320 === 0) console.log(`Processed ${batch} of ${tiles.length} tiles at zoom ${zoom}`);
   }
   if (!tileCount) throw new Error(`No road tiles were returned for zoom ${zoom}`);
 }
@@ -154,12 +167,9 @@ await extract(14, urbanAreas, ['streets', 'paths']);
 
 const output = new URL('../public/maps/', import.meta.url);
 await mkdir(output, { recursive: true });
-const assetGroups = groups.map((name) => {
-  const coordinates = segmentData[name];
-  if (!coordinates.length) throw new Error(`No ${name} found in source data`);
-  console.log(`${name}: ${coordinates.length / 6} line segments`);
-  return { name, values: coordinates.length };
-});
+const regionalGroups = ['highways', 'regional'];
+const localGroups = ['streets', 'paths'];
+const assetGroups = regionalGroups.map((name) => ({ name, values: segmentData[name].length }));
 const routeMarkers = [...roadLabels].sort(([a], [b]) => a.localeCompare(b)).flatMap(([ref, coordinates]) =>
   coordinates.map(([lon, lat]) => {
     const x = Math.round((lon - origin[0]) * metersPerLongitude);
@@ -168,29 +178,52 @@ const routeMarkers = [...roadLabels].sort(([a], [b]) => a.localeCompare(b)).flat
     return { ref, position: [x, Math.round(Math.max(0, surface.raycastFirst(ray, DoubleSide)?.point.y ?? 0)), z] };
   })
 );
+async function writeAsset(name, contents) {
+  const destination = new URL(name, output);
+  await mkdir(new URL('.', destination), { recursive: true });
+  const temporary = new URL(`roads-${randomUUID()}.tmp`, output);
+  try {
+    await writeFile(temporary, contents);
+    await rename(temporary, destination);
+  } finally {
+    await rm(temporary, { force: true });
+  }
+}
+
+function toBinary(arrays) {
+  const binary = Buffer.alloc(arrays.reduce((size, values) => size + values.length * 4, 0));
+  let offset = 0;
+  for (const coordinates of arrays) {
+    for (const value of coordinates) {
+      binary.writeInt32LE(value, offset);
+      offset += 4;
+    }
+  }
+  return binary;
+}
+
+const detailTiles = [];
+for (const [key, tile] of [...localDetails].sort(([a], [b]) => a.localeCompare(b))) {
+  const file = `road-detail/${key}.bin`;
+  await writeAsset(file, toBinary(localGroups.map((name) => tile[name])));
+  detailTiles.push({
+    file,
+    x: tile.tileX * detailSizeM,
+    z: tile.tileZ * detailSizeM,
+    groups: localGroups.filter((name) => tile[name].length).map((name) => ({ name, values: tile[name].length }))
+  });
+}
 const metadata = {
   attribution: '© OpenStreetMap contributors',
   license: 'https://www.openstreetmap.org/copyright',
   source: snapshot,
   bounds: detailBounds,
-  localStreetRadius: 'Approximately 5–6 km around each city or town',
+  localStreetRadius: 'Approximately 5–6 km around the seven cities and 107 municipality centers',
+  detailSizeM,
+  detailTiles,
   groups: assetGroups,
   routeMarkers
 };
-const binary = Buffer.alloc(groups.reduce((size, name) => size + segmentData[name].length * 4, 0));
-let offset = 0;
-for (const group of groups) {
-  for (const value of segmentData[group]) {
-    binary.writeInt32LE(value, offset);
-    offset += 4;
-  }
-}
-for (const [name, contents] of [['bicol-roads.bin', binary], ['bicol-roads.json', JSON.stringify(metadata, null, 2) + '\n']]) {
-  const temporary = new URL(`roads-${randomUUID()}.tmp`, output);
-  try {
-    await writeFile(temporary, contents);
-    await rename(temporary, new URL(name, output));
-  } finally {
-    await rm(temporary, { force: true });
-  }
-}
+await writeAsset('bicol-roads.bin', toBinary(regionalGroups.map((name) => segmentData[name])));
+await writeAsset('bicol-roads.json', JSON.stringify(metadata, null, 2) + '\n');
+console.log(`Saved regional roads and ${detailTiles.length} street and path assets`);

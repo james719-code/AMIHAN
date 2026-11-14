@@ -2,6 +2,24 @@
   "schemaVersion": "1.0.0",
   "sources": [
     {
+      "id": "bswm-soil-series",
+      "publisher": "Department of Agriculture – Bureau of Soils and Water Management",
+      "url": "https://www.bswm.da.gov.ph/download/philippine-soil-series/",
+      "product": "Philippine Soil Series",
+      "attribution": "DA–BSWM",
+      "coverage": "Spatial soil mapping units",
+      "status": "awaiting-dataset"
+    },
+    {
+      "id": "gpm-imerg-v07",
+      "publisher": "NASA Global Precipitation Measurement Mission",
+      "url": "https://gpm.nasa.gov/resources/documents/imerg-v07-technical-documentation",
+      "product": "IMERG V07 precipitation",
+      "attribution": "NASA GPM IMERG",
+      "resolution": "0.1° grid, half-hourly native product",
+      "status": "awaiting-dataset"
+    },
+    {
       "id": "nasa-power-daily-2024",
       "publisher": "NASA Langley Research Center POWER Project",
       "url": "https://power.larc.nasa.gov/docs/services/api/temporal/daily/",

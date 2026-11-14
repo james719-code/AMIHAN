@@ -14,6 +14,8 @@ import { demoSites, provinces } from './data/sites';
 import { citySource, coordinateSource, elevationSource, municipalitySource, places } from './data/places';
 import type { MetricDefinition, MetricKey } from './types';
 import { MapPanel } from './components/MapPanel';
+import { RotationPlanner } from './components/RotationPlanner';
+import { emptyField, type FieldSelection } from './components/field-terrain';
 
 const metrics: MetricDefinition[] = [
   { key: 'rainfallMm', label: 'Rainfall', shortLabel: 'Rainfall', unit: 'mm/day', color: 'var(--coastal-blue)', kind: 'bar' },
@@ -29,6 +31,7 @@ const coordinatesLabel = ([longitude, latitude]: number[]) => `${latitude.toFixe
 
 function App() {
   const [selectedPlaceId, setSelectedPlaceId] = useState(places[0].id);
+  const [fieldSelection, setFieldSelection] = useState<FieldSelection>(emptyField);
   const [metricKey, setMetricKey] = useState<MetricKey>('rainfallMm');
   const [mapMode, setMapMode] = useState<'2d' | '3d'>('3d');
   const [dateStart, setDateStart] = useState(demoDataManifest.selectedDates.start);
@@ -50,7 +53,7 @@ function App() {
   }));
 
   const selectProvince = (code: string) => {
-    const provincePlace = places.find((place) => place.provinceCode === code);
+    const provincePlace = places.find((place) => place.provinceCode === code && place.climateSite);
     if (provincePlace) setSelectedPlaceId(provincePlace.id);
   };
 
@@ -83,12 +86,12 @@ function App() {
         <section className="hero-copy">
           <div>
             <span className="eyebrow">Bicol Region V · Philippines</span>
-            <h1>Explore Bicol’s terrain and climate</h1>
-            <p>Explore Bicol’s cities, towns, and volcanoes. Select a place to see its elevation and local details.</p>
+            <h1>Plan crop rotations in Bicol</h1>
+            <p>Explore terrain and weather in Bicol, then select a place to see what data is needed to plan a rotation.</p>
           </div>
           <div className="hero-note">
-            <strong>About this demo</strong>
-            <p>The seven-day climate series uses synthetic data to demonstrate the explorer.</p>
+            <strong>Planning data pending</strong>
+            <p>Soil, rainfall, and climate datasets will support place-specific crop suggestions.</p>
           </div>
         </section>
 
@@ -98,6 +101,8 @@ function App() {
             mapMode={mapMode}
             onMapModeChange={setMapMode}
             onPlaceSelect={setSelectedPlaceId}
+            fieldSelection={fieldSelection}
+            onFieldSelection={setFieldSelection}
           />
 
           <aside className="control-card" aria-label="Explorer controls">
@@ -111,9 +116,17 @@ function App() {
               </select>
             </div>
             <div className="field-group">
-              <label htmlFor="place">Place</label>
+              <label htmlFor="place">City, municipality, or landmark</label>
               <select id="place" value={selectedPlaceId} onChange={(event) => setSelectedPlaceId(event.target.value)}>
-                {placeOptions.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}
+                {(['Municipality', 'City', 'Volcano'] as const).map((kind) => {
+                  const options = placeOptions.filter((place) => place.kind === kind)
+                    .sort((a, b) => a.name.localeCompare(b.name, 'en-PH'));
+                  if (!options.length) return null;
+                  const label = { Municipality: 'Municipalities', City: 'Cities', Volcano: 'Volcanoes' }[kind];
+                  return <optgroup key={kind} label={label}>
+                    {options.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}
+                  </optgroup>;
+                })}
               </select>
             </div>
             <div className="site-fact" aria-live="polite">
@@ -134,6 +147,9 @@ function App() {
                     <dd>{number.format(selectedPlace.population)}</dd>
                   </div>
                 )}
+                {selectedPlace.psgc && (
+                  <div><dt>PSGC code</dt><dd>{selectedPlace.psgc}</dd></div>
+                )}
                 <div>
                   <dt>Coordinates</dt>
                   <dd>{coordinatesLabel(selectedPlace.coordinates)}</dd>
@@ -144,7 +160,9 @@ function App() {
                   <>
                     <a href={elevationSource}>Mapzen elevation</a>
                     <a href={selectedPlace.kind === 'City' ? citySource : municipalitySource}>PSA census</a>
-                    <a href={coordinateSource}>GeoNames</a>
+                    {selectedPlace.coordinateUrl
+                      ? <a href={selectedPlace.coordinateUrl}>DILG location</a>
+                      : <a href={selectedPlace.geonamesId ? `https://www.geonames.org/${selectedPlace.geonamesId}/` : coordinateSource}>GeoNames</a>}
                   </>
                 )}
               </p>
@@ -152,10 +170,12 @@ function App() {
           </aside>
         </section>
 
+        <RotationPlanner placeName={selectedPlace.name} fieldSelection={fieldSelection} />
+
         {selectedSite ? <section className="dashboard-card" aria-labelledby="climate-heading">
           <div className="dashboard-heading">
             <div>
-              <h2 id="climate-heading">Daily climate readings</h2>
+              <h2 id="climate-heading">Demo climate readings</h2>
               <p className="section-subtitle">{selectedSite.name} · {coordinatesLabel(selectedSite.coordinates)} · UTC</p>
             </div>
             <div className="demo-badge"><span className="status-dot" /> Synthetic data</div>
@@ -233,7 +253,7 @@ function App() {
           <section className="dashboard-card" aria-labelledby="climate-heading">
             <div className="dashboard-heading">
               <div>
-                <h2 id="climate-heading">Daily climate readings</h2>
+                <h2 id="climate-heading">Demo climate readings</h2>
                 <p className="section-subtitle">Demo climate readings are unavailable for {selectedPlace.name}.</p>
               </div>
             </div>

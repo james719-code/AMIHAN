@@ -1,13 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import geography from '../data/bicol-map.json';
 import { places, waterLabels } from '../data/places';
+import { demoSites } from '../data/sites';
+import { demoWeatherDates } from '../data/demo-weather';
+import { climateLayers, demoClimateFrame, readingColor } from '../data/climate-map';
+import type { MetricKey } from '../types';
 import { createBicolMap, RELIEF_SCALE, type MapMode } from './bicol-map';
+import { ClimateMapControls } from './ClimateMapControls';
+import { FieldCheck } from './FieldCheck';
+import type { FieldSelection } from './field-terrain';
 
 type MapPanelProps = {
   selectedPlaceId: string;
   mapMode: MapMode;
   onMapModeChange: (mode: MapMode) => void;
   onPlaceSelect: (id: string) => void;
+  fieldSelection: FieldSelection;
+  onFieldSelection: (selection: FieldSelection) => void;
 };
 
 type MapView = Awaited<ReturnType<ReturnType<typeof createBicolMap>['load']>>;
@@ -16,12 +25,15 @@ export function MapPanel({
   selectedPlaceId,
   mapMode,
   onMapModeChange,
-  onPlaceSelect
+  onPlaceSelect,
+  fieldSelection,
+  onFieldSelection
 }: MapPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const compassRef = useRef<HTMLSpanElement>(null);
   const roadOverlayRef = useRef<HTMLDivElement>(null);
   const markers = useRef(new Map<string, HTMLButtonElement>());
+  const climateMarkers = useRef(new Map<string, HTMLButtonElement>());
   const labels = useRef(new Map<string, HTMLElement>());
   const lastSelection = useRef(selectedPlaceId);
   const [view, setView] = useState<MapView | null>(null);
@@ -32,6 +44,15 @@ export function MapPanel({
   const [roadsVisible, setRoadsVisible] = useState(true);
   const [roadsState, setRoadsState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [roadAttempt, setRoadAttempt] = useState(0);
+  const [climateVisible, setClimateVisible] = useState(false);
+  const [climateMetric, setClimateMetric] = useState<MetricKey>('rainfallMm');
+  const [climateDay, setClimateDay] = useState(1);
+  const [playing, setPlaying] = useState(false);
+  const [fieldActive, setFieldActive] = useState(false);
+  const [showSlope, setShowSlope] = useState(true);
+  const [fieldMiss, setFieldMiss] = useState(false);
+  const climateFrame = useMemo(() => demoClimateFrame(climateMetric, climateDay), [climateMetric, climateDay]);
+  const climateLayer = climateLayers[climateMetric];
 
   useEffect(() => {
     const container = containerRef.current;
@@ -40,7 +61,10 @@ export function MapPanel({
     if (!container || !compass || !roadOverlay) return;
     let map;
     try {
-      map = createBicolMap(container, compass, roadOverlay, setContextLost);
+      map = createBicolMap(container, compass, roadOverlay, setContextLost, (selection) => {
+        setFieldMiss(false);
+        onFieldSelection(selection);
+      }, () => setFieldMiss(true));
     } catch {
       setFailure('webgl');
       return;
@@ -55,11 +79,12 @@ export function MapPanel({
       active = false;
       map.dispose();
     };
-  }, [attempt]);
+  }, [attempt, onFieldSelection]);
 
   useEffect(() => { view?.setMode(mapMode); }, [mapMode, view]);
   useEffect(() => { view?.setHillshade(hillshade); }, [hillshade, view]);
   useEffect(() => { view?.setRoadsVisible(roadsVisible); }, [roadsVisible, view]);
+  useEffect(() => { view?.setFieldCheck(fieldActive, showSlope); }, [fieldActive, showSlope, view]);
   useEffect(() => {
     if (!view) return;
     let active = true;
@@ -70,8 +95,20 @@ export function MapPanel({
     return () => { active = false; };
   }, [roadAttempt, view]);
   useEffect(() => {
-    if (view && !contextLost) view.setPlaces(markers.current, labels.current);
+    if (view && !contextLost) view.setPlaces(markers.current, labels.current, climateMarkers.current);
   }, [contextLost, view]);
+  useEffect(() => {
+    if (view && !contextLost) view.setClimateFrame(climateVisible ? climateFrame : null);
+  }, [climateFrame, climateVisible, contextLost, view]);
+  useEffect(() => {
+    if (!playing || !climateVisible || contextLost) return;
+    if (climateDay === demoWeatherDates.length - 1) {
+      setPlaying(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setClimateDay(climateDay + 1), 1100);
+    return () => window.clearTimeout(timer);
+  }, [climateDay, climateVisible, contextLost, playing]);
   useEffect(() => {
     if (!view || contextLost) return;
     view.selectPlace(selectedPlaceId);
@@ -85,11 +122,35 @@ export function MapPanel({
     <section className="map-card" aria-label="Bicol Region map">
       <div className="map-header">
         <h2>Bicol terrain map</h2>
-        <button className="quiet-button" type="button" onClick={view?.reset} disabled={!mapAvailable}>
-          Reset Bicol view
-        </button>
+        <div className="map-header-actions">
+          <button
+            className="quiet-button map-tool-toggle"
+            type="button"
+            aria-pressed={fieldActive}
+            disabled={!mapAvailable}
+            onClick={() => {
+              setFieldActive(!fieldActive);
+              setClimateVisible(false);
+              setPlaying(false);
+            }}
+          >Field Check</button>
+          <button
+            className="quiet-button map-tool-toggle"
+            type="button"
+            aria-pressed={climateVisible}
+            disabled={!mapAvailable}
+            onClick={() => {
+              setClimateVisible(!climateVisible);
+              setFieldActive(false);
+              setPlaying(false);
+            }}
+          >Climate</button>
+          <button className="quiet-button" type="button" onClick={view?.reset} disabled={!mapAvailable}>
+            Reset Bicol view
+          </button>
+        </div>
       </div>
-      <div className="map-viewport">
+      <div className={`map-viewport${fieldActive ? ' field-picking' : ''}`}>
         <div ref={containerRef} className="map-container" aria-hidden={!mapAvailable} inert={!mapAvailable} />
         <div ref={roadOverlayRef} className="map-route-labels" hidden={!mapAvailable} aria-hidden="true" />
         <div className="map-compass" hidden={!mapAvailable} aria-hidden="true">
@@ -115,7 +176,7 @@ export function MapPanel({
                   className={`site-marker${place.kind === 'Volcano' ? ' is-volcano' : ''}${place.id === selectedPlaceId ? ' is-selected' : ''}`}
                   data-label={place.name}
                   aria-pressed={place.id === selectedPlaceId}
-                  aria-label={`Explore ${place.name}`}
+                  aria-label={`Explore ${place.name}${place.kind === 'Municipality' && !place.climateSite ? ', municipality' : ''}`}
                   title={`${place.name} · ${place.kind}`}
                   onClick={() => {
                     if (place.id === selectedPlaceId) view.focusPlace(place.id);
@@ -126,6 +187,31 @@ export function MapPanel({
                   <span aria-hidden="true" className="marker-label">{place.name}</span>
                 </button>
               ))}
+              {demoSites.map((site) => {
+                const value = climateFrame.readings.get(site.id) ?? null;
+                const formatted = value === null ? 'Missing' : `${value} ${climateLayer.unit}`;
+                const label = `${site.name} · ${climateLayer.label} · ${formatted}`;
+                return (
+                  <button
+                    key={`weather-${site.id}`}
+                    ref={(element) => {
+                      if (element) climateMarkers.current.set(site.id, element);
+                      else climateMarkers.current.delete(site.id);
+                    }}
+                    className="climate-reading"
+                    data-site-id={site.id}
+                    hidden={!climateVisible}
+                    style={{ backgroundColor: readingColor(climateMetric, value) }}
+                    aria-label={label}
+                    title={label}
+                    type="button"
+                    onClick={() => {
+                      if (site.id === selectedPlaceId) view.focusPlace(site.id);
+                      onPlaceSelect(site.id);
+                    }}
+                  >{formatted}</button>
+                );
+              })}
             </div>
             <div className="map-toolbar">
               <div className="segmented-control" role="group" aria-label="Map view">
@@ -154,6 +240,11 @@ export function MapPanel({
               <button className="quiet-button" type="button" aria-label="Zoom in" onClick={view.zoomIn}>+</button>
               <button className="quiet-button" type="button" aria-label="Zoom out" onClick={view.zoomOut}>−</button>
             </div>
+            {fieldActive && (
+              <button className="quiet-button field-center-button" type="button" onClick={view.pickFieldCenter}>
+                Sample center
+              </button>
+            )}
           </>
         ) : (
           <div className="map-status" role="status">
@@ -171,6 +262,26 @@ export function MapPanel({
           </div>
         )}
       </div>
+      {mapAvailable && fieldActive && (
+        <FieldCheck selection={fieldSelection} slopeVisible={showSlope} missed={fieldMiss}
+          onSlopeChange={setShowSlope} onClear={view.clearField} />
+      )}
+      {mapAvailable && climateVisible && (
+        <ClimateMapControls
+          metric={climateMetric}
+          day={climateDay}
+          playing={playing}
+          onMetricChange={setClimateMetric}
+          onDayChange={(day) => {
+            setPlaying(false);
+            setClimateDay(day);
+          }}
+          onPlayingChange={(next) => {
+            if (next && climateDay === demoWeatherDates.length - 1) setClimateDay(0);
+            setPlaying(next);
+          }}
+        />
+      )}
       <div className="map-legend" aria-label="Map legend">
         <span><i className="legend-dot" /> City or town</span>
         <span><i className="legend-volcano" /> Volcano</span>

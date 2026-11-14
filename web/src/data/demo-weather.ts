@@ -1,7 +1,7 @@
-import type { DemoSite, WeatherRow } from '../types';
+import type { WeatherRow } from '../types';
 import { demoSites } from './sites';
 
-const dates = [
+export const demoWeatherDates = [
   '2024-01-01',
   '2024-01-02',
   '2024-01-03',
@@ -13,7 +13,7 @@ const dates = [
 
 function buildSeries(index: number): WeatherRow[] {
   const temperatureOffset = index * 0.35;
-  return dates.map((date, day) => ({
+  return demoWeatherDates.map((date, day) => ({
     date,
     rainfallMm: day === 0 ? 0 : day === 3 ? null : Number((2.4 + index * 1.1 + day * 1.7).toFixed(1)),
     meanTemperatureC: Number((25.3 + temperatureOffset + day * 0.18).toFixed(1)),
@@ -32,7 +32,7 @@ export const demoDataManifest = {
   releaseId: 'starter-demo-2024-01',
   sourceId: 'demo-synthetic-2024',
   timeStandard: 'UTC',
-  selectedDates: { start: dates[0], end: dates.at(-1) ?? dates[0] },
+  selectedDates: { start: demoWeatherDates[0], end: demoWeatherDates.at(-1) ?? demoWeatherDates[0] },
   siteCount: demoSites.length,
   notes: 'Synthetic seven-day series for interface development. Not validated historical observations.'
 };
