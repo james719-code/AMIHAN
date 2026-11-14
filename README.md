@@ -1,6 +1,6 @@
-# FieldWise
+# AMIHAN - Adaptive Multi-season Insights for Harvest and Agricultural Needs
 
-FieldWise is a map-first agricultural planning project for Bicol Region V, Philippines. The [project plan](docs/PROJECT_PLAN.md) defines the 3D terrain viewer, climate and soil data pipeline, crop rotation planner, and the first coding milestone.
+AMIHAN is a map-first agricultural planning project for Bicol Region V, Philippines. The [project plan](docs/PROJECT_PLAN.md) defines the 3D terrain viewer, climate and soil data pipeline, crop rotation planner, and the first coding milestone.
 
 ## Local setup
 
@@ -15,7 +15,7 @@ npm.cmd --prefix data test
 npm.cmd --prefix web run dev
 ```
 
-Open the Vite URL printed by the dev server. The map and 2015–2024 climate history load from files served by FieldWise.
+Open the Vite URL printed by the dev server. The map and 2015–2024 climate history load from files served by AMIHAN.
 
 ## Crop rotation planning
 

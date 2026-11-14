@@ -96,12 +96,12 @@ function App() {
         <div className="site-header-inner">
           <div className="brand-lockup">
             <img className="brand-mark" src={`${import.meta.env.BASE_URL}fieldwise-mark.png`} alt="" width={48} height={48} />
-            <p className="brand-name">Field<span>Wise</span></p>
+            <p className="brand-name" title="Adaptive Multi-season Insights for Harvest and Agricultural Needs">AMIHAN</p>
           </div>
           {workspaceMenu}
         </div>
       </header>
-      <main className="app-shell" aria-label="FieldWise map workspace">
+      <main className="app-shell" aria-label="AMIHAN map workspace">
           <MapPanel
             selectedPlaceId={selectedPlaceId}
             activeTool={activeTool}
