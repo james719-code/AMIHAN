@@ -19,6 +19,8 @@
 .planner-download:disabled { border-color: var(--line); background: var(--soft); color: var(--muted); cursor: not-allowed; }
 .planner-export p { margin-top: 5px; font-size: 13px; }
 .planner-export [role="alert"] { color: #843f28; }
+.planner-field-actions { display: flex; justify-content: flex-end; margin-top: 14px; }
+.planner-field-actions button { min-height: 44px; }
 .section-nav { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-bottom: 20px; }
 .section-nav a {
   display: inline-flex;
@@ -205,7 +207,7 @@
 .readings-page .readings-card { min-width: 0; margin: 0; }
 .readings-card .dashboard-heading h2 { font-size: clamp(22px, 2.8vw, 30px); font-weight: 700; letter-spacing: normal; }
 .readings-card .readings-views { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.readings-card .readings-views button { min-height: 44px; font-size: 14px; }
+.readings-card .readings-views button { justify-content: center; min-height: 44px; font-size: 14px; }
 .readings-card .history-dates { grid-template-columns: repeat(2, minmax(0, 280px)); }
 .history-dates label { display: block; margin-bottom: 4px; font-size: 14px; }
 .history-dates select { min-height: 44px; background: #fff; font-size: 16px; }

@@ -8,7 +8,7 @@ import { plantingMonth, todayInBicol } from '../data/planting-plan';
 import { provinces } from '../data/sites';
 import { mapPath, overviewPath, plannerPath, readingsPath } from '../workspace-routes';
 
-const mark = `${overviewPath}fieldwise-mark.png`;
+const wordmark = `${overviewPath}amihan-full-light.svg`;
 const assets = `${overviewPath}landing/`;
 const heroCredit = 'https://commons.wikimedia.org/wiki/File:Farmers_of_Mt._Mayon.jpg';
 
@@ -165,7 +165,7 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
         <div className="landing-width">
           <div className="landing-footer-main">
             <div>
-              <a className="landing-brand" href={overviewPath} data-app-link><img src={mark} alt="" width={43} height={43} /><span>AMIHAN</span></a>
+              <a className="landing-brand" href={overviewPath} data-app-link><img src={wordmark} alt="AMIHAN" width={1670} height={443} /></a>
               <p>Adaptive Multi-season Insights for Harvest and Agricultural Needs</p>
             </div>
             <a className="landing-button landing-button-gold" href={plannerPath} data-app-link>Open Crop Planner</a>

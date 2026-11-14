@@ -24,7 +24,7 @@
   font-weight: 750;
   text-decoration: none;
 }
-.landing-brand img { border-radius: 8px; }
+.landing-brand img { width: 144px; height: auto; }
 .landing-button {
   display: inline-flex;
   justify-content: space-between;
@@ -182,7 +182,7 @@
 @media (max-width: 720px) {
   .landing-width { width: calc(100% - 40px); }
   .landing-brand { gap: 7px; font-size: 16px; }
-  .landing-brand img { width: 32px; height: 32px; }
+  .landing-brand img { width: 124px; }
   .landing-hero, .landing-section-intro, .landing-tools, .pilot-layout, .source-row, .rainfall-section { grid-template-columns: minmax(0, 1fr); }
   .landing-hero-copy { padding: 34px 20px 28px; }
   .landing-hero h1 { font-size: clamp(38px, 9vw, 62px); }

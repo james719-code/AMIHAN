@@ -22,6 +22,7 @@ import { provinces } from '../data/sites';
 import { smapMonthAt, smapObservationYear } from '../data/smap-seasonal';
 import { SoilLayers } from './SoilLayers';
 import { TownSelect } from './TownSelect';
+import { MapControlIcon } from './MapControlIcon';
 import { mapPath } from '../workspace-routes';
 
 type Props = {
@@ -124,6 +125,16 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
   const visibleCrops = availableCrops.filter((crop) =>
     `${crop.name} ${cropWorkbook[crop.artwork].crop} ${farmerCropName(crop)}`.toLowerCase().includes(query));
   const showAllCrops = libraryExpanded || Boolean(query);
+
+  function resetFieldConditions() {
+    setPrevious('');
+    setPreviousHarvest('');
+    setWater('');
+    setDrainage('');
+    setMoisture('');
+    setNextRicePlanting('');
+    setTypeOverride(undefined);
+  }
 
   async function exportPlan() {
     if (!season || !coordinates || exportState === 'loading') return;
@@ -245,6 +256,12 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
                   onChange={({ target: { value } }) => { if (!value || planningDate(value)) setNextRicePlanting(value); }} />
               </div>
             </>}
+          </div>
+          <div className="planner-field-actions">
+            <button className="quiet-button icon-text-button" type="button" onClick={resetFieldConditions}
+              disabled={!previous && !water && !drainage && !typeOverride}>
+              <MapControlIcon name="reset" />Reset field conditions
+            </button>
           </div>
         </fieldset>
         {season && <details className="planner-details planner-calendar">

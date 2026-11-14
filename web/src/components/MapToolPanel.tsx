@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { PanelActions } from './PanelActions';
 
 export function MapToolPanel({ id, title, visible, onMinimize, onClose, children }: {
   id: string;
@@ -19,12 +20,7 @@ export function MapToolPanel({ id, title, visible, onMinimize, onClose, children
       }}>
       <div className="tool-popup-heading">
         <strong id={`${id}-title`}>{title}</strong>
-        <div className="tool-panel-actions">
-          <button className="quiet-button tool-sheet-expand" type="button" aria-expanded={expanded}
-            aria-controls={`${id}-body`} onClick={() => setExpanded(!expanded)}>{expanded ? 'Reduce' : 'Expand'}</button>
-          <button className="quiet-button close-button" type="button" aria-label={`Minimize ${title}`} title="Minimize; keep the map layer active" onClick={onMinimize}>&minus;</button>
-          <button className="quiet-button close-button" type="button" aria-label={`Close ${title}`} title="Close tool" onClick={onClose}>&times;</button>
-        </div>
+        <PanelActions title={title} expanded={expanded} onToggle={() => setExpanded((value) => !value)} onMinimize={onMinimize} onClose={onClose} />
       </div>
       <div id={`${id}-body`} className="map-tool-body" tabIndex={0} role="region" aria-label={`${title} content`}>
         {visible && children}

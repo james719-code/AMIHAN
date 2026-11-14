@@ -137,6 +137,10 @@ export function createBicolMap(
   const projected = new Vector3();
   let width = 1;
   let height = 1;
+  let pendingWidth = 1;
+  let pendingHeight = 1;
+  let sizeDirty = false;
+  let hasSize = false;
   let relief = 1;
   let loaded = false;
   let mode: MapMode = '2d';
@@ -321,7 +325,7 @@ export function createBicolMap(
         sortMarkers();
         requestRender();
       },
-      focusPlace(id: string) {
+      focusPlace(id: string, screenOffset = { x: 0, y: 0 }) {
         const marker = markers.find((entry) => entry.id === id);
         if (!marker) return;
         overview = false;
@@ -331,12 +335,19 @@ export function createBicolMap(
         const fromZoom = camera.zoom;
         const targetSpan = marker.volcano ? 96 : 38;
         const toZoom = Math.max(camera.zoom, (camera.top - camera.bottom) / targetSpan);
+        // Move the camera target opposite the desired screen displacement.
+        // Camera axes keep this correct when the terrain is tilted or rotated.
+        const focusOffset = new Vector3(1, 0, 0).applyQuaternion(camera.quaternion)
+          .multiplyScalar(-screenOffset.x * (camera.right - camera.left) / (width * toZoom))
+          .addScaledVector(new Vector3(0, 1, 0).applyQuaternion(camera.quaternion),
+            screenOffset.y * (camera.top - camera.bottom) / (height * toZoom));
+        target.add(focusOffset);
         const start = performance.now();
         const duration = flatMap || reducedMotion.matches ? 0 : 440;
         focusStep = (now: number) => {
           const progress = duration ? Math.max(0, Math.min(1, (now - start) / duration)) : 1;
           const eased = 1 - (1 - progress) ** 3;
-          target.y = marker.position.y * relief;
+          target.y = marker.position.y * relief + focusOffset.y;
           controls.target.lerpVectors(from, target, eased);
           camera.position.copy(controls.target).add(offset);
           camera.zoom = fromZoom + (toZoom - fromZoom) * eased;
@@ -491,6 +502,12 @@ export function createBicolMap(
   }
 
   function drawFrame(now: number) {
+    // Resize clears either canvas backing store. Repaint it in this same frame,
+    // so the browser never presents an empty canvas between resize and render.
+    if (sizeDirty) {
+      applySize();
+      sizeDirty = false;
+    }
     focusStep?.(now);
     const verticalSpan = (camera.top - camera.bottom) / camera.zoom;
     if (layoutDirty) updateLayers(verticalSpan);
@@ -638,10 +655,29 @@ export function createBicolMap(
   }
 
   function resize() {
-    width = Math.max(1, container.clientWidth);
-    height = Math.max(1, container.clientHeight);
-    const aspect = width / height;
-    const halfHeight = Math.max(155, 112 / aspect);
+    const nextWidth = Math.max(1, container.clientWidth);
+    const nextHeight = Math.max(1, container.clientHeight);
+    if (nextWidth === pendingWidth && nextHeight === pendingHeight) return;
+    pendingWidth = nextWidth;
+    pendingHeight = nextHeight;
+    sizeDirty = true;
+    // Coalesce resize events into one live redraw per animation frame.
+    requestRender();
+  }
+
+  function applySize() {
+    const aspect = pendingWidth / pendingHeight;
+    // Grow the visible extent around the current center, keeping map features
+    // the same size in pixels instead of stretching or refitting the region.
+    const halfHeight = hasSize
+      ? (camera.top - camera.bottom) / 2 * pendingHeight / height
+      : Math.max(155, 112 / aspect);
+    width = pendingWidth;
+    height = pendingHeight;
+    // Pin the displayed size until the next redraw, independently of the
+    // backing-store resolution used by either renderer.
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
     camera.left = -halfHeight * aspect;
     camera.right = halfHeight * aspect;
     camera.top = halfHeight;
@@ -649,8 +685,8 @@ export function createBicolMap(
     camera.updateProjectionMatrix();
     if (renderer) renderer.setSize(width, height, false);
     else flatMap?.resize(width, height);
-    if (loaded && overview) fitOverview();
-    else requestRender();
+    if (overview) fitOverview();
+    hasSize = true;
   }
 
   function disposeModel(model: Object3D) {

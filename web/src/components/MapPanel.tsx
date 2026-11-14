@@ -4,6 +4,7 @@ import { rainBand, rainFrequencyAt, rainPercent } from '../data/expected-rain';
 import { labelMonth } from '../data/historical-climate';
 import { createBicolMap, type MapMode } from './bicol-map';
 import { ExpectedRain } from './ExpectedRain';
+import { MapControlIcon } from './MapControlIcon';
 import { MapLegend } from './MapLegend';
 import { MapToolPanel } from './MapToolPanel';
 import type { FieldSelection } from './field-terrain';
@@ -20,6 +21,7 @@ type MapPanelProps = {
   onToolChange: (tool: MapTool | null) => void;
   onToolMinimize: () => void;
   selectedPlace: MapPlace;
+  focusRequest: number;
   rainMonth: number;
   onRainMonthChange: (month: number) => void;
   mapMode: MapMode;
@@ -33,6 +35,29 @@ type MapPanelProps = {
 
 type MapView = Awaited<ReturnType<ReturnType<typeof createBicolMap>['load']>>;
 
+function focusPlace(view: MapView, id: string, container: HTMLElement | null) {
+  const panel = container?.closest('.map-card')?.querySelector('.map-tool-popup:not([hidden])');
+  if (!container || !panel) {
+    view.focusPlace(id);
+    return;
+  }
+
+  const map = container.getBoundingClientRect();
+  const tool = panel.getBoundingClientRect();
+  // Desktop tools overlay the map. Mobile tools already have their own space.
+  if (tool.left >= map.right || tool.top >= map.bottom) {
+    view.focusPlace(id);
+    return;
+  }
+
+  const leftWidth = Math.max(0, tool.left - map.left);
+  const bottomHeight = Math.max(0, map.bottom - tool.bottom);
+  const offset = leftWidth * map.height >= bottomHeight * map.width
+    ? { x: (leftWidth - map.width) / 2, y: 0 }
+    : { x: 0, y: (map.height - bottomHeight) / 2 };
+  view.focusPlace(id, offset);
+}
+
 export function MapPanel({
   activeTool,
   compactLayout,
@@ -41,6 +66,7 @@ export function MapPanel({
   onToolChange,
   onToolMinimize,
   selectedPlace,
+  focusRequest,
   rainMonth,
   onRainMonthChange,
   mapMode,
@@ -63,7 +89,7 @@ export function MapPanel({
   const settingsButton = useRef<HTMLButtonElement>(null);
   const markers = useRef(new Map<string, HTMLButtonElement>());
   const labels = useRef(new Map<string, HTMLElement>());
-  const lastSelection = useRef(selectedPlaceId);
+  const lastSelection = useRef({ id: selectedPlaceId, request: 0 });
   const lastFieldSelection = useRef(fieldSelection);
   const [view, setView] = useState<MapView | null>(null);
   const [failure, setFailure] = useState<'webgl' | 'asset' | null>(null);
@@ -168,10 +194,10 @@ export function MapPanel({
   useEffect(() => {
     if (!view || contextLost) return;
     view.selectPlace(selectedPlaceId);
-    if (lastSelection.current === selectedPlaceId) return;
-    view.focusPlace(selectedPlaceId);
-    lastSelection.current = selectedPlaceId;
-  }, [contextLost, selectedPlaceId, view]);
+    if (lastSelection.current.id === selectedPlaceId && lastSelection.current.request === focusRequest) return;
+    focusPlace(view, selectedPlaceId, containerRef.current);
+    lastSelection.current = { id: selectedPlaceId, request: focusRequest };
+  }, [contextLost, focusRequest, selectedPlaceId, view]);
 
   const mapAvailable = view !== null && !contextLost;
   const displayedMode = view?.supports3D ? mapMode : '2d';
@@ -200,7 +226,7 @@ export function MapPanel({
               setSettingsOpen(false);
             }}
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 18 9 8l4 6 3-5 5 9H3Z"/><path d="m7.3 11 1.7 2 1.5-2"/></svg>
+            <MapControlIcon name="hillshade" />
             <span className="map-tool-label">Field Check</span>
           </button>
           <button
@@ -218,15 +244,13 @@ export function MapPanel({
               setSettingsOpen(false);
             }}
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 14a4 4 0 1 1 .9-7.9A5.3 5.3 0 0 1 18 8a3 3 0 1 1 0 6h-1M9 16l-1 3m5-3-1 4m5-4-1 3"/></svg>
+            <MapControlIcon name="climate" />
             <span className="map-tool-label">Expected rain</span>
           </button>
           <button ref={settingsButton} className="quiet-button map-tools-collapse" type="button" disabled={!mapAvailable}
             aria-label="Settings" title="Settings" aria-expanded={settingsOpen} aria-controls="map-tools-content"
             onClick={() => setSettingsOpen(!settingsOpen)}>
-            <svg className="map-settings-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M4 6h4m4 0h8M4 12h9m4 0h3M4 18h4m4 0h8M8 4v4m9 2v4m-9 2v4" />
-            </svg>
+            <span className="map-settings-icon"><MapControlIcon name="tools" /></span>
             <span className="map-tool-label">Settings</span>
             <svg className="map-settings-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d={settingsOpen ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} />
@@ -302,7 +326,7 @@ export function MapPanel({
                   aria-label={`Explore ${place.name}${weather ? `, ${weather}` : place.kind === 'Municipality' && !place.climateSite ? ', municipality' : ''}`}
                   title={`${place.name} · ${weather || place.kind}`}
                   onClick={() => {
-                    if (place.id === selectedPlaceId) view.focusPlace(place.id);
+                    if (place.id === selectedPlaceId) focusPlace(view, place.id, containerRef.current);
                     if (rainActive) onRainPlaceSelect(place.id);
                     else onPlaceSelect(place.id);
                   }}

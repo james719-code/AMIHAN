@@ -122,8 +122,10 @@ function App() {
       <header className="app-header">
         <div className="app-header-inner">
           <a className="app-brand" href={overviewPath} aria-label="AMIHAN" data-app-link>
-            <img src={`${home}fieldwise-mark.png`} alt="" width={36} height={36} />
-            <span className="app-brand-name">AMIHAN</span>
+            <picture>
+              <source media="(max-width: 445px)" srcSet={`${home}amihan-logo-light.svg`} width={444} height={443} />
+              <img src={`${home}amihan-full-light.svg`} alt="" width={1670} height={443} />
+            </picture>
           </a>
           <WorkspaceMenu active={view} links={workspaceLinks} />
         </div>

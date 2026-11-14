@@ -1,4 +1,5 @@
-import { useEffect, useId, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
+import { PanelActions } from './PanelActions';
 
 export function WorkspacePanel({ id, open, title, onClose, children, keepMounted = false }: {
   id: string;
@@ -9,6 +10,7 @@ export function WorkspacePanel({ id, open, title, onClose, children, keepMounted
   keepMounted?: boolean;
 }) {
   const titleId = useId();
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -20,10 +22,10 @@ export function WorkspacePanel({ id, open, title, onClose, children, keepMounted
   }, [open, onClose]);
 
   return (
-    <aside id={id} className="workspace-panel" hidden={!open} aria-labelledby={titleId}>
+    <aside id={id} className={`workspace-panel${expanded ? ' is-expanded' : ''}`} hidden={!open} aria-labelledby={titleId}>
       <div className="panel-heading">
         <span id={titleId}>{title}</span>
-        <button className="quiet-button close-button" type="button" aria-label={`Close ${title.toLowerCase()}`} onClick={onClose}>&times;</button>
+        <PanelActions title={title.toLowerCase()} expanded={expanded} onToggle={() => setExpanded((value) => !value)} onClose={onClose} />
       </div>
       <div className="panel-content" tabIndex={0} role="region" aria-label={`${title} content`}>
         {(open || keepMounted) && children}
