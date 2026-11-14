@@ -8,7 +8,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshBVH } from 'three-mesh-bvh';
 import geography from '../data/bicol-map.json';
 import { places, waterLabels } from '../data/places';
-import { demoSites } from '../data/sites';
+import { climateSites } from '../data/historical-climate';
 import type { ClimateFrame } from '../data/climate-map';
 import { createRainGlyphs } from './bicol-rain';
 import { createFieldTerrain, emptyField, type FieldSelection } from './field-terrain';
@@ -191,14 +191,14 @@ export function createBicolMap(
           const element = labels.get(name);
           return element ? [{ element, position: mapPosition(coordinates), maxSpan }] : [];
         });
-        climateMarkers = demoSites.flatMap(({ id, coordinates }) => {
+        climateMarkers = climateSites.flatMap(({ id, coordinates }) => {
           const element = climate.get(id);
           return element ? [{ id, element, position: terrainPosition(coordinates) }] : [];
         });
         render();
       },
       setClimateFrame(frame: ClimateFrame | null) {
-        rainSites = frame?.metric === 'rainfallMm' ? climateMarkers.flatMap(({ id, position }) => {
+        rainSites = frame?.metric === 'dailyRainfall' ? climateMarkers.flatMap(({ id, position }) => {
           const amount = frame.readings.get(id);
           return amount !== undefined && amount !== null && amount > 0 ? [{ position, amount }] : [];
         }) : [];
@@ -273,8 +273,8 @@ export function createBicolMap(
       minY = Math.min(minY, projected.y);
       maxY = Math.max(maxY, projected.y);
     }
-    // Fit the projected regional extent and leave room for the toolbar and labels.
-    const center = new Vector3((minX + maxX) / 2, (minY + maxY) / 2 + 0.05, 0).unproject(camera);
+    // Fit the projected regional extent and leave room for labels.
+    const center = new Vector3((minX + maxX) / 2, (minY + maxY) / 2, 0).unproject(camera);
     const direction = camera.getWorldDirection(new Vector3());
     center.addScaledVector(direction, -center.y / direction.y);
     controls.target.copy(center);
@@ -390,7 +390,7 @@ export function createBicolMap(
     const northAngle = Math.atan2(Math.sin(azimuth), Math.cos(azimuth) * Math.cos(controls.getPolarAngle()));
     compass.style.rotate = `${northAngle}rad`;
     const occupied: [number, number, number, number][] = [
-      [0, 0, 311, 59], [width - 48, 0, width, 59], [width - 94, height - 56, width, height]
+      [width - 48, 0, width, 59], [width - 94, height - 56, width, height]
     ];
     if (fieldActive) occupied.push([0, height - 54, 126, height]);
     for (const { position, element } of climateMarkers) {

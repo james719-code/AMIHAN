@@ -15,17 +15,19 @@ npm.cmd --prefix data test
 npm.cmd --prefix web run dev
 ```
 
-Open the Vite URL printed by the dev server. The starter explorer uses clearly labeled seven-day synthetic readings and reference points. The map and climate demo load entirely from files served by FieldWise.
+Open the Vite URL printed by the dev server. The map and 2015–2024 climate history load from files served by FieldWise.
 
 ## Crop rotation planning
 
 Select a city, town, or volcano to zoom in on its terrain and roads. **Reset Bicol view** returns to the regional overview.
 
-The planner lists crops documented in Bicol and shows the soil, rainfall, and climate inputs pending for the selected place. See [the data intake notes](data/README.md#crop-rotation-and-rainfall-inputs) for the BSWM, IMERG, and NASA POWER files. Crop suggestions and rainfall replay await the supplied data.
+The **Crop rotation guide** shows seasonal rainfall for a named NASA POWER reference point. Select a planting month for historical rainfall, temperature, and humidity. Previous crop filters the documented Bicol sequences, while water source and drainage change the field checks. The guide provides planning context and links to the original crop studies and soil resources.
 
-Use **Climate** on the map to switch between demo rainfall, temperatures, humidity, and solar radiation. Scrub or play the seven synthetic days. The readings appear at the original reference coordinates. In 3D, positive rainfall adds animated marks at those points. Zero and missing values remain distinct.
+Use **Climate** on the map to scrub or play daily rainfall or monthly climate for a selected year. The readings appear at the requested NASA POWER coordinates. In 3D, positive daily rainfall adds animated marks at those points. **Historical climate** also shows daily readings, monthly readings, and the separate IMERG bounding-box rainfall series.
 
-Use **Field Check** to shade the regional terrain by slope and select two land points for an elevation profile. Measurements use the original terrain heights. The display mesh has roughly 660 m spacing across Bicol, so the profile describes regional terrain and leaves gaps over water. The rotation planner shows point A and takes planting month, water source, drainage, and previous crop as field inputs.
+Use **Field Check** to shade the regional terrain by slope and select two land points for an elevation profile. Measurements use the original terrain heights. The display mesh has roughly 660 m spacing across Bicol, so the profile describes regional terrain and leaves gaps over water. The rotation guide uses the closest supplied climate point when Field Check point A is set.
+
+The web app builds with the [bundled 2015–2024 climate readings](web/src/data/historical-climate.json). Original NASA POWER and Giovanni exports are kept locally.
 
 ## Local Bicol map
 
@@ -33,7 +35,7 @@ Three.js loads [bicol.glb](web/public/maps/bicol.glb), a glTF model with separat
 
 The overview fits Bicol inside a wider terrain model. The Bicol mesh samples Mapzen elevation tiles about every 660 m, with about 2.8 km spacing in the surrounding terrain. SRTM and GMTED2010 elevation data are courtesy of the U.S. Geological Survey, and ETOPO1 is courtesy of NOAA NCEI. [Mapzen source credits](https://github.com/tilezen/joerd/blob/master/docs/attribution.md)
 
-[Place records](web/src/data/places.json) and the [municipality catalog](web/src/data/municipalities.json) cover all seven Bicol cities, 107 municipalities, and three volcanoes. Municipality markers use GeoNames town or seat coordinates matched against the PSA geographic codes. Castilla uses coordinates from DILG Sorsogon. Elevations are estimates at the marker coordinates, sampled from Mapzen's zoom-12 tiles at roughly 37 m pixel spacing. Population covers the full city or municipality and comes from the 2024 census. Volcano cards show Smithsonian summit elevations. The six climate series are keyed to the original synthetic reference sites and display their own site coordinates. [GeoNames](https://www.geonames.org/about.html) · [PSA cities](https://psa.gov.ph/classification/psgc/cities/0500000000) · [PSA municipalities](https://psa.gov.ph/classification/psgc/municipalities/0500000000) · [Smithsonian Global Volcanism Program](https://volcano.si.edu/)
+[Place records](web/src/data/places.json) and the [municipality catalog](web/src/data/municipalities.json) cover all seven Bicol cities, 107 municipalities, and three volcanoes. Municipality markers use GeoNames town or seat coordinates matched against the PSA geographic codes. Castilla uses coordinates from DILG Sorsogon. Elevations are estimates at the marker coordinates, sampled from Mapzen's zoom-12 tiles at roughly 37 m pixel spacing. Population covers the full city or municipality and comes from the 2024 census. Volcano cards show Smithsonian summit elevations. [GeoNames](https://www.geonames.org/about.html) · [PSA cities](https://psa.gov.ph/classification/psgc/cities/0500000000) · [PSA municipalities](https://psa.gov.ph/classification/psgc/municipalities/0500000000) · [Smithsonian Global Volcanism Program](https://volcano.si.edu/)
 
 Change the extent and resolution in [bicol-map.json](web/src/data/bicol-map.json) or the elevation colors in [the generation script](web/scripts/generate-bicol-terrain.mjs). Regenerate the model with the following command, which downloads the source elevation tiles during generation.
 

@@ -1,16 +1,28 @@
+# Dependencies and build output
 node_modules/
 dist/
 .vite/
+*.tsbuildinfo
+
+# Tests and local logs
 coverage/
 playwright-report/
 test-results/
-*.tsbuildinfo
 *.log
+
+# OS and local environment
 .DS_Store
 Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Local data exports and generated datasets
 /data/raw/
 /data/processed/
+/data/cleaned_data/
+/data/Daily/
+/data/Monthly/
+/data/Imerg/
+/data/References.txt
 /web/public/datasets/
