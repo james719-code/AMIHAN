@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { WorkspacePanel } from './components/WorkspacePanel';
+import { WorkspaceMenu, type WorkspaceView } from './components/WorkspaceMenu';
 import {
   Bar,
   CartesianGrid,
@@ -13,7 +15,8 @@ import { demoDataManifest, demoWeatherBySite } from './data/demo-weather';
 import { demoSites, provinces } from './data/sites';
 import { citySource, coordinateSource, elevationSource, municipalitySource, places } from './data/places';
 import type { MetricDefinition, MetricKey } from './types';
-import { MapPanel } from './components/MapPanel';
+import { MapPanel, type MapTool } from './components/MapPanel';
+import { useMediaQuery } from './hooks/useMediaQuery';
 import { RotationPlanner } from './components/RotationPlanner';
 import { emptyField, type FieldSelection } from './components/field-terrain';
 
@@ -30,12 +33,28 @@ const number = new Intl.NumberFormat('en-PH');
 const coordinatesLabel = ([longitude, latitude]: number[]) => `${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E`;
 
 function App() {
+  const [activePanel, setActivePanel] = useState<WorkspaceView | null>('explore');
+  const [activeTool, setActiveTool] = useState<MapTool | null>(null);
+  const [toolMinimized, setToolMinimized] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 650px)');
+  const mobileToolOpen = isMobile && activeTool !== null && !toolMinimized;
   const [selectedPlaceId, setSelectedPlaceId] = useState(places[0].id);
   const [fieldSelection, setFieldSelection] = useState<FieldSelection>(emptyField);
   const [metricKey, setMetricKey] = useState<MetricKey>('rainfallMm');
   const [mapMode, setMapMode] = useState<'2d' | '3d'>('3d');
   const [dateStart, setDateStart] = useState(demoDataManifest.selectedDates.start);
   const [dateEnd, setDateEnd] = useState(demoDataManifest.selectedDates.end);
+
+  const selectWorkspace = (view: WorkspaceView) => {
+    setActivePanel((current) => current === view && !mobileToolOpen ? null : view);
+    if (isMobile) setToolMinimized(true);
+  };
+  const selectMapTool = (tool: MapTool | null) => {
+    setActiveTool(tool === activeTool && !toolMinimized ? null : tool);
+    setToolMinimized(false);
+    if (isMobile && tool !== null) setActivePanel(null);
+  };
+  const workspaceMenu = <WorkspaceMenu active={mobileToolOpen ? null : activePanel} onSelect={selectWorkspace} />;
 
   const selectedPlace = places.find((place) => place.id === selectedPlaceId) ?? places[0];
   const selectedProvince = provinces.find((province) => province.code === selectedPlace.provinceCode);
@@ -74,41 +93,39 @@ function App() {
   return (
     <>
       <header className="site-header">
-        <div className="page-width site-header-inner">
+        <div className="site-header-inner">
           <div className="brand-lockup">
             <img className="brand-mark" src={`${import.meta.env.BASE_URL}fieldwise-mark.png`} alt="" width={48} height={48} />
             <p className="brand-name">Field<span>Wise</span></p>
           </div>
-          <div className="release-chip"><span className="status-dot" /> Demo data</div>
+          {workspaceMenu}
         </div>
       </header>
-      <main className="page-width app-shell">
-        <section className="hero-copy">
-          <div>
-            <span className="eyebrow">Bicol Region V · Philippines</span>
-            <h1>Plan crop rotations in Bicol</h1>
-            <p>Explore terrain and weather in Bicol, then select a place to see what data is needed to plan a rotation.</p>
-          </div>
-          <div className="hero-note">
-            <strong>Planning data pending</strong>
-            <p>Soil, rainfall, and climate datasets will support place-specific crop suggestions.</p>
-          </div>
-        </section>
-
-        <section className="workspace-grid">
+      <main className="app-shell" aria-label="FieldWise map workspace">
           <MapPanel
             selectedPlaceId={selectedPlaceId}
+            activeTool={activeTool}
+            toolPanelVisible={!toolMinimized}
+            onToolChange={selectMapTool}
+            onToolMinimize={() => setToolMinimized(true)}
             mapMode={mapMode}
             onMapModeChange={setMapMode}
-            onPlaceSelect={setSelectedPlaceId}
+            onPlaceSelect={(id) => { setSelectedPlaceId(id); setActivePanel('explore'); if (isMobile) setToolMinimized(true); }}
             fieldSelection={fieldSelection}
             onFieldSelection={setFieldSelection}
           />
 
-          <aside className="control-card" aria-label="Explorer controls">
-            <div className="card-heading">
-              <h2>Explore a place</h2>
+          <aside id="place-sidebar" className="control-card place-sidebar" aria-label="Explorer controls" hidden={activePanel !== 'explore' || mobileToolOpen}>
+            <div className="panel-heading">
+              <h1>Explore a place</h1>
+              <button className="quiet-button close-button" type="button" aria-label="Close place sidebar" onClick={() => setActivePanel(null)}>&times;</button>
             </div>
+            <div className="sidebar-scroll" tabIndex={0} role="region" aria-label="Place explorer content">
+            <div className="explore-intro">
+              <span className="eyebrow">Bicol Region V &middot; Philippines</span>
+              <p>Choose a location below or select a marker on the map.</p>
+            </div>
+            <div className="explore-location-fields">
             <div className="field-group">
               <label htmlFor="province">Province</label>
               <select id="province" value={selectedPlace.provinceCode} onChange={(event) => selectProvince(event.target.value)}>
@@ -128,6 +145,7 @@ function App() {
                   </optgroup>;
                 })}
               </select>
+            </div>
             </div>
             <div className="site-fact" aria-live="polite">
               <div>
@@ -167,15 +185,23 @@ function App() {
                 )}
               </p>
             </div>
+            </div>
+            <div className="sidebar-footer">
+            <button className="quiet-button sidebar-plan" type="button" onClick={() => selectWorkspace('rotation')}>Plan a crop rotation &rarr;</button>
+            <p className="sidebar-data-note"><span className="status-dot" /> Demo data &middot; Planning datasets pending</p>
+            </div>
           </aside>
-        </section>
 
-        <RotationPlanner placeName={selectedPlace.name} fieldSelection={fieldSelection} />
+        <WorkspacePanel id="rotation-panel" open={activePanel === 'rotation' && !mobileToolOpen} title="Crop rotation planner" onClose={() => setActivePanel(null)} keepMounted>
+          <RotationPlanner placeName={selectedPlace.name} fieldSelection={fieldSelection} />
+        </WorkspacePanel>
 
-        {selectedSite ? <section className="dashboard-card" aria-labelledby="climate-heading">
+        <WorkspacePanel id="climate-panel" open={activePanel === 'climate' && !mobileToolOpen} title="Climate readings" onClose={() => setActivePanel(null)}>
+
+        {selectedSite ? <section className="dashboard-card readings-card" aria-labelledby="climate-heading">
           <div className="dashboard-heading">
             <div>
-              <h2 id="climate-heading">Demo climate readings</h2>
+              <h2 id="climate-heading">Climate at {selectedPlace.name}</h2>
               <p className="section-subtitle">{selectedSite.name} · {coordinatesLabel(selectedSite.coordinates)} · UTC</p>
             </div>
             <div className="demo-badge"><span className="status-dot" /> Synthetic data</div>
@@ -228,8 +254,10 @@ function App() {
             </div>
           </div>
 
+          <details className="daily-readings">
+          <summary>Daily readings <span>View the full data table</span></summary>
           <div className="table-heading"><h3>Daily readings</h3><span>Unavailable = no source value for that day</span></div>
-          <div className="table-scroll">
+          <div className="table-scroll" tabIndex={0} role="region" aria-label="Daily climate readings table">
             <table>
               <thead>
                 <tr><th scope="col">Date</th><th scope="col">Rainfall</th><th scope="col">Mean temp</th><th scope="col">Max temp</th><th scope="col">Humidity</th><th scope="col">Solar radiation</th></tr>
@@ -248,9 +276,10 @@ function App() {
               </tbody>
             </table>
           </div>
+          </details>
           <footer className="data-footer">FieldWise synthetic dataset · {demoDataManifest.releaseId}</footer>
         </section> : (
-          <section className="dashboard-card" aria-labelledby="climate-heading">
+          <section className="dashboard-card readings-card" aria-labelledby="climate-heading">
             <div className="dashboard-heading">
               <div>
                 <h2 id="climate-heading">Demo climate readings</h2>
@@ -259,6 +288,7 @@ function App() {
             </div>
           </section>
         )}
+        </WorkspacePanel>
       </main>
     </>
   );

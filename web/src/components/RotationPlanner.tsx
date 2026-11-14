@@ -9,7 +9,7 @@ export function RotationPlanner({ placeName, fieldSelection }: { placeName: stri
     <section className="dashboard-card rotation-card" aria-labelledby="rotation-heading">
       <div className="dashboard-heading">
         <div>
-          <h2 id="rotation-heading">Crop rotation planner</h2>
+          <h2 id="rotation-heading">Plan your next planting</h2>
           <p className="section-subtitle">{fieldSelection.start
             ? `Field Check point A · ${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E`
             : placeName}</p>
@@ -17,6 +17,10 @@ export function RotationPlanner({ placeName, fieldSelection }: { placeName: stri
         <span className="demo-badge">Awaiting data</span>
       </div>
       <p className="rotation-intro">Crop suggestions need local soil and weather data, field drainage, irrigation, and crop history.</p>
+      <div className="planner-section-heading">
+        <h3>Field details</h3>
+        <p>Start with what you know about your field.</p>
+      </div>
       <div className="field-inputs" key={fieldSelection.start ? `${longitude},${latitude}` : placeName}>
         <label>Planting month
           <select defaultValue="">
@@ -43,6 +47,10 @@ export function RotationPlanner({ placeName, fieldSelection }: { placeName: stri
         <label>Previous crop
           <input type="text" placeholder="e.g. rice" />
         </label>
+      </div>
+      <div className="planner-section-heading">
+        <h3>Planning data</h3>
+        <p>These datasets are needed before crop suggestions are available.</p>
       </div>
       <div className="planning-sources" aria-label="Planning data sources">
         {planningSources.map(({ id, name, provider, description, url }) => (

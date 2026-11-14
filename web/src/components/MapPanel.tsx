@@ -8,9 +8,16 @@ import type { MetricKey } from '../types';
 import { createBicolMap, RELIEF_SCALE, type MapMode } from './bicol-map';
 import { ClimateMapControls } from './ClimateMapControls';
 import { FieldCheck } from './FieldCheck';
+import { MapToolPanel } from './MapToolPanel';
+
+export type MapTool = 'field' | 'climate';
 import type { FieldSelection } from './field-terrain';
 
 type MapPanelProps = {
+  activeTool: MapTool | null;
+  toolPanelVisible: boolean;
+  onToolChange: (tool: MapTool | null) => void;
+  onToolMinimize: () => void;
   selectedPlaceId: string;
   mapMode: MapMode;
   onMapModeChange: (mode: MapMode) => void;
@@ -22,6 +29,10 @@ type MapPanelProps = {
 type MapView = Awaited<ReturnType<ReturnType<typeof createBicolMap>['load']>>;
 
 export function MapPanel({
+  activeTool,
+  toolPanelVisible,
+  onToolChange,
+  onToolMinimize,
   selectedPlaceId,
   mapMode,
   onMapModeChange,
@@ -32,6 +43,8 @@ export function MapPanel({
   const containerRef = useRef<HTMLDivElement>(null);
   const compassRef = useRef<HTMLSpanElement>(null);
   const roadOverlayRef = useRef<HTMLDivElement>(null);
+  const legendRef = useRef<HTMLDivElement>(null);
+  const toolsRef = useRef<HTMLDivElement>(null);
   const markers = useRef(new Map<string, HTMLButtonElement>());
   const climateMarkers = useRef(new Map<string, HTMLButtonElement>());
   const labels = useRef(new Map<string, HTMLElement>());
@@ -44,15 +57,36 @@ export function MapPanel({
   const [roadsVisible, setRoadsVisible] = useState(true);
   const [roadsState, setRoadsState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [roadAttempt, setRoadAttempt] = useState(0);
-  const [climateVisible, setClimateVisible] = useState(false);
+  const climateVisible = activeTool === 'climate';
   const [climateMetric, setClimateMetric] = useState<MetricKey>('rainfallMm');
   const [climateDay, setClimateDay] = useState(1);
   const [playing, setPlaying] = useState(false);
-  const [fieldActive, setFieldActive] = useState(false);
+  const fieldActive = activeTool === 'field';
+  const [toolsExpanded, setToolsExpanded] = useState(true);
   const [showSlope, setShowSlope] = useState(true);
   const [fieldMiss, setFieldMiss] = useState(false);
   const climateFrame = useMemo(() => demoClimateFrame(climateMetric, climateDay), [climateMetric, climateDay]);
   const climateLayer = climateLayers[climateMetric];
+
+  useEffect(() => {
+    const legend = legendRef.current;
+    const tools = toolsRef.current;
+    const shell = legend?.closest<HTMLElement>('.app-shell');
+    if (!legend || !tools || !shell) return;
+    const updateOverlaySizes = () => {
+      shell.style.setProperty('--map-footer-height', `${Math.ceil(legend.getBoundingClientRect().height)}px`);
+      shell.style.setProperty('--map-tools-height', `${Math.ceil(tools.getBoundingClientRect().height)}px`);
+    };
+    const observer = new ResizeObserver(updateOverlaySizes);
+    observer.observe(legend);
+    observer.observe(tools);
+    updateOverlaySizes();
+    return () => {
+      observer.disconnect();
+      shell.style.removeProperty('--map-footer-height');
+      shell.style.removeProperty('--map-tools-height');
+    };
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -120,17 +154,27 @@ export function MapPanel({
   const mapAvailable = view !== null && !contextLost;
   return (
     <section className="map-card" aria-label="Bicol Region map">
-      <div className="map-header">
+      <div ref={toolsRef} className="map-header">
         <h2>Bicol terrain map</h2>
+        <button className="quiet-button map-tools-collapse" type="button"
+          aria-expanded={toolsExpanded} aria-controls="map-tools-content"
+          onClick={() => setToolsExpanded(!toolsExpanded)}>
+          <span>Map tools</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <path d={toolsExpanded ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} />
+          </svg>
+        </button>
+        <div id="map-tools-content" hidden={!toolsExpanded}>
         <div className="map-header-actions">
           <button
             className="quiet-button map-tool-toggle"
             type="button"
             aria-pressed={fieldActive}
+            aria-expanded={fieldActive && toolPanelVisible && toolsExpanded}
+            aria-controls="field-tool-panel"
             disabled={!mapAvailable}
             onClick={() => {
-              setFieldActive(!fieldActive);
-              setClimateVisible(false);
+              onToolChange('field');
               setPlaying(false);
             }}
           >Field Check</button>
@@ -138,10 +182,11 @@ export function MapPanel({
             className="quiet-button map-tool-toggle"
             type="button"
             aria-pressed={climateVisible}
+            aria-expanded={climateVisible && toolPanelVisible && toolsExpanded}
+            aria-controls="climate-tool-panel"
             disabled={!mapAvailable}
             onClick={() => {
-              setClimateVisible(!climateVisible);
-              setFieldActive(false);
+              onToolChange('climate');
               setPlaying(false);
             }}
           >Climate</button>
@@ -149,12 +194,44 @@ export function MapPanel({
             Reset Bicol view
           </button>
         </div>
+        {mapAvailable && (
+            <div className="map-toolbar">
+              <div className="map-mode-controls" role="group" aria-label="Map view">
+                <button className="quiet-button map-tool-toggle" aria-pressed={mapMode === '2d'} type="button" onClick={() => onMapModeChange('2d')}>2D</button>
+                <button className="quiet-button map-tool-toggle" aria-pressed={mapMode === '3d'} type="button" onClick={() => onMapModeChange('3d')}>3D</button>
+              </div>
+              <label className="switch-label">
+                <input type="checkbox" checked={hillshade} onChange={(event) => setHillshade(event.target.checked)} />
+                Hillshade
+              </label>
+              {roadsState === 'error' ? (
+                <button className="quiet-button" type="button" onClick={() => {
+                  setRoadsState('loading');
+                  setRoadAttempt((count) => count + 1);
+                }}>Retry roads</button>
+              ) : roadsState === 'loading' ? (
+                <span className="switch-label" role="status">Loading roads…</span>
+              ) : (
+                <label className="switch-label">
+                  <input type="checkbox" checked={roadsVisible} onChange={(event) => setRoadsVisible(event.target.checked)} />
+                  Roads
+                </label>
+              )}
+            </div>
+        )}
+        </div>
       </div>
       <div className={`map-viewport${fieldActive ? ' field-picking' : ''}`}>
         <div ref={containerRef} className="map-container" aria-hidden={!mapAvailable} inert={!mapAvailable} />
         <div ref={roadOverlayRef} className="map-route-labels" hidden={!mapAvailable} aria-hidden="true" />
+        <div className="map-navigation" hidden={!mapAvailable}>
         <div className="map-compass" hidden={!mapAvailable} aria-hidden="true">
           <span ref={compassRef}>↑</span><strong>N</strong>
+        </div>
+            <div className="map-zoom" role="group" aria-label="Map zoom">
+              <button className="quiet-button" type="button" aria-label="Zoom in" onClick={() => view?.zoomIn()}>+</button>
+              <button className="quiet-button" type="button" aria-label="Zoom out" onClick={() => view?.zoomOut()}>−</button>
+            </div>
         </div>
         {mapAvailable ? (
           <>
@@ -213,38 +290,6 @@ export function MapPanel({
                 );
               })}
             </div>
-            <div className="map-toolbar">
-              <div className="segmented-control" role="group" aria-label="Map view">
-                <button aria-pressed={mapMode === '2d'} type="button" onClick={() => onMapModeChange('2d')}>2D</button>
-                <button aria-pressed={mapMode === '3d'} type="button" onClick={() => onMapModeChange('3d')}>3D terrain</button>
-              </div>
-              <label className="switch-label">
-                <input type="checkbox" checked={hillshade} onChange={(event) => setHillshade(event.target.checked)} />
-                Hillshade
-              </label>
-              {roadsState === 'error' ? (
-                <button className="quiet-button" type="button" onClick={() => {
-                  setRoadsState('loading');
-                  setRoadAttempt((count) => count + 1);
-                }}>Retry roads</button>
-              ) : roadsState === 'loading' ? (
-                <span className="switch-label" role="status">Loading roads…</span>
-              ) : (
-                <label className="switch-label">
-                  <input type="checkbox" checked={roadsVisible} onChange={(event) => setRoadsVisible(event.target.checked)} />
-                  Roads
-                </label>
-              )}
-            </div>
-            <div className="map-zoom" role="group" aria-label="Map zoom">
-              <button className="quiet-button" type="button" aria-label="Zoom in" onClick={view.zoomIn}>+</button>
-              <button className="quiet-button" type="button" aria-label="Zoom out" onClick={view.zoomOut}>−</button>
-            </div>
-            {fieldActive && (
-              <button className="quiet-button field-center-button" type="button" onClick={view.pickFieldCenter}>
-                Sample center
-              </button>
-            )}
           </>
         ) : (
           <div className="map-status" role="status">
@@ -263,26 +308,32 @@ export function MapPanel({
         )}
       </div>
       {mapAvailable && fieldActive && (
-        <FieldCheck selection={fieldSelection} slopeVisible={showSlope} missed={fieldMiss}
-          onSlopeChange={setShowSlope} onClear={view.clearField} />
+        <MapToolPanel id="field-tool-panel" title="Field Check" visible={toolsExpanded && toolPanelVisible}
+          onMinimize={onToolMinimize} onClose={() => onToolChange(null)}>
+          <FieldCheck selection={fieldSelection} slopeVisible={showSlope} missed={fieldMiss}
+            onSlopeChange={setShowSlope} onClear={view.clearField} onSampleCenter={view.pickFieldCenter} />
+        </MapToolPanel>
       )}
       {mapAvailable && climateVisible && (
-        <ClimateMapControls
-          metric={climateMetric}
-          day={climateDay}
-          playing={playing}
-          onMetricChange={setClimateMetric}
-          onDayChange={(day) => {
-            setPlaying(false);
-            setClimateDay(day);
-          }}
-          onPlayingChange={(next) => {
-            if (next && climateDay === demoWeatherDates.length - 1) setClimateDay(0);
-            setPlaying(next);
-          }}
-        />
+        <MapToolPanel id="climate-tool-panel" title="Climate layer" visible={toolsExpanded && toolPanelVisible}
+          onMinimize={onToolMinimize} onClose={() => { onToolChange(null); setPlaying(false); }}>
+          <ClimateMapControls
+            metric={climateMetric}
+            day={climateDay}
+            playing={playing}
+            onMetricChange={setClimateMetric}
+            onDayChange={(day) => {
+              setPlaying(false);
+              setClimateDay(day);
+            }}
+            onPlayingChange={(next) => {
+              if (next && climateDay === demoWeatherDates.length - 1) setClimateDay(0);
+              setPlaying(next);
+            }}
+          />
+        </MapToolPanel>
       )}
-      <div className="map-legend" aria-label="Map legend">
+      <div ref={legendRef} className="map-legend" aria-label="Map legend">
         <span><i className="legend-dot" /> City or town</span>
         <span><i className="legend-volcano" /> Volcano</span>
         {roadsVisible && roadsState === 'ready' && (

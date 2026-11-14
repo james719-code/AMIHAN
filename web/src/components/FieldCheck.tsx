@@ -8,11 +8,12 @@ type Props = {
   missed: boolean;
   onSlopeChange: (visible: boolean) => void;
   onClear: () => void;
+  onSampleCenter: () => void;
 };
 
 const number = new Intl.NumberFormat('en-PH', { maximumFractionDigits: 1 });
 
-export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onClear }: Props) {
+export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onClear, onSampleCenter }: Props) {
   const { start, profile } = selection;
   const [longitude, latitude] = start ? fieldCoordinates(start) : [];
   const profileRows = profile?.samples.map((elevationM, i) => ({
@@ -28,7 +29,6 @@ export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onC
     <div className="field-check" aria-label="Field Check results">
       <div className="field-check-header">
         <div>
-          <h3>Field Check</h3>
           <p>Tap two land points to see the elevation between them.</p>
         </div>
         <div className="field-check-actions">
@@ -36,6 +36,7 @@ export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onC
             <input type="checkbox" checked={slopeVisible} onChange={(event) => onSlopeChange(event.target.checked)} />
             Slope shading
           </label>
+          <button className="quiet-button" type="button" onClick={onSampleCenter}>Sample center</button>
           <button className="quiet-button" type="button" disabled={!start} onClick={onClear}>Clear points</button>
         </div>
       </div>
@@ -60,11 +61,12 @@ export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onC
         <div className="field-profile" role="group" aria-label="Elevation profile from A to B">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={profileRows} margin={{ left: 4, right: 14, top: 8, bottom: 3 }}>
-              <CartesianGrid stroke="#d7ded0" vertical={false} />
-              <XAxis type="number" dataKey="distanceKm" domain={[0, 'dataMax']} tickFormatter={(value) => `${number.format(value)} km`} fontSize={11} />
-              <YAxis width={52} tickFormatter={(value) => `${number.format(value)} m`} fontSize={11} domain={['auto', 'auto']} />
-              <Tooltip labelFormatter={(value) => `${number.format(Number(value))} km from A`} formatter={(value) => [`${value} m`, 'Elevation']} />
-              <Line dataKey="elevationM" type="linear" stroke="#2e6049" strokeWidth={2} dot={false} isAnimationActive={false} />
+              <CartesianGrid stroke="var(--line)" vertical={false} />
+              <XAxis type="number" dataKey="distanceKm" domain={[0, 'dataMax']} tickFormatter={(value) => `${number.format(value)} km`} tick={{ fill: 'var(--muted)', fontSize: 12 }} />
+              <YAxis width={52} tickFormatter={(value) => `${number.format(value)} m`} tick={{ fill: 'var(--muted)', fontSize: 12 }} domain={['auto', 'auto']} />
+              <Tooltip labelFormatter={(value) => `${number.format(Number(value))} km from A`} formatter={(value) => [`${value} m`, 'Elevation']}
+                contentStyle={{ color: 'var(--ink)', backgroundColor: 'var(--surface)', borderColor: 'var(--control-line)', borderRadius: 8 }} />
+              <Line dataKey="elevationM" type="linear" stroke="var(--leaf)" strokeWidth={2} dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
