@@ -53,8 +53,21 @@ function App() {
       <header className="site-header">
         <div className="site-header-inner">
           <div className="brand-lockup">
-            <img className="brand-mark" src={`${import.meta.env.BASE_URL}fieldwise-mark.png`} alt="" width={48} height={48} />
-            <p className="brand-name" title="Adaptive Multi-season Insights for Harvest and Agricultural Needs">AMIHAN</p>
+            <picture>
+              <source
+                media="(max-width: 650px)"
+                srcSet={`${import.meta.env.BASE_URL}amihan-logo.svg`}
+                width={444}
+                height={443}
+              />
+            <img
+              className="brand-mark"
+              src={`${import.meta.env.BASE_URL}amihan-full-light.svg`}
+              alt="AMIHAN"
+              width={1670}
+              height={443}
+            />
+            </picture>
           </div>
           {workspaceMenu}
         </div>

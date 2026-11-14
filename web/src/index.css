@@ -54,7 +54,7 @@ button { cursor: pointer; }
 
 .site-header-inner { min-height: 76px; gap: 16px; }
 .brand-lockup { gap: 10px; }
-.brand-mark { display: block; width: 48px; height: 48px; border-radius: 10px; object-fit: contain; flex: none; }
+.brand-mark { display: block; width: 112px; height: auto; object-fit: contain; flex: none; }
 .brand-name { margin: 0; font-size: 24px; font-weight: 750; letter-spacing: -.045em; }
 .brand-name span { color: var(--rice-gold); }
 
@@ -521,7 +521,6 @@ tbody tr:hover { background: var(--soft); }
 
 @media (max-width: 560px) {
   .site-header-inner { min-height: 66px; }
-  .brand-mark { width: 42px; height: 42px; }
   .brand-name { font-size: 22px; }
   .hero-copy { display: grid; gap: 15px; }
   .hero-note { max-width: 34rem; }
@@ -554,7 +553,6 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   box-shadow: var(--control-shadow);
 }
 .site-header-inner { min-height: 60px; padding: env(safe-area-inset-top) 12px 0 max(12px, env(safe-area-inset-left)); gap: 20px; }
-.brand-mark { width: 38px; height: 38px; }
 .brand-name { font-size: 23px; }
 .workspace-nav { display: flex; gap: 5px; }
 .workspace-nav .quiet-button { border-color: transparent; background: transparent; color: var(--paper); }
@@ -699,7 +697,7 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .site-header { top: 0; left: 0; right: 0; }
   .site-header-inner { min-height: 52px; padding: env(safe-area-inset-top) 8px 0; gap: 6px; }
   .brand-lockup { gap: 5px; }
-  .brand-mark { width: 28px; height: 28px; }
+  .brand-mark { width: 104px; }
   .brand-name { font-size: 18px; }
   .workspace-nav { gap: 1px; }
   .workspace-nav .quiet-button { padding: 8px 6px; font-size: 11px; }
@@ -831,7 +829,7 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .field-inputs { gap: 14px 12px; }
 }
 @media (max-width: 380px) {
-  .site-header .brand-mark { display: none; }
+  .brand-mark { width: 88px; }
   .workspace-menu-button { padding-inline: 7px; }
   .field-inputs { grid-template-columns: minmax(0, 1fr); }
 }
@@ -888,4 +886,10 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .map-tool-popup.is-expanded { height: min(70dvh, calc(100dvh - var(--map-footer-height) - 108px - env(safe-area-inset-top))); }
   .tool-sheet-expand { display: inline-flex; align-items: center; min-height: 32px; }
   .tool-popup-heading { min-height: 56px; }
+}
+
+@media (max-width: 650px) {
+  .brand-lockup { padding-inline: 8px; }
+  .brand-lockup picture { display: flex; align-items: center; }
+  .brand-lockup .brand-mark { width: 30px; height: 30px; }
 }
