@@ -1,17 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import geography from '../data/bicol-map.json';
 import { places, waterLabels } from '../data/places';
-import { demoSites } from '../data/sites';
-import { demoWeatherDates } from '../data/demo-weather';
-import { climateLayers, demoClimateFrame, readingColor } from '../data/climate-map';
-import type { MetricKey } from '../types';
+import { climateFrameFor, climateLayers, readingColor, type ClimateLayer } from '../data/climate-map';
+import { climateSites, daysInYear, formatReading, lastClimateYear } from '../data/historical-climate';
 import { createBicolMap, RELIEF_SCALE, type MapMode } from './bicol-map';
 import { ClimateMapControls } from './ClimateMapControls';
 import { FieldCheck } from './FieldCheck';
 import { MapToolPanel } from './MapToolPanel';
+import type { FieldSelection } from './field-terrain';
 
 export type MapTool = 'field' | 'climate';
-import type { FieldSelection } from './field-terrain';
 
 type MapPanelProps = {
   activeTool: MapTool | null;
@@ -58,15 +56,17 @@ export function MapPanel({
   const [roadsState, setRoadsState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [roadAttempt, setRoadAttempt] = useState(0);
   const climateVisible = activeTool === 'climate';
-  const [climateMetric, setClimateMetric] = useState<MetricKey>('rainfallMm');
-  const [climateDay, setClimateDay] = useState(1);
+  const [climateMetric, setClimateMetric] = useState<ClimateLayer>('dailyRainfall');
+  const [climateYear, setClimateYear] = useState(lastClimateYear);
+  const [climatePeriod, setClimatePeriod] = useState(0);
   const [playing, setPlaying] = useState(false);
   const fieldActive = activeTool === 'field';
   const [toolsExpanded, setToolsExpanded] = useState(true);
   const [showSlope, setShowSlope] = useState(true);
   const [fieldMiss, setFieldMiss] = useState(false);
-  const climateFrame = useMemo(() => demoClimateFrame(climateMetric, climateDay), [climateMetric, climateDay]);
+  const climateFrame = useMemo(() => climateFrameFor(climateMetric, climateYear, climatePeriod), [climateMetric, climateYear, climatePeriod]);
   const climateLayer = climateLayers[climateMetric];
+  const lastPeriod = (climateMetric === 'dailyRainfall' ? daysInYear(climateYear) : 12) - 1;
 
   useEffect(() => {
     const legend = legendRef.current;
@@ -136,13 +136,13 @@ export function MapPanel({
   }, [climateFrame, climateVisible, contextLost, view]);
   useEffect(() => {
     if (!playing || !climateVisible || contextLost) return;
-    if (climateDay === demoWeatherDates.length - 1) {
+    if (climatePeriod === lastPeriod) {
       setPlaying(false);
       return;
     }
-    const timer = window.setTimeout(() => setClimateDay(climateDay + 1), 1100);
+    const timer = window.setTimeout(() => setClimatePeriod(climatePeriod + 1), 850);
     return () => window.clearTimeout(timer);
-  }, [climateDay, climateVisible, contextLost, playing]);
+  }, [climatePeriod, lastPeriod, climateVisible, contextLost, playing]);
   useEffect(() => {
     if (!view || contextLost) return;
     view.selectPlace(selectedPlaceId);
@@ -264,9 +264,9 @@ export function MapPanel({
                   <span aria-hidden="true" className="marker-label">{place.name}</span>
                 </button>
               ))}
-              {demoSites.map((site) => {
+              {climateSites.map((site) => {
                 const value = climateFrame.readings.get(site.id) ?? null;
-                const formatted = value === null ? 'Missing' : `${value} ${climateLayer.unit}`;
+                const formatted = value === null ? 'Missing' : `${formatReading.format(value)} ${climateLayer.unit}`;
                 const label = `${site.name} · ${climateLayer.label} · ${formatted}`;
                 return (
                   <button
@@ -277,7 +277,7 @@ export function MapPanel({
                     }}
                     className="climate-reading"
                     data-site-id={site.id}
-                    hidden={!climateVisible}
+                    hidden={!climateVisible || (climateMetric === 'dailyRainfall' && !site.dailyRainfall)}
                     style={{ backgroundColor: readingColor(climateMetric, value) }}
                     aria-label={label}
                     title={label}
@@ -294,7 +294,7 @@ export function MapPanel({
         ) : (
           <div className="map-status" role="status">
             {failure === 'webgl' || contextLost ? (
-              <p>Map unavailable on this device. You can still select a reference point and view its climate readings.</p>
+              <p>Map unavailable on this device. Use the place selector to explore crop rotations and historical climate.</p>
             ) : failure === 'asset' ? (
               <>
                 <p>The local terrain file could not be loaded.</p>
@@ -319,15 +319,25 @@ export function MapPanel({
           onMinimize={onToolMinimize} onClose={() => { onToolChange(null); setPlaying(false); }}>
           <ClimateMapControls
             metric={climateMetric}
-            day={climateDay}
+            year={climateYear}
+            period={climatePeriod}
             playing={playing}
-            onMetricChange={setClimateMetric}
-            onDayChange={(day) => {
+            onMetricChange={(metric) => {
+              if ((metric === 'dailyRainfall') !== (climateMetric === 'dailyRainfall')) setClimatePeriod(0);
               setPlaying(false);
-              setClimateDay(day);
+              setClimateMetric(metric);
+            }}
+            onYearChange={(year) => {
+              setPlaying(false);
+              setClimateYear(year);
+              if (climateMetric === 'dailyRainfall') setClimatePeriod((period) => Math.min(period, daysInYear(year) - 1));
+            }}
+            onPeriodChange={(period) => {
+              setPlaying(false);
+              setClimatePeriod(period);
             }}
             onPlayingChange={(next) => {
-              if (next && climateDay === demoWeatherDates.length - 1) setClimateDay(0);
+              if (next && climatePeriod === lastPeriod) setClimatePeriod(0);
               setPlaying(next);
             }}
           />

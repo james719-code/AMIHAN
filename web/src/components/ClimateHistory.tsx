@@ -90,7 +90,7 @@ export function ClimateHistory({ site, place }: { site: ClimateSite; place: MapP
   const loadingWeather = weatherSite && !currentWeather;
 
   return (
-    <section className="dashboard-card" id="climate-history" aria-labelledby="climate-heading">
+    <section className="dashboard-card readings-card" id="climate-history" aria-labelledby="climate-heading">
       <div className="dashboard-heading">
         <div>
           <h2 id="climate-heading">Historical climate</h2>

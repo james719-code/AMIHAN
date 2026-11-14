@@ -1,86 +1,163 @@
-import { cropResearch, planningSources } from '../data/rotation';
+import { Fragment, useState } from 'react';
+import {
+  climatePeriod, coordinatesLabel, formatReading, labelMonth, months, nearestClimateSite,
+  powerUrl, seasonalClimate, soilUrl, type ClimateSite
+} from '../data/historical-climate';
+import type { MapPlace } from '../data/places';
+import { previousCrops, rotationGuides, type PreviousCrop } from '../data/rotation';
 import { fieldCoordinates, type FieldSelection } from './field-terrain';
 
-const monthLabel = new Intl.DateTimeFormat('en-PH', { month: 'long', timeZone: 'UTC' });
+type Water = '' | 'rainfed' | 'irrigated';
+type Drainage = '' | 'well' | 'slow' | 'waterlogged';
+type Props = { place: MapPlace; site: ClimateSite; fieldSelection: FieldSelection; onOpenClimate: () => void };
+const display = (value: number | null, unit: string) => value === null ? 'Unavailable' : `${formatReading.format(value)} ${unit}`;
 
-export function RotationPlanner({ placeName, fieldSelection }: { placeName: string; fieldSelection: FieldSelection }) {
-  const [longitude, latitude] = fieldSelection.start ? fieldCoordinates(fieldSelection.start) : [];
+export function RotationPlanner({ place, site, fieldSelection, onOpenClimate }: Props) {
+  const coordinates = fieldSelection.start ? fieldCoordinates(fieldSelection.start) : null;
+  const reference = coordinates ? nearestClimateSite(coordinates) : site;
+  const location = coordinates ? `Field Check point A · ${coordinatesLabel(coordinates)}` : place.name;
+  const fieldKey = coordinates ? coordinates.join(',') : place.id;
+
   return (
     <section className="dashboard-card rotation-card" aria-labelledby="rotation-heading">
       <div className="dashboard-heading">
         <div>
-          <h2 id="rotation-heading">Plan your next planting</h2>
-          <p className="section-subtitle">{fieldSelection.start
-            ? `Field Check point A · ${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E`
-            : placeName}</p>
+          <h2 id="rotation-heading">Crop rotation guide</h2>
+          <p className="section-subtitle">{location}</p>
         </div>
-        <span className="demo-badge">Awaiting data</span>
+        <button className="quiet-button" type="button" onClick={onOpenClimate}>Explore climate history</button>
       </div>
-      <p className="rotation-intro">Crop suggestions need local soil and weather data, field drainage, irrigation, and crop history.</p>
-      <div className="planner-section-heading">
-        <h3>Field details</h3>
-        <p>Start with what you know about your field.</p>
-      </div>
-      <div className="field-inputs" key={fieldSelection.start ? `${longitude},${latitude}` : placeName}>
-        <label>Planting month
-          <select defaultValue="">
-            <option value="">Choose month</option>
-            {Array.from({ length: 12 }, (_, month) => (
-              <option value={month + 1} key={month}>
-                {monthLabel.format(new Date(Date.UTC(2024, month, 1)))}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>Water source
-          <select defaultValue="">
-            <option value="">Unknown</option>
-            <option>Rainfed</option><option>Irrigated</option>
-          </select>
-        </label>
-        <label>Field drainage
-          <select defaultValue="">
-            <option value="">Unknown</option>
-            <option>Drains well</option><option>Drains slowly</option><option>Often waterlogged</option>
-          </select>
-        </label>
-        <label>Previous crop
-          <input type="text" placeholder="e.g. rice" />
-        </label>
-      </div>
-      <div className="planner-section-heading">
-        <h3>Planning data</h3>
-        <p>These datasets are needed before crop suggestions are available.</p>
-      </div>
-      <div className="planning-sources" aria-label="Planning data sources">
-        {planningSources.map(({ id, name, provider, description, url }) => (
-          <article className="planning-source" key={id}>
-            <h3>{name}</h3>
-            <p>{description}</p>
-            <a href={url}>{provider}</a>
-            <span className="planning-status">Awaiting dataset</span>
-          </article>
-        ))}
-      </div>
-      <div className="rotation-replay">
-        <div>
-          <h3>Rainfall replay</h3>
-          <p>Replay a historical rain event when IMERG data is available for this area.</p>
-        </div>
-        <button className="quiet-button" type="button" disabled>Play rainfall</button>
-      </div>
-      <details className="crop-research">
-        <summary>Crops documented in Bicol</summary>
-        <ul>
-          {cropResearch.map(({ title, detail, source, url }) => (
-            <li key={title}>
-              <strong>{title}</strong>
-              <p>{detail}</p>
-              <a href={url}>{source}</a>
-            </li>
-          ))}
-        </ul>
-      </details>
+      <RotationForm key={fieldKey} reference={reference} />
     </section>
+  );
+}
+
+function RotationForm({ reference }: { reference: ClimateSite }) {
+  const [month, setMonth] = useState<number | null>(null);
+  const [water, setWater] = useState<Water>('');
+  const [drainage, setDrainage] = useState<Drainage>('');
+  const [previous, setPrevious] = useState<PreviousCrop>('');
+  const season = seasonalClimate(reference);
+  const selected = month === null ? null : season[month];
+  const available = season.filter(({ rainfallMm }) => rainfallMm !== null)
+    .sort((a, b) => (a.rainfallMm ?? 0) - (b.rainfallMm ?? 0));
+  const driest = available[0];
+  const wettest = available.at(-1);
+  const maxRainfall = wettest?.rainfallMm || 1;
+  const guides = rotationGuides.filter((guide) => previous === '' || guide.previous === previous);
+  const plantingPeriod = month === null ? [] : [month, (month + 1) % 12, (month + 2) % 12].map((index) => season[index]);
+  const wettestAhead = plantingPeriod.reduce<typeof selected>((wettestMonth, item) =>
+    item.rainfallMm !== null && item.rainfallMm > (wettestMonth?.rainfallMm ?? -1) ? item : wettestMonth, null);
+  const drainageNote = {
+    '': 'Check how quickly standing water clears before considering a legume.',
+    well: 'Confirm that the field still drains well after heavy rain.',
+    slow: 'Check drainage after heavy rain before sowing mungbean or peanut.',
+    waterlogged: 'Pause legume plans until the field can drain reliably.'
+  }[drainage];
+  const waterNote = {
+    '': 'Confirm how you will supply water during drier weeks.',
+    rainfed: 'Check soil moisture at sowing and whether you can supply water during a dry spell.',
+    irrigated: 'Confirm when irrigation is available and whether you can control water entering the field.'
+  }[water];
+
+  return (
+    <>
+      <h3 className="planner-section-heading">Field details</h3>
+      <div className="field-inputs">
+        <div><label htmlFor="planting-month">Planting month</label>
+          <select id="planting-month" value={month ?? ''} onChange={(event) => setMonth(event.target.value === '' ? null : Number(event.target.value))}>
+            <option value="">Choose month</option>
+            {months.map((index) => <option key={index} value={index}>{labelMonth(index)}</option>)}
+          </select>
+        </div>
+        <div><label htmlFor="previous-crop">Previous crop</label>
+          <select id="previous-crop" value={previous} onChange={(event) => setPrevious(event.target.value as PreviousCrop)}>
+            {previousCrops.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}
+          </select>
+        </div>
+        <div><label htmlFor="water-source">Water source</label>
+          <select id="water-source" value={water} onChange={(event) => setWater(event.target.value as Water)}>
+            <option value="">Unknown</option><option value="rainfed">Rainfed</option><option value="irrigated">Irrigated</option>
+          </select>
+        </div>
+        <div><label htmlFor="field-drainage">Field drainage</label>
+          <select id="field-drainage" value={drainage} onChange={(event) => setDrainage(event.target.value as Drainage)}>
+            <option value="">Unknown</option><option value="well">Drains well</option>
+            <option value="slow">Drains slowly</option><option value="waterlogged">Often waterlogged</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="season-grid">
+        <div className="season-panel">
+          <h3>Average monthly rainfall</h3>
+          <p>{reference.name} climate reference · {climatePeriod} · mm</p>
+          <div className="season-bars" role="group" aria-label="Select planting month by average rainfall">
+            {season.map(({ month: index, label, rainfallMm }) => (
+              <button key={index} type="button" aria-pressed={month === index}
+                aria-label={`${labelMonth(index)}, ${display(rainfallMm, 'mm')}`}
+                title={`${labelMonth(index)} · ${display(rainfallMm, 'mm')}`} onClick={() => setMonth(index)}>
+                <span className="season-bar-track" aria-hidden="true">
+                  <span className="season-bar" style={{ height: `${Math.max(rainfallMm === null ? 0 : 2, 100 * (rainfallMm ?? 0) / maxRainfall)}%` }} />
+                </span>
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+          {driest && wettest && (
+            <p className="season-range">Driest average <strong>{driest.label} · {display(driest.rainfallMm, 'mm')}</strong>
+              <span>Wettest average <strong>{wettest.label} · {display(wettest.rainfallMm, 'mm')}</strong></span>
+            </p>
+          )}
+        </div>
+        <div className="season-panel season-summary" aria-live="polite">
+          <h3>{selected ? `${labelMonth(selected.month)} planting context` : 'Planting month'}</h3>
+          {selected ? (
+            <>
+              <dl>
+                <div><dt>Rainfall</dt><dd>{display(selected.rainfallMm, 'mm')}</dd></div>
+                <div><dt>Mean temp.</dt><dd>{display(selected.meanTemperatureC, '°C')}</dd></div>
+                <div><dt>Humidity</dt><dd>{display(selected.relativeHumidityPct, '%')}</dd></div>
+              </dl>
+              <p>Rainfall average from {selected.yearsWithRainfall} years.</p>
+              {wettestAhead && <p>In the three months starting in {labelMonth(selected.month)}, {labelMonth(wettestAhead.month)} has the highest average rainfall ({display(wettestAhead.rainfallMm, 'mm')}).</p>}
+            </>
+          ) : <p>Select a month to see its historical rainfall, temperature, and humidity.</p>}
+        </div>
+      </div>
+
+      <div className={`field-notes${drainage === 'waterlogged' ? ' field-notes-warning' : ''}`} aria-live="polite">
+        <h3>Before planting</h3>
+        <ul>
+          <li>{drainageNote}</li>
+          <li>{waterNote}</li>
+        </ul>
+      </div>
+
+      <div className="rotation-guides" aria-labelledby="guide-options">
+        <h3 id="guide-options">Crop sequences documented in Bicol</h3>
+        {guides.length ? (
+          <div className="guide-grid">
+            {guides.map(({ id, crops, location, detail, fieldCheck, sources }) => (
+              <article className="guide-card" key={id}>
+                <p className="guide-location">{location}</p>
+                <h4 className="guide-sequence">
+                  {crops.map((crop, index) => (
+                    <Fragment key={index}>{index > 0 && <span className="sequence-arrow"> → </span>}<span>{crop}</span></Fragment>
+                  ))}
+                </h4>
+                <p>{detail}</p>
+                <p>{fieldCheck}</p>
+                <p className="guide-sources">{sources.map(({ label, url }) => <a href={url} key={url}>{label}</a>)}</p>
+              </article>
+            ))}
+          </div>
+        ) : <p className="climate-empty">The current guide covers rotations after rice and corn. Choose Unknown to browse all examples.</p>}
+      </div>
+      <footer className="data-footer">
+        Confirm soil, crop timing, and variety with your municipal agriculture office before planting.
+        {' '}<a href={powerUrl}>NASA POWER climate data</a> · <a href={soilUrl}>DA–BSWM soil resources</a>
+      </footer>
+    </>
   );
 }

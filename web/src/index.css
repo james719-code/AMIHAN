@@ -765,36 +765,48 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .panel-content .section-subtitle { margin-top: 8px; line-height: 1.6; }
 .panel-content .demo-badge { flex: none; }
 .rotation-intro { margin-block: 20px; line-height: 1.7; max-width: 65ch; }
-.planner-section-heading { margin: 24px 0 14px; }
-.planner-section-heading h3 { margin: 0; color: var(--forest); font-size: 15px; font-weight: 750; }
-.planner-section-heading p { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.planner-section-heading { margin: 24px 0 14px; color: var(--forest); font-size: 15px; font-weight: 750; }
 .field-inputs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
 .field-inputs label { gap: 7px; }
 .field-inputs input, .field-inputs select { min-height: 44px; padding: 10px 12px; }
-.planning-sources { grid-template-columns: 1fr; gap: 10px; }
-.planning-source { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; padding: 16px; }
-.planning-source h3, .planning-source p { grid-column: 1; }
-.planning-source p { line-height: 1.6; }
-.planning-source a { grid-column: 1; margin-top: 4px; }
-.planning-source .planning-status { grid-column: 2; grid-row: 1; align-self: start; margin: 0; padding: 4px 8px; border-radius: 4px; background: var(--gold-wash); font-size: 11px; }
-.rotation-replay { margin-top: 24px; padding-block: 20px; gap: 16px; }
-.rotation-replay p { margin-top: 5px; line-height: 1.6; max-width: 48ch; }
+.field-inputs > div, .history-dates > div { display: grid; gap: 7px; min-width: 0; }
+.season-grid { display: grid; gap: 12px; }
+.season-panel { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; }
+.season-panel h3, .field-notes h3, .rotation-guides > h3 { margin: 0; color: var(--forest); font-size: 16px; font-weight: 750; }
+.season-panel p, .guide-card p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.season-bars { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; margin: 14px 0 10px; }
+.season-bars button { display: grid; gap: 4px; border-radius: 5px; padding: 3px 0; color: var(--muted); font-size: 10px; font-weight: 650; }
+.season-bars button:hover, .season-bars button[aria-pressed="true"] { background: var(--gold-wash); color: var(--forest); }
+.season-bar-track { display: flex; align-items: end; justify-content: center; height: 70px; border-bottom: 1px solid var(--line); }
+.season-bar { width: 60%; border-radius: 3px 3px 0 0; background: var(--coastal-blue); }
+.season-bars button[aria-pressed="true"] .season-bar { background: var(--gold-ink); }
+.season-range { display: flex; flex-wrap: wrap; gap: 3px 16px; }
+.season-range strong { color: var(--forest); font-weight: 750; }
+.season-summary { background: var(--soft); }
+.season-summary dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 8px; margin: 13px 0 10px; }
+.season-summary dt { color: var(--muted); font-size: 12px; }
+.season-summary dd { margin: 2px 0 0; color: var(--forest); font-weight: 750; font-variant-numeric: tabular-nums; }
+.field-notes { display: grid; gap: 5px; margin: 12px 0 22px; border-radius: 9px; padding: 12px 16px; background: var(--soft); }
+.field-notes-warning { background: var(--gold-wash); }
+.field-notes ul { display: grid; gap: 3px; margin: 0; padding-left: 16px; color: var(--muted); font-size: 13px; list-style: disc; }
+.guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; margin-top: 10px; }
+.guide-card { display: grid; align-content: start; gap: 5px; padding: 15px; border: 1px solid var(--line); border-top: 3px solid var(--rice-gold); border-radius: 11px; }
+.guide-card .guide-location { margin: 0; font-size: 12px; font-weight: 700; }
+.guide-sequence { margin: 0; color: var(--forest); font: 500 20px/1.2 var(--display-font); }
+.sequence-arrow { color: var(--gold-ink); }
+.guide-card .guide-sources { display: flex; flex-wrap: wrap; gap: 3px 12px; padding-top: 4px; font-size: 12px; }
+.guide-sources a, .data-footer a, .climate-map-controls a { color: var(--forest); text-decoration: underline; text-underline-offset: 2px; }
 .crop-research { margin-top: 20px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; }
 .crop-research p { margin-top: 4px; line-height: 1.6; }
 .readings-card .dashboard-controls { display: grid; gap: 18px; margin-top: 20px; }
-.readings-card .metric-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 5px; border: 1px solid var(--line); }
+.readings-card .metric-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 5px; border: 1px solid var(--line); }
 .readings-card .metric-tabs button { min-height: 40px; padding: 8px; }
-.readings-card .date-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); width: min(100%, 420px); gap: 12px; }
-.readings-card .date-controls input { max-width: none; min-height: 42px; background: rgb(255 254 250 / 85%); }
-.readings-card .coverage-strip { margin-block: 20px; }
-.readings-card .coverage-strip > div { padding: 14px; border: 1px solid var(--line); }
-.readings-card .coverage-strip .coverage-warning { background: var(--gold-wash); }
-.daily-readings { margin-top: 20px; border: 1px solid var(--line); border-radius: 8px; background: rgb(255 254 250 / 40%); }
-.daily-readings summary { padding: 16px; cursor: pointer; color: var(--forest); font-size: 14px; font-weight: 750; }
-.daily-readings summary span { margin-left: 8px; color: var(--muted); font-size: 11px; font-weight: 400; }
-.daily-readings .table-heading { margin: 0; padding: 0 16px; }
-.daily-readings .table-scroll { margin: 12px 0 0; }
-.daily-readings thead { background: #e0e8db; }
+.history-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.history-dates label { color: var(--forest); font-size: 12px; font-weight: 700; }
+.history-dates select { width: 100%; min-width: 0; min-height: 42px; padding: 8px; border: 1px solid var(--control-line); border-radius: 8px; background: var(--surface); font-size: 13px; }
+.history-metrics, .history-chart { margin-top: 14px; }
+.climate-empty { margin: 14px 0 0; padding: 13px; border-radius: 8px; background: var(--soft); color: var(--muted); font-size: 14px; }
+.climate-table { min-width: 0; }
 .readings-card .data-footer { line-height: 1.6; }
 @media (max-width: 650px) {
   .site-header-inner { padding-inline: 0; }
@@ -816,9 +828,6 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
   .panel-content > .dashboard-card { padding: 20px 16px; }
   .panel-content .dashboard-heading { flex-wrap: wrap; gap: 10px; }
   .field-inputs { gap: 14px 12px; }
-  .planning-source { grid-template-columns: minmax(0, 1fr); }
-  .planning-source .planning-status { grid-column: 1; grid-row: auto; width: fit-content; margin-top: 6px; }
-  .daily-readings summary span { display: block; margin: 5px 0 0 16px; }
 }
 @media (max-width: 380px) {
   .site-header .brand-mark { display: none; }
