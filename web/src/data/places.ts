@@ -35,6 +35,9 @@ export const places: MapPlace[] = [
   }))
 ];
 
+export const farmingPlaces = places.filter(({ kind }) => kind !== 'Volcano')
+  .sort((a, b) => a.name.localeCompare(b.name, 'en-PH'));
+
 export const waterLabels = [
   { name: 'Philippine Sea', coordinates: [124.68, 14.05], maxSpan: Infinity },
   { name: 'Sibuyan Sea', coordinates: [122.61, 12.27], maxSpan: Infinity },
