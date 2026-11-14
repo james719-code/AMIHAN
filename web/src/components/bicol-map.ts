@@ -198,7 +198,7 @@ export function createBicolMap(
         render();
       },
       setClimateFrame(frame: ClimateFrame | null) {
-        rainSites = frame?.metric === 'rainfallMm' ? climateMarkers.flatMap(({ id, position }) => {
+        rainSites = frame?.metric === 'dailyRainfall' ? climateMarkers.flatMap(({ id, position }) => {
           const amount = frame.readings.get(id);
           return amount !== undefined && amount !== null && amount > 0 ? [{ position, amount }] : [];
         }) : [];
