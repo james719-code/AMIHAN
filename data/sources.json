@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "1.0.0",
+  "sources": [
+    {
+      "id": "nasa-power-daily-2024",
+      "publisher": "NASA Langley Research Center POWER Project",
+      "url": "https://power.larc.nasa.gov/docs/services/api/temporal/daily/",
+      "product": "Daily Agroclimatology",
+      "versionOrRetrieved": "2024 verification window; record retrieval date when downloaded",
+      "attribution": "NASA POWER",
+      "terms": "NASA POWER data access and usage terms",
+      "coverage": "Daily point data for registered sites",
+      "resolution": "Standard-resolution Agroclimatology",
+      "units": {
+        "PRECTOTCORR": "mm/day",
+        "T2M": "°C",
+        "T2M_MAX": "°C",
+        "RH2M": "%",
+        "ALLSKY_SFC_SW_DWN": "MJ/m²/day"
+      },
+      "crs": "WGS 84 longitude/latitude",
+      "timeStandard": "UTC"
+    },
+    {
+      "id": "demo-synthetic-2024",
+      "publisher": "FieldWise starter fixtures",
+      "url": "local://web/src/data/demo-weather.ts",
+      "product": "Seven-day synthetic weather series",
+      "versionOrRetrieved": "starter milestone",
+      "attribution": "FieldWise demo data",
+      "terms": "Synthetic data for interface development only",
+      "coverage": "Seven demo days per province reference point",
+      "resolution": "Point reference demo",
+      "units": {
+        "rainfallMm": "mm/day",
+        "meanTemperatureC": "°C",
+        "maxTemperatureC": "°C",
+        "relativeHumidityPct": "%",
+        "solarRadiationMjM2": "MJ/m²/day"
+      },
+      "crs": "WGS 84 longitude/latitude",
+      "timeStandard": "UTC"
+    }
+  ]
+}
