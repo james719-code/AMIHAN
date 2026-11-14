@@ -1,3 +1,6 @@
+import { MoreDetails } from './MoreDetails';
+import { SummaryStat } from './SummaryStat';
+import { MapControlIcon } from './MapControlIcon';
 import { useEffect, useState } from 'react';
 import { Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import {
@@ -12,11 +15,11 @@ import {
 } from '../data/power-weather';
 
 const metrics = [
-  { key: 'rainfallMm', label: 'Rainfall', unit: 'mm', color: 'var(--coastal-blue)' },
-  { key: 'meanTemperatureC', label: 'Mean temperature', unit: '°C', color: 'var(--clay)' },
-  { key: 'maxTemperatureC', label: 'Maximum temperature', unit: '°C', color: 'var(--deep-clay)' },
-  { key: 'minTemperatureC', label: 'Minimum temperature', unit: '°C', color: 'var(--coastal-blue)' },
-  { key: 'relativeHumidityPct', label: 'Humidity', unit: '%', color: 'var(--humid-green)' }
+  { key: 'rainfallMm', label: 'Rainfall', shortLabel: 'Rain', icon: 'rain', unit: 'mm', color: 'var(--coastal-blue)' },
+  { key: 'meanTemperatureC', label: 'Mean temperature', shortLabel: 'Mean', icon: 'temperature', unit: '°C', color: 'var(--clay)' },
+  { key: 'maxTemperatureC', label: 'Maximum temperature', shortLabel: 'Max', icon: 'temperature', unit: '°C', color: 'var(--deep-clay)' },
+  { key: 'minTemperatureC', label: 'Minimum temperature', shortLabel: 'Min', icon: 'temperature', unit: '°C', color: 'var(--coastal-blue)' },
+  { key: 'relativeHumidityPct', label: 'Humidity', shortLabel: 'Humidity', icon: 'humidity', unit: '%', color: 'var(--humid-green)' }
 ] as const;
 const weatherMetricKeys = Object.keys(powerWeatherMetrics) as WeatherMetric[];
 const weatherNotes: Partial<Record<WeatherMetric, string>> = {
@@ -24,10 +27,10 @@ const weatherNotes: Partial<Record<WeatherMetric, string>> = {
   transpirationEnergyMjM2: 'Modeled energy used by vegetation to release water vapor, expressed as energy per square meter.'
 };
 const views = [
-  { id: 'weather', label: `${powerWeatherYear} daily weather` },
-  { id: 'monthly', label: 'Monthly climate' },
-  { id: 'daily', label: 'Daily rainfall' },
-  { id: 'imerg', label: 'Regional rainfall' }
+  { id: 'weather', label: `${powerWeatherYear} daily weather`, shortLabel: 'Weather', icon: 'climate' },
+  { id: 'monthly', label: 'Monthly climate', shortLabel: 'Monthly', icon: 'calendar' },
+  { id: 'daily', label: 'Daily rainfall', shortLabel: 'Daily rain', icon: 'rain' },
+  { id: 'imerg', label: 'Regional rainfall', shortLabel: 'Regional', icon: 'location' }
 ] as const;
 type View = typeof views[number]['id'];
 type WeatherResult = { key: string; cell: Awaited<ReturnType<typeof loadPowerWeather>> | null };
@@ -100,21 +103,26 @@ export function ClimateHistory({ site, place }: { site: ClimateSite; place: MapP
 
   return (
     <section className="dashboard-card readings-card" id="climate-history" aria-labelledby="climate-heading">
-      <div className="dashboard-heading">
+      <div className="dashboard-heading brochure-heading">
+        <span className="brochure-symbol"><MapControlIcon name="readings" /></span>
         <div>
-          <h2 id="climate-heading">Historical climate</h2>
-          <p className="section-subtitle">{scope}</p>
+          <h2 id="climate-heading">Climate at a glance</h2>
+          <p className="section-subtitle">{regional ? "Bicol regional rainfall" : place.name} · {weather ? `${selectedYear} UTC` : climatePeriod}</p>
         </div>
-        <span className="demo-badge">{weather ? `${selectedYear} · UTC` : climatePeriod}</span>
       </div>
       <div className="dashboard-controls">
         <div className="metric-tabs" role="group" aria-label="Climate view">
-          {views.map(({ id, label }) => (
-            <button key={id} type="button" aria-pressed={view === id} onClick={() => setView(id)}>{label}</button>
+          {views.map(({ id, label, shortLabel, icon }) => (
+            <button key={id} type="button" aria-label={label} title={label} aria-pressed={view === id} onClick={() => setView(id)}><MapControlIcon name={icon} /><span>{shortLabel}</span></button>
           ))}
         </div>
         <div className="history-dates">
-          {weather && <div><label htmlFor="weather-metric">Daily measure</label>
+          {view === 'monthly' && <div className="history-measure"><label htmlFor="monthly-metric">Measure</label>
+            <select id="monthly-metric" value={metricKey} onChange={(event) => setMetricKey(event.target.value as MonthlyMetric)}>
+              {metrics.map(({ key, label }) => <option key={key} value={key}>{label}</option>)}
+            </select>
+          </div>}
+          {weather && <div className="history-measure"><label htmlFor="weather-metric">Daily measure</label>
             <select id="weather-metric" value={weatherMetricKey} onChange={(event) => setWeatherMetricKey(event.target.value as WeatherMetric)}>
               {weatherMetricKeys.map((key) => <option key={key} value={key}>{powerWeatherMetrics[key].label}</option>)}
             </select>
@@ -131,18 +139,8 @@ export function ClimateHistory({ site, place }: { site: ClimateSite; place: MapP
           </div>}
         </div>
       </div>
-      {view === 'monthly' && (
-        <div className="metric-tabs history-metrics" role="group" aria-label="Monthly climate metric">
-          {metrics.map(({ key, label }) => (
-            <button key={key} type="button" aria-pressed={metricKey === key} onClick={() => setMetricKey(key)}>{label}</button>
-          ))}
-        </div>
-      )}
       {count > 0 ? (
         <>
-          {climateMeaning && <div className="plain-language-insight" aria-live="polite">
-            <strong>What this means</strong><p>{climateMeaning}</p>
-          </div>}
           <div className="chart-panel history-chart">
             <div className="chart-title">
               <span><i aria-hidden="true" style={{ backgroundColor: metric.color }} />{title}</span>
@@ -164,19 +162,10 @@ export function ClimateHistory({ site, place }: { site: ClimateSite; place: MapP
               </ResponsiveContainer>
             </div>
           </div>
-          <details className="crop-research">
-            <summary>View readings · {count} of {rows.length} {daily ? 'days' : 'months'}</summary>
-            <div className="table-scroll">
-              <table className="climate-table">
-                <thead><tr><th scope="col">Date</th><th scope="col">{metric.label} ({displayUnit})</th></tr></thead>
-                <tbody>
-                  {rows.map(({ date, value }) => (
-                    <tr key={date}><th scope="row">{date}</th><td>{value === null ? 'Unavailable' : formatReading.format(value)}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </details>
+          <dl className="summary-stats" aria-label="Readings at a glance">
+            <SummaryStat icon="readings" label="Highest" value={highest ? `${formatReading.format(highest.value)} ${displayUnit}` : 'Unavailable'} note={highest?.date} />
+            <SummaryStat icon="calendar" label="Coverage" value={`${count}/${rows.length}`} note={daily ? 'days recorded' : 'months recorded'} />
+          </dl>
         </>
       ) : (
         <p className="climate-empty" role="status">
@@ -190,7 +179,26 @@ export function ClimateHistory({ site, place }: { site: ClimateSite; place: MapP
             : 'No readings are available for this period.'}
         </p>
       )}
+      <p className="brief-note"><MapControlIcon name="info" />Historical readings · not a forecast</p>
+      <MoreDetails key={view} title="Reading details & sources">
+          {climateMeaning && <div className="plain-language-insight" aria-live="polite">
+            <strong>Reading the chart</strong><p>{climateMeaning}</p>
+          </div>}
+          <section className="readings-table" aria-labelledby="readings-table-heading">
+            <h3 id="readings-table-heading">All readings · {count} of {rows.length} {daily ? 'days' : 'months'}</h3>
+            <div className="table-scroll">
+              <table className="climate-table">
+                <thead><tr><th scope="col">Date</th><th scope="col">{metric.label} ({displayUnit})</th></tr></thead>
+                <tbody>
+                  {rows.map(({ date, value }) => (
+                    <tr key={date}><th scope="row">{date}</th><td>{value === null ? 'Unavailable' : formatReading.format(value)}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
       <footer className="data-footer">
+        <p className="readings-source">{scope}</p>
         {regional
           ? <>Monthly rate converted to rainfall depth for the export’s bounding box. <a href={imerg.url}>Giovanni export</a> · <a href={imergUrl}>NASA GPM IMERG</a></>
           : weather ? <>Nearest grid cell · {powerWeatherProducts[product].resolution} · UTC.
@@ -201,6 +209,7 @@ export function ClimateHistory({ site, place }: { site: ClimateSite; place: MapP
             {daily && (site.id === 'albay-01' || site.id === 'sorsogon-01') ? ` ${site.name} and ${shared} share the same daily readings.` : ''}
             {' '}<a href={powerUrl}>NASA POWER</a></>}
       </footer>
+      </MoreDetails>
     </section>
   );
 }

@@ -19,7 +19,7 @@ Open the Vite URL printed by the dev server. The map and 2015–2024 climate his
 
 ## Crop rotation planning
 
-Select a city, town, or volcano to zoom in on its terrain and roads. **Reset Bicol view** returns to the regional overview.
+Select a city, town, or volcano to zoom in on its terrain and roads. **Reset View** returns to the regional overview.
 
 Open **Planner** and choose a place and planting date. Enter the previous crop and harvest date, water source, and drainage. The Planner looks up the climate type for the town marker or field pin using the PAGASA map and allows a manual override. Rotation options show planting and harvest windows, local NASA GPM IMERG rainfall where available, and which field details still need checking.
 

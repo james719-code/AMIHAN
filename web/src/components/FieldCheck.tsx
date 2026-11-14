@@ -1,4 +1,5 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { MapControlIcon } from './MapControlIcon';
 import geography from '../data/bicol-map.json';
 import { fieldCoordinates, profileSpacingKm, slopeBands, type FieldSelection } from './field-terrain';
 
@@ -43,8 +44,8 @@ export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onC
             <input type="checkbox" checked={slopeVisible} onChange={(event) => onSlopeChange(event.target.checked)} />
             Slope shading
           </label>
-          <button className="quiet-button" type="button" onClick={onSampleCenter}>Sample center</button>
-          <button className="quiet-button" type="button" disabled={!start} onClick={onClear}>Clear points</button>
+          <button className="quiet-button compact-icon-button" type="button" aria-label="Sample map center" title="Sample map center" onClick={onSampleCenter}><MapControlIcon name="center" /></button>
+          <button className="quiet-button compact-icon-button" type="button" aria-label="Clear points" title="Clear points" disabled={!start} onClick={onClear}><MapControlIcon name="clear" /></button>
         </div>
       </div>
       {slopeVisible && (

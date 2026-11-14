@@ -1,3 +1,4 @@
+import { MapControlIcon } from './MapControlIcon';
 import { climateLayers, missingReadingColor, type ClimateLayer } from '../data/climate-map';
 import { climateYears, dayDate, daysInYear, labelMonth, powerUrl } from '../data/historical-climate';
 
@@ -36,8 +37,11 @@ export function ClimateMapControls({ metric, year, period, playing, onMetricChan
           </select>
         </label>
         <div className="climate-timeline">
-          <button className="quiet-button" type="button" onClick={() => onPlayingChange(!playing)}>
-            {playing ? 'Pause' : daily ? 'Play days' : 'Play months'}
+          <button className="quiet-button compact-icon-button" type="button"
+            aria-label={playing ? 'Pause animation' : daily ? 'Play days' : 'Play months'}
+            title={playing ? 'Pause animation' : daily ? 'Play days' : 'Play months'}
+            onClick={() => onPlayingChange(!playing)}>
+            <MapControlIcon name={playing ? 'pause' : 'play'} />
           </button>
           <label className="climate-day">
             <span>{daily ? 'Day' : 'Month'} <time dateTime={date ? date.toISOString().slice(0, 10) : `${year}-${String(period + 1).padStart(2, '0')}`}>{label}</time></span>

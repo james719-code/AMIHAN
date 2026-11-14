@@ -1,3 +1,6 @@
+import { MoreDetails } from './MoreDetails';
+import { SummaryStat } from './SummaryStat';
+import { MapControlIcon } from './MapControlIcon';
 import { lazy, Suspense, useState } from 'react';
 import {
   bicolRainfedCalendar, bicolRiceCalendar, bicolVegetableGuide, crops, pagasaClimateTypes,
@@ -30,7 +33,7 @@ const display = (value: number | null, unit: string) => value === null ? 'Unavai
 const displayMoisture = (value: number | null) => value === null ? 'Unavailable' : `${value.toFixed(3)} m³/m³`;
 const shortName = (crop: Crop) => crop.name.split(' (')[0];
 const rotationStatusLabels: Record<RotationStatus, string> = {
-  suitable: 'Suitable under provided conditions',
+  suitable: 'Fits your conditions',
   conditional: 'Conditional',
   insufficient: 'Insufficient data',
   unsuitable: 'Unsuitable'
@@ -50,6 +53,16 @@ export function RotationPlanner({ place, fieldSelection, onOpenClimate }: Props)
   const [pickingDays, setPickingDays] = useState('21');
   const [search, setSearch] = useState('');
   const [vegetationOpen, setVegetationOpen] = useState(false);
+
+  const resetFieldConditions = () => {
+    setPrevious('');
+    setPreviousHarvest('');
+    setWater('');
+    setDrainage('');
+    setMoisture('');
+    setNextRicePlanting('');
+    setTypeOverride(undefined);
+  };
 
   const start = date || todayInBicol();
   const month = plantingMonth(start);
@@ -92,9 +105,10 @@ export function RotationPlanner({ place, fieldSelection, onOpenClimate }: Props)
 
   return (
     <section className="dashboard-card rotation-card" aria-labelledby="rotation-heading">
-      <div className="dashboard-heading">
+      <div className="dashboard-heading brochure-heading">
+        <span className="brochure-symbol"><MapControlIcon name="planner" /></span>
         <div>
-          <h2 id="rotation-heading">Plan your next crops</h2>
+          <h2 id="rotation-heading">Plan your crops</h2>
           <p className="section-subtitle">{location}</p>
         </div>
       </div>
@@ -119,7 +133,7 @@ export function RotationPlanner({ place, fieldSelection, onOpenClimate }: Props)
         </div>
       </div>
       <details className="planner-details planner-field-details" open>
-        <summary>Field conditions</summary>
+        <summary><MapControlIcon name="tools" /> Field conditions</summary>
         <div className="field-inputs planner-detail-content">
           <div><label htmlFor="previous-crop">Previous crop</label>
             <select id="previous-crop" value={previous} onChange={(event) => {
@@ -170,22 +184,43 @@ export function RotationPlanner({ place, fieldSelection, onOpenClimate }: Props)
             </div>
           </>}
         </div>
+        <div className="planner-field-actions">
+          <button className="quiet-button icon-text-button" type="button" aria-label="Reset field conditions" onClick={resetFieldConditions}>
+            <MapControlIcon name="reset" />Reset
+          </button>
+        </div>
       </details>
 
+      <section className="climate-snapshot" aria-label="Monthly climate at a glance">
+        <div className="brief-section-heading"><MapControlIcon name="climate" /><h3>{labelMonth(month)} climate</h3></div>
+        <dl className="summary-stats">
+          <SummaryStat icon="rain" label="Rain" value={display(selected.rainfallMm, 'mm')} />
+          <SummaryStat icon="temperature" label="Temp." value={display(selected.meanTemperatureC, '°C')} />
+          <SummaryStat icon="humidity" label="Humidity" value={display(selected.relativeHumidityPct, '%')} />
+          <SummaryStat icon="humidity" label="Root-zone moisture" value={displayMoisture(observed)} note={`${smapObservationYear}${moistureComparison ? ` - ${moistureComparison}` : ''}`} />
+        </dl>
+      </section>
+
       <section className="planner-results" aria-labelledby="planner-results-heading">
-        <h3 id="planner-results-heading">Rotation options</h3>
+        <h3 id="planner-results-heading">Crop ideas</h3>
         <p className="planner-note" aria-live="polite">
           {suggestions.length
-            ? `${suggestions.length} ${suggestions.length === 1 ? 'option' : 'options'} to consider for ${formatPlantingDate(start)}.`
-            : 'No options fit the selected date and field conditions. Check the reasons below.'}
+            ? `${suggestions.length} ${suggestions.length === 1 ? 'idea' : 'ideas'} · ${formatPlantingDate(start)}`
+            : 'No matches. Adjust field conditions or view details.'}
         </p>
         <div className="rotation-results">
-          {suggestions.map((rotation) => <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />)}
+          {suggestions.slice(0, 2).map((rotation) => <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />)}
         </div>
+        {suggestions.length > 2 && <MoreDetails title={`More crop ideas · ${suggestions.length - 2}`}>
+          <div className="rotation-results">{suggestions.slice(2).map((rotation) => <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} inlineDetails />)}</div>
+        </MoreDetails>}
+      </section>
+
+      <p className="brief-note"><MapControlIcon name="info" />Planning guide · confirm with your local agriculture office.</p>
         {otherOptions.length > 0 && <details className="planner-details">
           <summary>More options <span>{otherOptions.length}</span></summary>
           <div className="planner-detail-content rotation-results">
-            {otherOptions.map((rotation) => <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />)}
+            {otherOptions.map((rotation) => <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} inlineDetails />)}
           </div>
         </details>}
         {unsuitable.length > 0 && <details className="planner-details">
@@ -209,33 +244,6 @@ export function RotationPlanner({ place, fieldSelection, onOpenClimate }: Props)
             <p>Repeat-pick crops get this many extra days. The Planner also allows {turnaroundDays} days to clear and prepare the field before a follow-up crop or the next rice planting.</p>
           </div>
         </details>
-      </section>
-
-      <div className="planner-weather">
-        <div>
-          <strong>{labelMonth(month)} climate</strong>
-          {localRainfall && <span><a href={imergSeasonalSource}>NASA GPM IMERG rainfall</a> · {imergSeasonalPeriod} · 0.1° grid</span>}
-          <span>NASA POWER · {reference.name} reference · {climatePeriod}{localRainfall ? ' · temperature and humidity' : ''}</span>
-        </div>
-        <dl>
-          <div><dt>Rainfall</dt><dd>{display(selected.rainfallMm, 'mm')}</dd></div>
-          <div><dt>Mean temp.</dt><dd>{display(selected.meanTemperatureC, '°C')}</dd></div>
-          <div><dt>Humidity</dt><dd>{display(selected.relativeHumidityPct, '%')}</dd></div>
-          <div><dt>Root-zone moisture · {smapObservationYear}</dt><dd>{displayMoisture(observed)}</dd>
-            {moistureComparison && <span>{moistureComparison}</span>}
-          </div>
-        </dl>
-      </div>
-      <p className="planner-satellite-note">
-        <a href={powerHydrologyUrl}>NASA SMAP</a> estimates moisture in the top metre of soil for a roughly 9 km grid cell.
-        {soilMoisture && <> The {smapBaseline} average for {labelMonth(month)} is {displayMoisture(soilMoisture.mean)}.
-          {soilMoisture.low !== null && soilMoisture.high !== null && <> Typical range {displayMoisture(soilMoisture.low)} to {displayMoisture(soilMoisture.high)}.</>}
-        </>}
-        {!soilMoisture && <> No downloaded SMAP cell covers this selection.</>}
-        {soilMoisture && soilMoisture.observedDays < soilMoisture.daysInObservation &&
-          <> {smapObservationYear} has {soilMoisture.observedDays} of {soilMoisture.daysInObservation} daily readings for this month.</>}
-      </p>
-
       <details className="planner-details" onToggle={(event) => setVegetationOpen(event.currentTarget.open)}>
         <summary>Vegetation timeline · NASA HLS</summary>
         {!pin && <div className="planner-detail-content"><p>Set point A in Field Check and use the map location to see satellite observations for that field pin.</p></div>}
@@ -297,9 +305,37 @@ export function RotationPlanner({ place, fieldSelection, onOpenClimate }: Props)
               );
             })}
           </div>
-          <button className="quiet-button" type="button" onClick={() => onOpenClimate(farm.id)}>Explore climate history</button>
+          <button className="quiet-button icon-text-button" type="button" onClick={() => onOpenClimate(farm.id)}><MapControlIcon name="readings" />Climate history</button>
         </div>
       </details>
+
+      <MoreDetails title="Climate data & sources">
+      <section className="planner-context" aria-label="Climate at the selected location">
+      <div className="planner-weather">
+        <div>
+          <strong>{labelMonth(month)} climate</strong>
+          {localRainfall && <span><a href={imergSeasonalSource}>NASA GPM IMERG rainfall</a> · {imergSeasonalPeriod} · 0.1° grid</span>}
+          <span>NASA POWER · {reference.name} reference · {climatePeriod}{localRainfall ? ' · temperature and humidity' : ''}</span>
+        </div>
+        <dl>
+          <div><dt>Rainfall</dt><dd>{display(selected.rainfallMm, 'mm')}</dd></div>
+          <div><dt>Mean temp.</dt><dd>{display(selected.meanTemperatureC, '°C')}</dd></div>
+          <div><dt>Humidity</dt><dd>{display(selected.relativeHumidityPct, '%')}</dd></div>
+          <div><dt>Root-zone moisture · {smapObservationYear}</dt><dd>{displayMoisture(observed)}</dd>
+            {moistureComparison && <span>{moistureComparison}</span>}
+          </div>
+        </dl>
+      </div>
+      <p className="planner-satellite-note">
+        <a href={powerHydrologyUrl}>NASA SMAP</a> estimates moisture in the top metre of soil for a roughly 9 km grid cell.
+        {soilMoisture && <> The {smapBaseline} average for {labelMonth(month)} is {displayMoisture(soilMoisture.mean)}.
+          {soilMoisture.low !== null && soilMoisture.high !== null && <> Typical range {displayMoisture(soilMoisture.low)} to {displayMoisture(soilMoisture.high)}.</>}
+        </>}
+        {!soilMoisture && <> No downloaded SMAP cell covers this selection.</>}
+        {soilMoisture && soilMoisture.observedDays < soilMoisture.daysInObservation &&
+          <> {smapObservationYear} has {soilMoisture.observedDays} of {soilMoisture.daysInObservation} daily readings for this month.</>}
+      </p>
+      </section>
 
       <footer className="data-footer planner-footer">
         <p>Planning pilot v{rotationRulesVersion}. Auto reads the selected location from the PAGASA climate map. Near a boundary, an option that depends on one climate type is shown as conditional. Confirm the plan and variety with your municipal agriculture office before planting.</p>
@@ -313,6 +349,7 @@ export function RotationPlanner({ place, fieldSelection, onOpenClimate }: Props)
           <a href={soilUrl}>DA–BSWM soil guide</a>
         </p>
       </footer>
+      </MoreDetails>
     </section>
   );
 }
@@ -340,7 +377,7 @@ function RotationStep({ step, phase }: { step: GrowingStep; phase: string }) {
   );
 }
 
-function RotationCard({ rotation, previous }: { rotation: Rotation; previous?: Crop }) {
+function RotationCard({ rotation, previous, inlineDetails = false }: { rotation: Rotation; previous?: Crop; inlineDetails?: boolean }) {
   const { first, next, status, findings, guide, totalDays } = rotation;
   const missingData = findings.filter(({ status }) => status === 'insufficient');
   const needsFieldDetails = status === 'insufficient' && missingData.length > 0 && missingData.every(({ fieldInput }) => fieldInput);
@@ -348,14 +385,7 @@ function RotationCard({ rotation, previous }: { rotation: Rotation; previous?: C
   const messages = [...new Set([...findings.filter(({ status }) => status !== 'suitable'),
     ...findings.filter(({ status }) => status === 'suitable')].map(({ message }) => message))];
   const followsPrevious = previous && guide?.crops[0] === shortName(previous) && guide.crops[1] === shortName(first.crop);
-  return (
-    <article className="rotation-result" data-status={status}>
-      <h4>{followsPrevious && <>{shortName(previous)}<span className="sequence-arrow"> → </span></>}{shortName(first.crop)}{next && <><span className="sequence-arrow"> → </span>{shortName(next.crop)}</>}</h4>
-      <p className="rotation-status">{needsFieldDetails ? 'Field details needed' : rotationStatusLabels[status]}</p>
-      <ol>
-        <RotationStep step={first} phase={followsPrevious ? 'Plant after harvest' : 'First crop'} />
-        {next && <RotationStep step={next} phase="Next crop" />}
-      </ol>
+  const explanation = <>
       <ul className="rotation-findings">
         {messages.map((message) => <li key={message}>{message}</li>)}
       </ul>
@@ -366,6 +396,17 @@ function RotationCard({ rotation, previous }: { rotation: Rotation; previous?: C
           url === bicolRiceCalendar ? 'Bicol rice calendar' : 'Bicol rainfed calendar'}</a>)}
         {guide?.sources.map(({ label, url }) => <a key={url} href={url}>{label}</a>)}
       </p>
+  </>;
+  return (
+    <article className="rotation-result" data-status={status}>
+      <h4>{followsPrevious && <>{shortName(previous)}<span className="sequence-arrow"> → </span></>}{shortName(first.crop)}{next && <><span className="sequence-arrow"> → </span>{shortName(next.crop)}</>}</h4>
+      <p className="rotation-status"><MapControlIcon name={status === 'suitable' ? 'planner' : 'info'} />{needsFieldDetails ? 'Field details needed' : rotationStatusLabels[status]}</p>
+      <ol>
+        <RotationStep step={first} phase={followsPrevious ? 'Plant after harvest' : 'First crop'} />
+        {next && <RotationStep step={next} phase="Next crop" />}
+      </ol>
+      {messages.length > 0 && status !== 'suitable' && <p className="rotation-alert">{messages[0]}</p>}
+      {inlineDetails ? <div className="rotation-explanation">{explanation}</div> : <MoreDetails title="Why this rotation?">{explanation}</MoreDetails>}
     </article>
   );
 }
