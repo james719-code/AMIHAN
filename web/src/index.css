@@ -807,6 +807,10 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .history-dates select { width: 100%; min-width: 0; min-height: 42px; padding: 8px; border: 1px solid var(--control-line); border-radius: 8px; background: var(--surface); font-size: 13px; }
 .history-metrics, .history-chart { margin-top: 14px; }
 .climate-empty { margin: 14px 0 0; padding: 13px; border-radius: 8px; background: var(--soft); color: var(--muted); font-size: 14px; }
+.plain-language-insight { margin: 14px 0; padding: 12px 14px; border-left: 4px solid var(--rice-gold); border-radius: 8px; background: var(--soft); color: var(--ink); }
+.plain-language-insight strong { display: block; color: var(--forest); font-size: 13px; }
+.plain-language-insight p { margin: 4px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.planner-insight { margin-top: 0; }
 .climate-table { min-width: 0; }
 .readings-card .data-footer { line-height: 1.6; }
 @media (max-width: 650px) {
@@ -843,6 +847,29 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 .place-sidebar, .workspace-panel { position: absolute; top: calc(60px + env(safe-area-inset-top)); bottom: var(--map-footer-height); left: 0; right: auto; z-index: 5; display: flex; flex-direction: column; width: var(--workspace-panel-width); height: auto; max-height: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 0; overflow: hidden; box-shadow: none; }
 .place-sidebar[hidden], .workspace-panel[hidden] { display: none; }
 .place-sidebar, .workspace-panel { background: var(--overlay-glass); }
+/* Keep the explorer panel crisp against the map; its nested sections inherit white too. */
+.place-sidebar, .place-sidebar .site-fact, .place-sidebar .sidebar-footer { background: #fff; }
+.workspace-panel { background: #fff; }
+/* Use the same clean surface in the planner and climate-reading workspace panels. */
+.workspace-panel .season-summary, .workspace-panel .field-notes,
+.workspace-panel .plain-language-insight, .workspace-panel .metric-tabs,
+.workspace-panel .climate-empty, .workspace-panel .crop-research,
+.workspace-panel thead { background: #fff; }
+.workspace-panel .plain-language-insight, .workspace-panel .metric-tabs {
+  box-sizing: border-box;
+  width: 100%;
+  border-color: var(--control-line);
+}
+.workspace-panel .plain-language-insight { border: 1px solid var(--control-line); border-left: 4px solid var(--rice-gold); }
+.workspace-panel .readings-card, .workspace-panel .readings-card .dashboard-controls,
+.workspace-panel .readings-card .metric-tabs {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  justify-self: stretch;
+}
+/* Keep the planner's first guidance card the same footprint as its message changes. */
+.workspace-panel .planner-insight { min-height: 92px; }
 .place-sidebar .panel-heading, .workspace-panel .panel-heading { position: static; flex: none; padding: 14px 20px; font-size: 15px; }
 .panel-heading h1 { margin: 0; font: inherit; }
 .explore-intro { margin-bottom: 20px; }

@@ -13,6 +13,13 @@ type Props = {
 
 const number = new Intl.NumberFormat('en-PH', { maximumFractionDigits: 1 });
 
+function slopeMeaning(slope: number) {
+  if (slope < 3) return 'This spot is mostly level. Watch where water collects after rain.';
+  if (slope < 8) return 'This spot has a gentle slope. Keep soil covered and guide runoff away from crops.';
+  if (slope < 15) return 'This spot is noticeably sloped. Plan erosion control before planting.';
+  return 'This spot is steep. Seek local advice on contour planting and erosion control before using it for crops.';
+}
+
 export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onClear, onSampleCenter }: Props) {
   const { start, profile } = selection;
   const [longitude, latitude] = start ? fieldCoordinates(start) : [];
@@ -57,6 +64,9 @@ export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onC
           <p><strong>Point A</strong> · {latitude.toFixed(4)}° N, {longitude.toFixed(4)}° E · <strong>{number.format(Math.round(start.elevationM))} m</strong> elevation · <strong>{number.format(start.slopePercent)}%</strong> slope. Choose point B.</p>
         )}
       </div>
+      {start && !missed && <div className="plain-language-insight">
+        <strong>What this means</strong><p>{slopeMeaning(start.slopePercent)}</p>
+      </div>}
       {profileRows && !approximateOnly && (
         <div className="field-profile" role="group" aria-label="Elevation profile from A to B">
           <ResponsiveContainer width="100%" height="100%">

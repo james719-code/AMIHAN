@@ -59,9 +59,17 @@ function RotationForm({ reference }: { reference: ClimateSite }) {
     rainfed: 'Check soil moisture at sowing and whether you can supply water during a dry spell.',
     irrigated: 'Confirm when irrigation is available and whether you can control water entering the field.'
   }[water];
+  const nextStep = month === null
+    ? 'Start by choosing a planting month. We will show the usual rainfall pattern for that time of year.'
+    : drainage === 'waterlogged'
+      ? 'Pause legume plans for now. Improve drainage first, then review the crop options again.'
+      : `For a ${labelMonth(month)} planting, prepare for the wettest part of this three-month period in ${wettestAhead ? labelMonth(wettestAhead.month) : labelMonth(month)}.`;
 
   return (
     <>
+      <div className="plain-language-insight planner-insight" aria-live="polite">
+        <strong>Your next step</strong><p>{nextStep}</p>
+      </div>
       <h3 className="planner-section-heading">Field details</h3>
       <div className="field-inputs">
         <div><label htmlFor="planting-month">Planting month</label>
