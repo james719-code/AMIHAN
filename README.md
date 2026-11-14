@@ -1,6 +1,6 @@
 # AMIHAN - Adaptive Multi-season Insights for Harvest and Agricultural Needs
 
-AMIHAN is a map-first agricultural planning project for Bicol Region V, Philippines. The [project plan](docs/PROJECT_PLAN.md) defines the 3D terrain viewer, climate and soil data pipeline, crop rotation planner, and the first coding milestone.
+AMIHAN is an agricultural planning project for Bicol Region V, Philippines. Overview opens first, followed by Crop Planner and Field Map. Overview shows how often it rained during the current calendar month in 2021–2025 and links to PAGASA’s current outlook.
 
 ## Local setup
 
@@ -19,17 +19,15 @@ Open the Vite URL printed by the dev server. The map and 2015–2024 climate his
 
 ## Crop rotation planning
 
-Select a city, town, or volcano to zoom in on its terrain and roads. **Reset Bicol view** returns to the regional overview.
-
-Open **Planner** and choose a place and planting date. Enter the previous crop and harvest date, water source, and drainage. The Planner looks up the climate type for the town marker or field pin using the PAGASA map and allows a manual override. Rotation options show planting and harvest windows, local NASA GPM IMERG rainfall where available, and which field details still need checking.
+Choose a town or city and a planting date in **Crop Planner**. Enter the previous crop and harvest date, water source, and drainage. Crop cards show planting and expected harvest windows and link to any field answers needed. Open **Planting calendar settings** to review the local PAGASA climate type or override it.
 
 To check the rice–mungbean pilot, select Pamplona, Camarines Sur and enter rice as the previous crop with rainfed as the water source. Enter the available soil moisture or water and the next rice planting date. The planner checks that the mungbean planting window fits and that final picking and field preparation can finish before the next rice planting. The crop library includes all 48 crops from the supplied workbook, with illustrations, growth milestones, and production references.
 
-The Planner shows NASA SMAP root-zone moisture next to rainfall and compares 2025 with the 2016–2024 average for that month. Set point A in **Field Check**, return to **Planner**, and open **Vegetation timeline** for the last six completed months of NASA HLS greenness observations at that pin. The vegetation timeline uses an internet connection and shows gaps where usable imagery is unavailable.
+Open **Rain and soil** to compare historical rainfall, review your drainage answer, and see how area soil moisture in 2025 compared with the 2016–2024 range for the same month. Use **Compare planting months** to try another month. The climate archive and source credits are available under data sources on **Overview**.
 
-Use **Climate** on the map to scrub or play daily rainfall or monthly climate for a selected year. The readings appear at the requested NASA POWER coordinates. In 3D, positive daily rainfall adds animated marks at those points. In **Historical climate → 2024 daily weather**, select any of Bicol’s 107 municipalities or seven cities and use **Daily measure** to explore rainfall, temperature, wind, dew point, humidity, solar radiation, soil moisture, land evaporation, and transpiration energy. The chart uses the nearest grid cell to the mapped town or city coordinate. The other tabs include the 2015–2024 reference-point climate history and the IMERG bounding-box rainfall series.
+Use **Expected rain** on the map to compare towns for a selected month. It estimates the chance of at least 1 mm of rain on a day from that month’s 2021–2025 NASA IMERG records. The median and middle 50% summarize historical monthly totals. The panel links to PAGASA for a current farm forecast. The climate archive preserves daily and monthly historical readings.
 
-Use **Field Check** to shade the regional terrain by slope and select two land points for an elevation profile. Measurements use the original terrain heights. The display mesh has roughly 660 m spacing across Bicol, so the profile describes regional terrain and leaves gaps over water. The planner uses Field Check point A when using the map location.
+Open **Field Map** to view terrain and roads. Use **Field Check** to shade the terrain by slope and select two land points for an elevation profile. Measurements use the original terrain heights. The display mesh has roughly 660 m spacing across Bicol, so the profile describes regional terrain and leaves gaps over water. After selecting point A, choose **Use this field in Planner**. Open **Vegetation timeline** for NASA HLS observations at the pin, which require an internet connection and may have gaps.
 
 The web app builds with the [bundled 2015–2024 climate readings](web/src/data/historical-climate.json). Original NASA POWER and Giovanni exports are kept locally.
 
