@@ -7,9 +7,11 @@ const cells: Partial<Record<string, SmapCell>> = data.cells;
 export const smapObservationYear = data.observationYear;
 export const smapBaseline = `${data.startYear}–${data.observationYear - 1}`;
 
-export function smapMonthAt(placeId: string, pin: readonly number[] | null, month: number) {
-  const key = powerWeatherSite(placeId)?.cells.smap;
-  if (!pin) return key ? cells[key]?.months[month] : undefined;
+export function smapMonthAt(placeId: string | undefined, pin: readonly number[] | null, month: number) {
+  if (!pin) {
+    const key = placeId && powerWeatherSite(placeId)?.cells.smap;
+    return key ? cells[key]?.months[month] : undefined;
+  }
 
   const [longitude, latitude] = pin;
   const x = nearestCenter(data.grid.lon, longitude);

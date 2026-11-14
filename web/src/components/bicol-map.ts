@@ -9,9 +9,6 @@ import { MeshBVH } from 'three-mesh-bvh';
 import geography from '../data/bicol-map.json';
 import terrainElevations from '../data/terrain-elevations.json';
 import { places, waterLabels } from '../data/places';
-import { climateSites } from '../data/historical-climate';
-import type { ClimateFrame } from '../data/climate-map';
-import { createRainGlyphs } from './bicol-rain';
 import { createFieldSampler, createFieldTerrain, emptyField, type FieldSelection } from './field-terrain';
 import { loadBicolRoads } from './bicol-roads';
 import { createFlatMap } from './bicol-flat-map';
@@ -105,9 +102,11 @@ function createHardwareRenderer(canvas: HTMLCanvasElement) {
 
 export function createBicolMap(
   container: HTMLDivElement, compass: HTMLSpanElement, roadOverlay: HTMLDivElement,
+  overlayControls: readonly HTMLElement[],
   onContextChange: (lost: boolean) => void,
   onFieldChange: (selection: FieldSelection) => void,
-  onFieldMiss: () => void
+  onFieldMiss: () => void,
+  initialFieldSelection: FieldSelection = emptyField
 ) {
   const renderer = createHardwareRenderer(document.createElement('canvas'));
   const canvas = renderer?.domElement ?? document.createElement('canvas');
@@ -146,7 +145,7 @@ export function createBicolMap(
   let sampler: ReturnType<typeof createFieldSampler> | undefined;
   let slopeVisible = false;
   let fieldActive = false;
-  let selection = emptyField;
+  let selection = initialFieldSelection;
   let pickStart: { x: number; y: number; id: number } | null = null;
   let selectedPlaceId = '';
   let focusStep: ((now: number) => void) | null = null;
@@ -155,13 +154,8 @@ export function createBicolMap(
   let sceneDirty = false;
   let roadTilesDirty = false;
   let lost = false;
-  let lastRainFrame = -Infinity;
-  let rainSites: { position: Vector3; amount: number }[] = [];
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const rain = createRainGlyphs();
-  scene.add(rain.mesh);
   let markers: { id: string; element: HTMLButtonElement; position: Vector3; priority: number; order: number; volcano: boolean }[] = [];
-  let climateMarkers: { id: string; element: HTMLButtonElement; position: Vector3 }[] = [];
   let contextLabels: { element: HTMLElement; position: Vector3; maxSpan: number }[] = [];
   let roads: Awaited<ReturnType<typeof loadBicolRoads>> | undefined;
   let roadsPromise: Promise<void> | undefined;
@@ -305,7 +299,7 @@ export function createBicolMap(
         else if (terrain && shadedMaterial) terrain.material = enabled ? shadedMaterial : flatMaterial;
         requestRender();
       },
-      setPlaces(elements: Map<string, HTMLButtonElement>, labels: Map<string, HTMLElement>, climate: Map<string, HTMLButtonElement>) {
+      setPlaces(elements: Map<string, HTMLButtonElement>, labels: Map<string, HTMLElement>) {
         markers = [];
         for (const [order, place] of places.entries()) {
           const element = elements.get(place.id);
@@ -318,18 +312,7 @@ export function createBicolMap(
           const element = labels.get(name);
           return element ? [{ element, position: mapPosition(coordinates), maxSpan }] : [];
         });
-        climateMarkers = climateSites.flatMap(({ id, coordinates }) => {
-          const element = climate.get(id);
-          return element ? [{ id, element, position: terrainPosition(coordinates, `climate_${id}`) }] : [];
-        });
         sortMarkers();
-        requestRender();
-      },
-      setClimateFrame(frame: ClimateFrame | null) {
-        rainSites = frame?.metric === 'dailyRainfall' ? climateMarkers.flatMap(({ id, position }) => {
-          const amount = frame.readings.get(id);
-          return amount !== undefined && amount !== null && amount > 0 ? [{ position, amount }] : [];
-        }) : [];
         requestRender();
       },
       selectPlace(id: string) {
@@ -510,17 +493,8 @@ export function createBicolMap(
   function drawFrame(now: number) {
     focusStep?.(now);
     const verticalSpan = (camera.top - camera.bottom) / camera.zoom;
-    const rainVisible = mode === '3d' && rainSites.length > 0;
-    const animateRain = rainVisible && !reducedMotion.matches;
-    const rainDue = animateRain && now - lastRainFrame >= 40;
-
     if (layoutDirty) updateLayers(verticalSpan);
-    if (layoutDirty || rainDue) {
-      rain.mesh.visible = rainVisible;
-      if (rainVisible) rain.update(rainSites, verticalSpan, relief, animateRain ? now / 1000 : 0);
-      if (rainDue) lastRainFrame = now;
-    }
-    if (layoutDirty || sceneDirty || rainDue) {
+    if (layoutDirty || sceneDirty) {
       if (renderer) renderer.render(scene, camera);
       else {
         camera.updateMatrixWorld();
@@ -533,7 +507,7 @@ export function createBicolMap(
     sceneDirty = false;
     roadTilesDirty = false;
     frameId = 0;
-    if (focusStep || animateRain) scheduleFrame();
+    if (focusStep) scheduleFrame();
   }
 
   function updateLayers(verticalSpan: number) {
@@ -560,7 +534,6 @@ export function createBicolMap(
   }
 
   const grid = new SpatialGrid();
-  const climateDimensionCache = new WeakMap<HTMLElement, { halfWidth: number; labelHeight: number; text: string }>();
   const elementState = new WeakMap<HTMLElement, { visible: boolean; x: number; y: number }>();
 
   function placeElement(element: HTMLElement, x: number, y: number, visible: boolean) {
@@ -590,39 +563,35 @@ export function createBicolMap(
     }
   }
 
+  function positionMarkerLabel(element: HTMLButtonElement, x: number, y: number, selected: boolean) {
+    const labelWidth = (selected ? 17 : 2) + (element.dataset.label?.length ?? 0) * (width < 500 ? 5.5 : 6.5);
+    const labelHeight = selected ? 12 : 8;
+    const right = x + 10 + labelWidth < width - 4
+      && !grid.overlaps(x + 10, y - labelHeight, x + 10 + labelWidth, y + labelHeight);
+    const left = !right && x - 10 - labelWidth > 4
+      && !grid.overlaps(x - 10 - labelWidth, y - labelHeight, x - 10, y + labelHeight);
+    toggleClass(element, 'has-label', right || left);
+    toggleClass(element, 'label-left', left);
+    if (right) grid.insert([x + 10, y - labelHeight, x + 10 + labelWidth, y + labelHeight]);
+    if (left) grid.insert([x - 10 - labelWidth, y - labelHeight, x - 10, y + labelHeight]);
+  }
+
   function positionOverlays(verticalSpan: number) {
-    // Read and cache climate label dimensions to prevent forced layout reflows on every frame.
-    const climateLabels = climateMarkers.filter(({ element }) => !element.hidden).map(({ position, element }) => {
-      const text = element.textContent ?? '';
-      let dim = climateDimensionCache.get(element);
-      if (!dim || dim.text !== text) {
-        dim = { halfWidth: element.offsetWidth / 2, labelHeight: element.offsetHeight, text };
-        climateDimensionCache.set(element, dim);
-      }
-      return { position, element, halfWidth: dim.halfWidth, labelHeight: dim.labelHeight };
-    });
+    grid.clear();
+    const mapBounds = container.getBoundingClientRect();
+    for (const control of overlayControls) {
+      const bounds = control.getBoundingClientRect();
+      if (!bounds.width || !bounds.height || bounds.right <= mapBounds.left || bounds.left >= mapBounds.right) continue;
+      grid.insert([
+        bounds.left - mapBounds.left - 4, bounds.top - mapBounds.top - 4,
+        bounds.right - mapBounds.left + 4, bounds.bottom - mapBounds.top + 4
+      ]);
+    }
+
     const azimuth = controls.getAzimuthalAngle();
     const northAngle = Math.atan2(Math.sin(azimuth), Math.cos(azimuth) * Math.cos(controls.getPolarAngle()));
     compass.style.rotate = `${northAngle}rad`;
 
-    grid.clear();
-    grid.insert([width - 48, 0, width, 59]);
-    grid.insert([width - 94, height - 56, width, height]);
-    if (fieldActive) grid.insert([0, height - 54, 126, height]);
-
-    for (const { position, element, halfWidth, labelHeight } of climateLabels) {
-      projected.set(position.x, position.y * relief + 0.05, position.z).project(camera);
-      const x = (projected.x + 1) * width / 2;
-      const y = (1 - projected.y) * height / 2;
-      const top = y - labelHeight - 8;
-      const bottom = y + labelHeight + 8;
-      const above = top > 4 && !grid.overlaps(x - halfWidth, top, x + halfWidth, y - 7);
-      const below = !above && bottom < height - 4 && !grid.overlaps(x - halfWidth, y + 7, x + halfWidth, bottom);
-      const visible = x > halfWidth + 4 && x < width - halfWidth - 4 && y > 5 && y < height - 5 && (above || below);
-      toggleClass(element, 'below-point', below);
-      placeElement(element, x, y, visible);
-      if (visible) grid.insert([x - halfWidth, below ? y + 7 : top, x + halfWidth, below ? bottom : y - 7]);
-    }
     const close = verticalSpan <= 105;
     const visibleMarkers = [];
     for (const { position, element, id, priority } of markers) {
@@ -639,20 +608,12 @@ export function createBicolMap(
       placeElement(element, x, y, visible);
       if (visible) {
         grid.insert([x - 7, y - 7, x + 7, y + 7]);
-        visibleMarkers.push({ element, x, y, selected });
+        if (selected) positionMarkerLabel(element, x, y, true);
+        else visibleMarkers.push({ element, x, y });
       }
     }
-    for (const { element, x, y, selected } of visibleMarkers) {
-      const labelWidth = (selected ? 17 : 2) + (element.dataset.label?.length ?? 0) * (width < 500 ? 5.5 : 6.5);
-      const labelHeight = selected ? 12 : 8;
-      const right = x + 10 + labelWidth < width - 4
-        && !grid.overlaps(x + 10, y - labelHeight, x + 10 + labelWidth, y + labelHeight);
-      const left = !right && x - 10 - labelWidth > 4
-        && !grid.overlaps(x - 10 - labelWidth, y - labelHeight, x - 10, y + labelHeight);
-      toggleClass(element, 'has-label', right || left);
-      toggleClass(element, 'label-left', left);
-      if (right) grid.insert([x + 10, y - labelHeight, x + 10 + labelWidth, y + labelHeight]);
-      if (left) grid.insert([x - 10 - labelWidth, y - labelHeight, x - 10, y + labelHeight]);
+    for (const { element, x, y } of visibleMarkers) {
+      positionMarkerLabel(element, x, y, false);
     }
     for (const { element, position, maxSpan } of contextLabels) {
       projected.copy(position).project(camera);
@@ -744,8 +705,6 @@ export function createBicolMap(
       canvas.removeEventListener('keydown', fieldKeyDown);
       if (terrain && shadedMaterial) terrain.material = shadedMaterial;
       roads?.dispose();
-      scene.remove(rain.mesh);
-      rain.dispose();
       field?.dispose();
       if (model) disposeModel(model);
       flatMaterial.dispose();

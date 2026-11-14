@@ -102,21 +102,26 @@ export function ClimateHistory({ site, place }: { site: ClimateSite; place: MapP
     <section className="dashboard-card readings-card" id="climate-history" aria-labelledby="climate-heading">
       <div className="dashboard-heading">
         <div>
-          <h2 id="climate-heading">Historical climate</h2>
+          <h2 id="climate-heading">{place.name}</h2>
           <p className="section-subtitle">{scope}</p>
         </div>
         <span className="demo-badge">{weather ? `${selectedYear} · UTC` : climatePeriod}</span>
       </div>
       <div className="dashboard-controls">
-        <div className="metric-tabs" role="group" aria-label="Climate view">
+        <div className="metric-tabs readings-views" role="group" aria-label="Reading type">
           {views.map(({ id, label }) => (
             <button key={id} type="button" aria-pressed={view === id} onClick={() => setView(id)}>{label}</button>
           ))}
         </div>
         <div className="history-dates">
-          {weather && <div><label htmlFor="weather-metric">Daily measure</label>
+          {weather && <div><label htmlFor="weather-metric">Measure</label>
             <select id="weather-metric" value={weatherMetricKey} onChange={(event) => setWeatherMetricKey(event.target.value as WeatherMetric)}>
               {weatherMetricKeys.map((key) => <option key={key} value={key}>{powerWeatherMetrics[key].label}</option>)}
+            </select>
+          </div>}
+          {view === 'monthly' && <div><label htmlFor="monthly-metric">Measure</label>
+            <select id="monthly-metric" value={metricKey} onChange={(event) => setMetricKey(event.target.value as MonthlyMetric)}>
+              {metrics.map(({ key, label }) => <option key={key} value={key}>{label}</option>)}
             </select>
           </div>}
           {!weather && <div><label htmlFor="history-year">Year</label>
@@ -131,17 +136,10 @@ export function ClimateHistory({ site, place }: { site: ClimateSite; place: MapP
           </div>}
         </div>
       </div>
-      {view === 'monthly' && (
-        <div className="metric-tabs history-metrics" role="group" aria-label="Monthly climate metric">
-          {metrics.map(({ key, label }) => (
-            <button key={key} type="button" aria-pressed={metricKey === key} onClick={() => setMetricKey(key)}>{label}</button>
-          ))}
-        </div>
-      )}
       {count > 0 ? (
         <>
           {climateMeaning && <div className="plain-language-insight" aria-live="polite">
-            <strong>What this means</strong><p>{climateMeaning}</p>
+            <strong>Period summary</strong><p>{climateMeaning}</p>
           </div>}
           <div className="chart-panel history-chart">
             <div className="chart-title">

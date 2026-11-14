@@ -1,178 +1,174 @@
-import { lazy, Suspense, useState } from 'react';
-import { WorkspacePanel } from './components/WorkspacePanel';
+import { lazy, Suspense, useCallback, useEffect, useState, type MouseEvent } from 'react';
+import { TownSelect } from './components/TownSelect';
 import { WorkspaceMenu, type WorkspaceView } from './components/WorkspaceMenu';
-import { climateSiteFor, coordinatesLabel } from './data/historical-climate';
-import { provinces } from './data/sites';
-import { citySource, coordinateSource, elevationSource, municipalitySource, places } from './data/places';
-import type { MapTool } from './components/MapPanel';
-import { useMediaQuery } from './hooks/useMediaQuery';
-import type { FieldSelection } from './components/field-terrain';
+import type { FieldPoint, FieldSelection } from './components/field-terrain';
+import { fieldCoordinates } from './data/field-location';
+import { climateSiteFor } from './data/historical-climate';
+import { farmingPlaces, places, type MapPlace } from './data/places';
+import { mapPath, overviewPath, plannerPath } from './workspace-routes';
 
-const number = new Intl.NumberFormat('en-PH');
-const ClimateHistory = lazy(() => import('./components/ClimateHistory')
-  .then(({ ClimateHistory }) => ({ default: ClimateHistory })));
-const MapPanel = lazy(() => import('./components/MapPanel')
-  .then(({ MapPanel }) => ({ default: MapPanel })));
-const RotationPlanner = lazy(() => import('./components/RotationPlanner')
-  .then(({ RotationPlanner }) => ({ default: RotationPlanner })));
+const MapWorkspace = lazy(() => import('./components/MapWorkspace').then(({ MapWorkspace }) => ({ default: MapWorkspace })));
+const ClimateHistory = lazy(() => import('./components/ClimateHistory').then(({ ClimateHistory }) => ({ default: ClimateHistory })));
+const RotationPlanner = lazy(() => import('./components/RotationPlanner').then(({ RotationPlanner }) => ({ default: RotationPlanner })));
+const Overview = lazy(async () => {
+  await import('./landing.css');
+  const { LandingPage } = await import('./components/LandingPage');
+  return { default: LandingPage };
+});
+
+const home = import.meta.env.BASE_URL;
+const workspaceLinks = [
+  { view: 'overview', label: 'Overview', href: overviewPath },
+  { view: 'planner', label: 'Crop Planner', href: plannerPath },
+  { view: 'map', label: 'Field Map', href: mapPath }
+] as const;
 const emptyField: FieldSelection = { start: null, profile: null };
+const initialUrl = window.location.href;
+
+function getRoute(url: URL) {
+  const panel = url.searchParams.get('panel');
+  const place = url.searchParams.get('place');
+  const path = url.pathname.replace(/\/index\.html$/, '/').replace(/\/$/, '');
+  const plannerAnchors = /^#(?:field-setup|crop-options|soil-conditions|crop-resources|planner-location|previous-crop|previous-harvest|water-source|field-drainage|establishment-moisture|next-rice-planting|planting-date)$/;
+  const legacyPlanner = (Boolean(place) && url.hash !== '#sources') || plannerAnchors.test(url.hash);
+  const view: WorkspaceView = path === `${home}overview`
+    ? 'overview'
+    : panel === 'planner' ? 'planner'
+    : panel === 'readings' ? 'readings'
+    : path === mapPath.slice(0, -1) ? 'map'
+    : legacyPlanner ? 'planner' : 'overview';
+  return { view, placeId: places.find(({ id }) => id === place)?.id ?? '', hash: url.hash, url: url.href };
+}
 
 function App() {
-  const [activePanel, setActivePanel] = useState<WorkspaceView | null>('explore');
-  const [plannerOpened, setPlannerOpened] = useState(false);
-  const [activeTool, setActiveTool] = useState<MapTool | null>(null);
-  const [toolMinimized, setToolMinimized] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 650px)');
-  const mobileToolOpen = isMobile && activeTool !== null && !toolMinimized;
-  const [selectedPlaceId, setSelectedPlaceId] = useState(places[0].id);
+  const [route, setRoute] = useState(() => getRoute(new URL(window.location.href)));
+  const [plannerOpened, setPlannerOpened] = useState(route.view === 'planner');
+  const [townId, setTownId] = useState(() => farmingPlaces.find(({ id }) => id === route.placeId)?.id ?? '');
+  const [overviewTownId, setOverviewTownId] = useState<string>();
+  const [readingTownId, setReadingTownId] = useState<string | undefined>(() => route.view === 'readings'
+    ? farmingPlaces.find(({ id }) => id === route.placeId)?.id
+    : undefined);
+  const [mapPlaceId, setMapPlaceId] = useState('');
   const [fieldSelection, setFieldSelection] = useState<FieldSelection>(emptyField);
-  const [mapMode, setMapMode] = useState<'2d' | '3d'>('3d');
+  const [appliedField, setAppliedField] = useState<FieldPoint | null>(null);
+  const town = farmingPlaces.find(({ id }) => id === townId);
+  const readingTown = farmingPlaces.find(({ id }) => id === (readingTownId ?? townId));
+  const { view } = route;
+  const pageTitle = view === 'readings' ? 'Climate archive' : workspaceLinks.find((link) => link.view === view)?.label;
 
-  const selectWorkspace = (view: WorkspaceView) => {
-    if (view === 'rotation') setPlannerOpened(true);
-    setActivePanel((current) => current === view && !mobileToolOpen ? null : view);
-    if (isMobile) setToolMinimized(true);
-  };
-  const selectMapTool = (tool: MapTool | null) => {
-    setActiveTool(tool === activeTool && !toolMinimized ? null : tool);
-    setToolMinimized(false);
-    if (isMobile && tool !== null) setActivePanel(null);
-  };
-  const workspaceMenu = <WorkspaceMenu active={mobileToolOpen ? null : activePanel} onSelect={selectWorkspace} />;
-
-  const selectedPlace = places.find((place) => place.id === selectedPlaceId) ?? places[0];
-  const selectedProvince = provinces.find((province) => province.code === selectedPlace.provinceCode);
-  const selectedSite = climateSiteFor(selectedPlace);
-  const placeOptions = places.filter((place) => place.provinceCode === selectedPlace.provinceCode);
-
-  const selectProvince = (code: string) => {
-    const provincePlace = places.find((place) => place.provinceCode === code && place.climateSite);
-    if (provincePlace) setSelectedPlaceId(provincePlace.id);
+  const selectTown = (id: string) => {
+    setTownId(id);
+    setReadingTownId(undefined);
+    setAppliedField(null);
   };
 
-  const summitSource = selectedPlace.volcanoNumber
-    ? `https://volcano.si.edu/volcano.cfm?vn=${selectedPlace.volcanoNumber}`
-    : null;
+  const updateFieldSelection = useCallback((selection: FieldSelection) => {
+    setFieldSelection(selection);
+    if (!selection.start) setAppliedField(null);
+  }, []);
+
+  const changeRoute = (url: URL) => {
+    const next = getRoute(url);
+    if (next.placeId) {
+      if (next.view === 'map') setMapPlaceId(next.placeId);
+      if (farmingPlaces.some(({ id }) => id === next.placeId)) {
+        if (next.view === 'planner') selectTown(next.placeId);
+        if (next.view === 'readings') setReadingTownId(next.placeId);
+      }
+    }
+    if (next.view === 'planner') setPlannerOpened(true);
+    setRoute(next);
+  };
+
+  function navigate(href: string) {
+    const url = new URL(href, window.location.href);
+    if (url.href === window.location.href) return;
+    window.history.pushState(null, '', url);
+    changeRoute(url);
+  }
+
+  useEffect(() => {
+    const onPopState = () => changeRoute(new URL(window.location.href));
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  useEffect(() => {
+    document.title = `${pageTitle} · AMIHAN`;
+    if (!route.hash) {
+      window.scrollTo(0, 0);
+      if (document.activeElement === document.body && route.url !== initialUrl) {
+        document.getElementById('main-content')?.focus({ preventScroll: true });
+      }
+    }
+  }, [route.url, route.hash, pageTitle]);
+
+  function followAppLink(event: MouseEvent<HTMLDivElement>) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+    const link = (event.target as Element).closest<HTMLAnchorElement>('a[data-app-link]');
+    if (!link) return;
+    event.preventDefault();
+    navigate(link.href);
+    if (link.closest('.app-header')) document.getElementById('main-content')?.focus({ preventScroll: true });
+  }
+
+  function openPlanner(place: MapPlace) {
+    navigate(`${plannerPath}&place=${encodeURIComponent(place.id)}`);
+  }
 
   return (
-    <>
-      <header className="site-header">
-        <div className="site-header-inner">
-          <div className="brand-lockup">
-            <img className="brand-mark" src={`${import.meta.env.BASE_URL}fieldwise-mark.png`} alt="" width={48} height={48} />
-            <p className="brand-name" title="Adaptive Multi-season Insights for Harvest and Agricultural Needs">AMIHAN</p>
-          </div>
-          {workspaceMenu}
+    <div className={view === 'map' ? 'app-layout map-layout' : 'app-layout'} onClick={followAppLink}>
+      <a className="skip-link" href="#main-content">Skip to content</a>
+      <header className="app-header">
+        <div className="app-header-inner">
+          <a className="app-brand" href={overviewPath} aria-label="AMIHAN" data-app-link>
+            <img src={`${home}fieldwise-mark.png`} alt="" width={36} height={36} />
+            <span className="app-brand-name">AMIHAN</span>
+          </a>
+          <WorkspaceMenu active={view} links={workspaceLinks} />
         </div>
       </header>
-      <main className="app-shell" aria-label="AMIHAN map workspace">
-          <Suspense fallback={<section className="map-card map-status" role="status"><p>Loading Bicol terrain…</p></section>}>
-            <MapPanel
-              selectedPlaceId={selectedPlaceId}
-              activeTool={activeTool}
-              toolPanelVisible={!toolMinimized}
-              onToolChange={selectMapTool}
-              onToolMinimize={() => setToolMinimized(true)}
-              mapMode={mapMode}
-              onMapModeChange={setMapMode}
-              onPlaceSelect={(id) => { setSelectedPlaceId(id); setActivePanel('explore'); if (isMobile) setToolMinimized(true); }}
-              fieldSelection={fieldSelection}
-              onFieldSelection={setFieldSelection}
-            />
-          </Suspense>
 
-          <aside id="place-sidebar" className="control-card place-sidebar" aria-label="Explorer controls" hidden={activePanel !== 'explore' || mobileToolOpen}>
-            <div className="panel-heading">
-              <h1>Explore a place</h1>
-              <button className="quiet-button close-button" type="button" aria-label="Close place sidebar" onClick={() => setActivePanel(null)}>&times;</button>
-            </div>
-            <div className="sidebar-scroll" tabIndex={0} role="region" aria-label="Place explorer content">
-            <div className="explore-intro">
-              <span className="eyebrow">Bicol Region V &middot; Philippines</span>
-              <p>Choose a location below or select a marker on the map.</p>
-            </div>
-            <div className="explore-location-fields">
-            <div className="field-group">
-              <label htmlFor="province">Province</label>
-              <select id="province" value={selectedPlace.provinceCode} onChange={(event) => selectProvince(event.target.value)}>
-                {provinces.map((province) => <option key={province.code} value={province.code}>{province.name}</option>)}
-              </select>
-            </div>
-            <div className="field-group">
-              <label htmlFor="place">City, municipality, or landmark</label>
-              <select id="place" value={selectedPlaceId} onChange={(event) => setSelectedPlaceId(event.target.value)}>
-                {(['Municipality', 'City', 'Volcano'] as const).map((kind) => {
-                  const options = placeOptions.filter((place) => place.kind === kind)
-                    .sort((a, b) => a.name.localeCompare(b.name, 'en-PH'));
-                  if (!options.length) return null;
-                  const label = { Municipality: 'Municipalities', City: 'Cities', Volcano: 'Volcanoes' }[kind];
-                  return <optgroup key={kind} label={label}>
-                    {options.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}
-                  </optgroup>;
-                })}
-              </select>
-            </div>
-            </div>
-            <div className="site-fact" aria-live="polite">
-              <div>
-                <span className="fact-label">{selectedPlace.kind} · {selectedProvince?.name}</span>
-                <h3>{selectedPlace.name}</h3>
-              </div>
-              <dl className="place-facts">
-                <div>
-                  <dt>{summitSource ? 'Summit elevation' : 'Elevation at marker'}</dt>
-                  <dd>{selectedPlace.summitMeters !== undefined
-                    ? `${number.format(selectedPlace.summitMeters)} m`
-                    : selectedPlace.elevationMeters === null ? 'Unavailable' : `≈ ${number.format(selectedPlace.elevationMeters)} m`}</dd>
-                </div>
-                {selectedPlace.population !== undefined && (
-                  <div>
-                    <dt>Population · 2024</dt>
-                    <dd>{number.format(selectedPlace.population)}</dd>
-                  </div>
-                )}
-                {selectedPlace.psgc && (
-                  <div><dt>PSGC code</dt><dd>{selectedPlace.psgc}</dd></div>
-                )}
-                <div>
-                  <dt>Coordinates</dt>
-                  <dd>{coordinatesLabel(selectedPlace.coordinates)}</dd>
-                </div>
-              </dl>
-              <p className="place-sources">
-                {summitSource ? <a href={summitSource}>Smithsonian Global Volcanism Program</a> : (
-                  <>
-                    <a href={elevationSource}>Mapzen elevation</a>
-                    <a href={selectedPlace.kind === 'City' ? citySource : municipalitySource}>PSA census</a>
-                    {selectedPlace.coordinateUrl
-                      ? <a href={selectedPlace.coordinateUrl}>DILG location</a>
-                      : <a href={selectedPlace.geonamesId ? `https://www.geonames.org/${selectedPlace.geonamesId}/` : coordinateSource}>GeoNames</a>}
-                  </>
-                )}
-              </p>
-            </div>
-            </div>
-            <div className="sidebar-footer">
-            <button className="quiet-button sidebar-plan" type="button" onClick={() => selectWorkspace('rotation')}>Plan a crop rotation &rarr;</button>
-            </div>
-          </aside>
-
-        <WorkspacePanel id="rotation-panel" open={activePanel === 'rotation' && !mobileToolOpen} title="Crop rotation planner" onClose={() => setActivePanel(null)} keepMounted={plannerOpened}>
-          <Suspense fallback={<p role="status">Loading crop rotation planner…</p>}>
-            <RotationPlanner place={selectedPlace} fieldSelection={fieldSelection} onOpenClimate={(id) => {
-              setSelectedPlaceId(id);
-              selectWorkspace('climate');
-            }} />
+      <main id="main-content" className={`app-main ${view}-page`} tabIndex={-1} aria-label={pageTitle}>
+        {plannerOpened && <div className="planner-width planner-content" hidden={view !== 'planner'}>
+          <Suspense fallback={<p role="status">Loading crop planner…</p>}>
+            <RotationPlanner town={town} fieldPin={appliedField ? fieldCoordinates(appliedField) : null}
+              onSelectTown={selectTown} onUseTown={() => setAppliedField(null)} />
           </Suspense>
-        </WorkspacePanel>
+        </div>}
 
-        <WorkspacePanel id="climate-panel" open={activePanel === 'climate' && !mobileToolOpen} title="Climate readings" onClose={() => setActivePanel(null)}>
-          <Suspense fallback={<p role="status">Loading climate readings…</p>}>
-            <ClimateHistory site={selectedSite} place={selectedPlace} />
-          </Suspense>
-        </WorkspacePanel>
+        {view === 'readings' && <div className="planner-width">
+          <header className="planner-title">
+            <h1>Climate archive</h1>
+            <p>Compare daily weather, monthly climate, and regional rainfall across Bicol.</p>
+          </header>
+          <div className="readings-location field-inputs">
+            <div>
+              <label htmlFor="readings-town">Town or city</label>
+              <TownSelect id="readings-town" value={readingTown?.id ?? ''} onChange={setReadingTownId} />
+            </div>
+          </div>
+          {readingTown
+            ? <Suspense fallback={<p role="status">Loading climate readings…</p>}>
+                <ClimateHistory site={climateSiteFor(readingTown)} place={readingTown} />
+              </Suspense>
+            : <p className="readings-empty">Choose a town or city to see its climate readings.</p>}
+        </div>}
+
+        {view === 'map' && <Suspense fallback={<p className="page-loading" role="status">Loading Field Map…</p>}>
+          <MapWorkspace selectedPlaceId={mapPlaceId || route.placeId || townId} onPlaceSelect={setMapPlaceId} fieldSelection={fieldSelection}
+            onFieldSelection={updateFieldSelection} onUseField={() => {
+              if (!fieldSelection.start) return;
+              setAppliedField(fieldSelection.start);
+              navigate(plannerPath);
+            }} onPlanner={openPlanner} />
+        </Suspense>}
+
+        {view === 'overview' && <Suspense fallback={<p className="page-loading" role="status">Loading Overview…</p>}>
+          <Overview hash={route.hash} townId={overviewTownId ?? townId} onSelectTown={setOverviewTownId} />
+        </Suspense>}
       </main>
-    </>
+    </div>
   );
 }
 

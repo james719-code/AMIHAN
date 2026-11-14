@@ -1,5 +1,5 @@
 import { bicolRainfedCalendar, bicolRiceCalendar, bicolVegetableGuide, crops, type ClimateType, type Crop, type Days } from './crops';
-import { daysInMonth, formatReading, labelMonth, type seasonalClimate } from './historical-climate';
+import { daysInMonth, labelMonth, rainfallPattern, type seasonalClimate } from './historical-climate';
 import { findRotationGuide, type RotationGuide } from './rotation';
 
 export type Water = '' | 'rainfed' | 'irrigated' | 'paddy';
@@ -13,7 +13,9 @@ export type GrowingStep = {
 };
 
 export type RotationStatus = 'suitable' | 'conditional' | 'insufficient' | 'unsuitable';
-type RuleFinding = { status: RotationStatus; message: string; fieldInput?: true };
+export type FieldInput = 'previous-crop' | 'previous-harvest' | 'water-source' | 'field-drainage' |
+  'establishment-moisture' | 'next-rice-planting';
+type RuleFinding = { status: RotationStatus; message: string; fieldInput?: FieldInput; riceWindowFits?: true };
 export type Rotation = {
   first: GrowingStep;
   next: GrowingStep | null;
@@ -26,7 +28,6 @@ export type Rotation = {
 type PlanSettings = {
   start: string;
   season: Season;
-  localRainfall?: boolean;
   climateTypes: readonly ClimateType[];
   water: Water;
   drainage: Drainage;
@@ -58,6 +59,8 @@ export const daysLabel = ([min, max]: Days) => min === max ? `${min.toLocaleStri
   `${min.toLocaleString('en-PH')}–${max.toLocaleString('en-PH')} days`;
 export const dateRangeLabel = ([early, late]: readonly [string, string]) =>
   early === late ? formatPlantingDate(early) : `${formatPlantingDate(early)} – ${formatPlantingDate(late)}`;
+export const compactDateRange = ([early, late]: readonly [string, string]) =>
+  dateLabel.formatRange(new Date(early), new Date(late));
 
 const isoDate = (date: Date) => date.toISOString().slice(0, 10);
 export const plantingMonth = (date: string) => Number(date.slice(5, 7)) - 1;
@@ -88,6 +91,9 @@ export function growingStep(crop: Crop, start: string): GrowingStep {
 const isRice = (crop?: Crop) => crop?.name === 'Rice (Palay)';
 const isMungbean = (crop: Crop) => crop.name === 'Mungbean (Monggo)';
 const shortName = (crop: Crop) => crop.name.split(' (')[0];
+export function farmerCropName(crop: Crop) {
+  return crop.name === 'Coffee (Robusta)' ? crop.name : /\(([^)]+)\)$/.exec(crop.name)?.[1] ?? crop.name;
+}
 const rotationCrops = crops.filter((crop) => crop.calendar && !crop.longCycle && crop.days[1] <= 210);
 
 const statusOrder: Record<RotationStatus, number> = { suitable: 0, conditional: 1, insufficient: 2, unsuitable: 3 };
@@ -106,7 +112,7 @@ export function plantingCalendarSource(crop: Crop) {
 function checkCalendar({ crop, start }: GrowingStep, types: readonly ClimateType[]): RuleFinding {
   const month = plantingMonth(start);
   const monthName = labelMonth(month);
-  const name = shortName(crop);
+  const name = farmerCropName(crop);
   const supportedTypes = types.filter((type) => crop.calendar?.[type]);
   const matchingTypes = supportedTypes.filter((type) => crop.calendar?.[type]?.includes(month + 1));
   if (!matchingTypes.length && supportedTypes.length !== types.length) return {
@@ -122,40 +128,36 @@ function checkCalendar({ crop, start }: GrowingStep, types: readonly ClimateType
 
 function checkField(crop: Crop, { water, drainage }: PlanSettings): RuleFinding[] {
   if (isRice(crop)) {
-    if (!water) return [{ status: 'insufficient', fieldInput: true, message: 'Confirm whether this field is an irrigated rice paddy.' }];
+    if (!water) return [{ status: 'insufficient', fieldInput: 'water-source', message: 'Confirm whether this field is an irrigated rice paddy.' }];
     return water === 'paddy'
       ? [{ status: 'conditional', message: 'Check the local irrigation schedule before planting lowland rice.' }]
       : [{ status: 'unsuitable', message: 'This lowland rice plan requires a managed, irrigated paddy.' }];
   }
 
   const findings: RuleFinding[] = [];
-  if (!water) findings.push({ status: 'insufficient', fieldInput: true, message: 'Enter the field’s water source.' });
-  if (!drainage) findings.push({ status: 'insufficient', fieldInput: true, message: 'Check drainage and enter how well the field drains.' });
-  if (drainage === 'slow') findings.push({ status: 'conditional', message: 'The field drains slowly. Confirm it has drained before sowing.' });
+  if (!water) findings.push({ status: 'insufficient', fieldInput: 'water-source', message: 'Where does your field get water?' });
+  if (!drainage) findings.push({ status: 'insufficient', fieldInput: 'field-drainage', message: 'After rain, does water stay in your field?' });
+  if (drainage === 'slow') findings.push({ status: 'conditional', message: 'Water drains slowly. Check that standing water has drained before you sow.' });
   if (drainage === 'well' && water === 'paddy') findings.push({ status: 'conditional', message: 'Drain the paddy before sowing the upland crop.' });
   if (drainage === 'waterlogged') findings.push({ status: 'unsuitable', message: 'Wait until the field can drain before planting an upland crop.' });
   return findings;
 }
 
-function checkClimate({ crop, start }: GrowingStep, { season, water, localRainfall }: PlanSettings): RuleFinding[] {
+function checkClimate({ crop, start }: GrowingStep, { season, water }: PlanSettings): RuleFinding[] {
   const month = plantingMonth(start);
   const { rainfallMm, meanTemperatureC } = season[month];
   const monthName = labelMonth(month);
-  const name = shortName(crop);
+  const name = farmerCropName(crop);
   const findings: RuleFinding[] = [];
   if (rainfallMm === null) findings.push({ status: 'insufficient', message: `Historical rainfall is unavailable for ${monthName}.` });
   else if (!isRice(crop)) {
-    // These comparisons describe the reference site's seasons. Crop or field thresholds require local validation.
-    const wetterMonths = season.filter((reading) => reading.rainfallMm !== null && reading.rainfallMm > rainfallMm).length;
-    const drierMonths = season.filter((reading) => reading.rainfallMm !== null && reading.rainfallMm < rainfallMm).length;
-    const rainfall = `${monthName} averages ${formatReading.format(rainfallMm)} mm of rain ${localRainfall ? 'in the local NASA IMERG grid cell' : 'at the NASA POWER reference site'}.`;
-    if (drierMonths >= 9) findings.push({
-      status: 'conditional', message: `${rainfall} Check drainage and the local forecast before sowing ${name} in this wetter month.`
+    const pattern = rainfallPattern(season, month);
+    if (pattern === 'wetter') findings.push({
+      status: 'conditional', message: `${monthName} is usually one of the wetter months. Check drainage and the local forecast before sowing ${name}.`
     });
-    else if (water === 'rainfed' && wetterMonths >= 9) findings.push({
-      status: 'conditional', message: `${rainfall} Check that there is enough water for ${name} to establish in this drier month.`
+    else if (water === 'rainfed' && pattern === 'drier') findings.push({
+      status: 'conditional', message: `${monthName} is usually one of the drier months. Check that there is enough water for ${name} to get started.`
     });
-    else findings.push({ status: 'suitable', message: rainfall });
   }
   if (crop.name === 'Cabbage' && (meanTemperatureC === null || meanTemperatureC > 20)) findings.push({
     status: 'conditional', message: 'Cabbage grows best in cooler conditions. Confirm the field temperature and variety.'
@@ -168,9 +170,9 @@ const clearingDate = (step: GrowingStep, pickingDays: number) =>
 
 function checkCropHistory(settings: PlanSettings): RuleFinding[] {
   if (!settings.previousCrop) return settings.fallow ? [] : [
-    { status: 'insufficient', fieldInput: true, message: 'Enter the previous crop or choose Fallow under Field conditions.' }
+    { status: 'insufficient', fieldInput: 'previous-crop', message: 'What grew here last?' }
   ];
-  if (!settings.previousHarvest) return [{ status: 'insufficient', fieldInput: true, message: 'Enter when the previous crop was harvested.' }];
+  if (!settings.previousHarvest) return [{ status: 'insufficient', fieldInput: 'previous-harvest', message: 'When did you harvest it?' }];
   if (settings.previousHarvest > settings.start) return [
     { status: 'unsuitable', message: 'Choose a planting date on or after the previous crop is harvested.' }
   ];
@@ -180,17 +182,17 @@ function checkCropHistory(settings: PlanSettings): RuleFinding[] {
 function checkRiceBreak(first: GrowingStep, settings: PlanSettings): RuleFinding[] {
   const findings: RuleFinding[] = [];
   if (settings.drainage === 'well') findings.push({ status: 'suitable', message: 'You reported that the field drains well.' });
-  if (!settings.moisture) findings.push({ status: 'insufficient', fieldInput: true, message: 'Confirm there is enough soil moisture or water to establish mungbean.' });
-  if (settings.moisture === 'dry') findings.push({ status: 'conditional', message: 'Arrange water or wait for adequate soil moisture before sowing mungbean.' });
-  if (settings.moisture === 'adequate') findings.push({ status: 'suitable', message: 'You reported enough moisture or available water to establish mungbean.' });
-  if (!settings.nextRicePlanting) findings.push({ status: 'insufficient', fieldInput: true, message: 'Enter the next rice planting date to check that mungbean fits.' });
+  if (!settings.moisture) findings.push({ status: 'insufficient', fieldInput: 'establishment-moisture', message: 'Is the soil moist, or can you water the monggo?' });
+  if (settings.moisture === 'dry') findings.push({ status: 'conditional', message: 'Arrange water or wait until the soil is moist before sowing monggo.' });
+  if (settings.moisture === 'adequate') findings.push({ status: 'suitable', message: 'You reported moist soil or available water for monggo.' });
+  if (!settings.nextRicePlanting) findings.push({ status: 'insufficient', fieldInput: 'next-rice-planting', message: 'When will you plant palay again?' });
   else {
     const ready = clearingDate(first, settings.pickingDays);
     const fits = ready <= settings.nextRicePlanting;
     const riceDate = formatPlantingDate(settings.nextRicePlanting);
-    findings.push({ status: fits ? 'suitable' : 'unsuitable', message: fits
-      ? `Mungbean can clear the field by ${formatPlantingDate(ready)}, in time for rice on ${riceDate}.`
-      : `Mungbean needs the field through ${formatPlantingDate(ready)}, which overlaps rice planting on ${riceDate}.` });
+    findings.push(fits
+      ? { status: 'suitable', riceWindowFits: true, message: `The field should be ready by ${formatPlantingDate(ready)}, in time to plant palay on ${riceDate}.` }
+      : { status: 'unsuitable', message: `Monggo needs the field through ${formatPlantingDate(ready)}, which overlaps palay planting on ${riceDate}.` });
   }
   return findings;
 }
@@ -227,21 +229,22 @@ function assessFollowUp(step: GrowingStep, previous: Crop, settings: PlanSetting
 
 export function suggestRotations(settings: PlanSettings) {
   const history = checkCropHistory(settings);
-  const previous = settings.previousCrop && shortName(settings.previousCrop);
+  const previous = settings.previousCrop;
   const assessed = rotationCrops.map((crop): Rotation => {
     const first = growingStep(crop, settings.start);
-    const guide = previous ? findRotationGuide(previous, shortName(crop)) : undefined;
-    const riceBreak = isRice(settings.previousCrop) && isMungbean(crop);
-    const findings = [checkCalendar(first, settings.climateTypes), ...history, ...checkField(crop, settings), ...checkClimate(first, settings)];
-    if (crop.family === settings.previousCrop?.family) findings.push({
-      status: 'unsuitable', message: `${shortName(crop)} repeats the previous crop’s family.`
-    });
-    else if (settings.previousCrop) findings.push({
-      status: 'suitable', message: `${shortName(crop)} switches crop families after ${previous}.`
-    });
+    const guide = previous ? findRotationGuide(shortName(previous), shortName(crop)) : undefined;
+    const riceBreak = isRice(previous) && isMungbean(crop);
+    const findings = [...history, ...checkField(crop, settings)];
     if (riceBreak) findings.push(...checkRiceBreak(first, settings));
-    else if (settings.nextRicePlanting && clearingDate(first, settings.pickingDays) > settings.nextRicePlanting) findings.push({
-      status: 'unsuitable', message: `This crop would still occupy the field when rice is due on ${formatPlantingDate(settings.nextRicePlanting)}.`
+    findings.push(checkCalendar(first, settings.climateTypes), ...checkClimate(first, settings));
+    if (crop.family === previous?.family) findings.push({
+      status: 'unsuitable', message: `${farmerCropName(crop)} repeats the previous crop’s family.`
+    });
+    else if (previous) findings.push({
+      status: 'suitable', message: `${farmerCropName(crop)} belongs to a different crop family from ${farmerCropName(previous)}.`
+    });
+    if (!riceBreak && settings.nextRicePlanting && clearingDate(first, settings.pickingDays) > settings.nextRicePlanting) findings.push({
+      status: 'unsuitable', message: `This crop would still occupy the field when palay is due on ${formatPlantingDate(settings.nextRicePlanting)}.`
     });
     const followUp = !riceBreak && statusOf(findings) !== 'unsuitable' ? nextStep(first, settings) : null;
     const next = followUp?.step ?? null;

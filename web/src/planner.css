@@ -1,0 +1,393 @@
+.planner-width { width: min(100% - 48px, 1140px); margin-inline: auto; }
+.planner-page, .readings-page { padding-block: clamp(24px, 4.2vw, 56px) 42px; }
+.planner-content[hidden] { display: none; }
+.planner-title { margin-bottom: clamp(18px, 3.4vw, 28px); }
+.planner-title h1 { color: var(--forest); font: 750 clamp(32px, 4vw, 46px)/1.08 var(--ui-font); }
+.planner-title p { margin-top: 10px; color: var(--muted); font-size: 15px; line-height: 1.55; }
+.section-nav { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-bottom: 20px; }
+.section-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 13px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--forest);
+  font-size: 14px;
+  font-weight: 650;
+}
+.section-nav a:hover { border-color: var(--leaf); background: var(--soft); }
+.planner-section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin-bottom: 16px;
+}
+.planner-section-title h2, .planner-resources h2 {
+  color: var(--forest);
+  font-size: clamp(21px, 2.4vw, 26px);
+  font-weight: 700;
+}
+.planner-section-title a { font-size: 14px; }
+.planner-form { padding: clamp(14px, 2.2vw, 24px); border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.planner-form label, .readings-location label { align-self: end; font-size: 14px; line-height: 1.4; }
+.planner-form .field-inputs input, .planner-form .field-inputs select, .readings-location select { font-size: 16px; }
+.planner-calendar { margin-top: 14px; }
+.planner-calendar .planner-detail-content { display: grid; gap: 5px; }
+.planner-calendar select { width: min(100%, 270px); padding: 8px 10px; border: 1px solid var(--control-line); border-radius: 7px; background: #fff; font-size: 16px; }
+.planner-calendar label { color: var(--forest); font-weight: 650; }
+.planner-form :is(input, select), .readings-location select { min-height: 44px; }
+.planner-form .planner-inputs { margin: 0; }
+.planner-form .field-inputs > div { grid-template-rows: auto min-content; align-content: end; }
+.planner-form .planner-field-details { min-width: 0; margin: 18px 0 0; padding: 0; }
+.planner-field-details legend { width: 100%; padding-top: 14px; border-top: 1px solid var(--line); color: var(--forest); font-size: 15px; font-weight: 750; }
+.planner-field-details .field-inputs { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; }
+.planner-pin { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; align-items: center; margin-top: 12px; padding: 10px 12px; border-radius: 7px; background: var(--soft); font-size: 13px; }
+.planner-inline-link { color: var(--coastal-blue); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.planner-inline-link:hover { text-decoration-thickness: 2px; }
+.planner-columns { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: clamp(18px, 3vw, 30px); align-items: start; margin-top: clamp(22px, 3vw, 36px); }
+.planner-columns .planner-results { margin: 0; min-width: 0; }
+.planner-results > h2, .soil-heading h2, .soil-title { margin: 0; color: var(--forest); font: 700 clamp(21px, 2.4vw, 26px)/1.2 var(--ui-font); }
+.planner-columns .planner-note { margin: 6px 0 12px; font-size: 14px; }
+.crop-options-artwork-note { margin: -5px 0 12px; color: var(--muted); font-size: 13px; }
+.planner-note:has(a[href="#planner-location"]) {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.rotation-results { display: grid; gap: 12px; }
+.rotation-result {
+  container-type: inline-size;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.rotation-card-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.rotation-card-heading h3 { margin: 0; color: var(--forest); font-size: 20px; font-weight: 750; line-height: 1.2; }
+.rotation-card-heading .sequence-arrow { color: var(--leaf); }
+.rotation-status { padding: 4px 8px; border-radius: 5px; background: var(--gold-wash); color: #704916; font-size: 12px; font-weight: 700; }
+.rotation-result[data-status="suitable"] .rotation-status { background: #e8efe3; color: var(--forest); }
+.rotation-result[data-status="insufficient"] .rotation-status { background: #e8f1f5; color: var(--coastal-blue); }
+.rotation-schedule { margin: 0; padding: 0 16px; list-style: none; }
+.rotation-step { display: grid; gap: 8px 14px; padding-block: 11px; }
+.rotation-step + .rotation-step { border-top: 1px solid var(--line); }
+.rotation-step-crop { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.rotation-step-crop .crop-art { flex-basis: 36px; width: 36px; height: 36px; border-radius: 6px; }
+.rotation-step-crop strong { display: block; color: var(--forest); font-size: 15px; line-height: 1.3; }
+.rotation-step-label { display: block; color: var(--muted); font-size: 12px; font-weight: 650; line-height: 1.3; }
+.rotation-step-label abbr { text-decoration: none; }
+.rotation-step-dates { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 4px 10px; align-items: start; }
+.rotation-step-dates dd { margin-top: 3px; color: var(--ink); font-size: 14px; font-weight: 650; line-height: 1.35; font-variant-numeric: tabular-nums; }
+@container (min-width: 410px) {
+  .rotation-step { grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); align-items: center; }
+}
+.rotation-next-step {
+  padding: 10px 16px;
+  border-block: 1px solid var(--line);
+  background: #f3f6ef;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.rotation-next-step p + p { margin-top: 3px; }
+.rotation-more { color: var(--muted); font-size: 13px; }
+.rotation-more > summary { min-height: 44px; padding: 12px 16px; color: var(--forest); font-weight: 650; cursor: pointer; }
+.rotation-more > summary:hover { background: var(--soft); }
+.rotation-more-content { padding: 0 16px 14px; line-height: 1.5; }
+.rotation-findings { display: grid; gap: 4px; margin: 0; padding-left: 17px; list-style: disc; }
+.rotation-total { color: var(--forest); font-weight: 700; }
+.rotation-result .rotation-context { margin-top: 8px; }
+.rotation-result .guide-sources { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.planner-resources { display: grid; gap: 16px; margin-top: 32px; }
+.resource-cards { display: grid; align-items: start; gap: 16px clamp(16px, 3vw, 28px); }
+.resource-section-heading p { margin-top: 4px; color: var(--muted); font-size: 13px; }
+.resource-library, .resource-guides {
+  min-width: 0;
+  padding: clamp(14px, 2vw, 20px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+@media (min-width: 651px) {
+  .resource-cards { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+  .resource-library, .resource-guides { overflow-y: auto; scrollbar-gutter: stable; scrollbar-width: thin; }
+  .resource-cards > [data-sticky="true"] {
+    --resource-top: calc(var(--anchor-offset) + env(safe-area-inset-top));
+    position: sticky;
+    top: var(--resource-top);
+    max-height: calc(100dvh - var(--resource-top) - 16px);
+    scroll-padding-block: 12px;
+  }
+}
+.resource-card-content { display: flow-root; }
+.resource-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 3px 8px; margin-bottom: 14px; }
+.resource-heading h3 { color: var(--forest); font-size: 19px; font-weight: 750; }
+.resource-heading > span { color: var(--muted); font-size: 13px; }
+.resource-library .crop-search { font-size: 14px; }
+.resource-library .crop-search input { min-height: 44px; background: #fff; font-size: 16px; }
+.resource-library .crop-profile-content { padding-inline: 8px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.resource-library .crop-profile summary { min-height: 52px; padding-inline: 8px; border-radius: 6px; }
+.resource-library .crop-profile summary:hover, .resource-library .crop-profile[open] summary { background: var(--soft); }
+.resource-library .crop-profile summary strong + span { color: var(--muted); font-size: 13px; }
+.resource-library .crop-art { width: 36px; height: 36px; flex-basis: 36px; }
+.crop-library-toggle { min-height: 44px; margin-top: 10px; font-size: 14px; }
+.crop-library-empty { margin-top: 12px; color: var(--muted); }
+.field-study-list { display: grid; gap: 12px; }
+.field-study { min-width: 0; padding: 12px 12px 0; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+.field-study h4 { color: var(--forest); font-size: 15px; font-weight: 750; line-height: 1.35; }
+.study-sequence {
+  display: flex;
+  align-items: start;
+  margin-block: 10px 9px;
+  padding: 8px 5px;
+  border-radius: 6px;
+  background: #f0f3eb;
+  list-style: none;
+}
+.study-sequence li {
+  position: relative;
+  display: grid;
+  flex: 1 1 0;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--forest);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.study-sequence .crop-art { width: 44px; height: 44px; }
+.study-arrow { position: absolute; top: 11px; left: 0; transform: translateX(-50%); color: var(--leaf); font-size: 19px; line-height: 1; }
+.study-field-check, .study-details p { color: var(--muted); font-size: 13px; line-height: 1.45; }
+.study-details { margin-top: 8px; border-top: 1px solid var(--line); }
+.study-details summary { display: list-item; padding-block: 11px; color: var(--forest); font-size: 13px; font-weight: 700; cursor: pointer; }
+.study-details p:last-child { padding-block: 5px 12px; }
+.field-study .guide-sources { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.resource-vegetation { margin: 0; }
+.rainfall-stats { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+.rainfall-stats > div { display: grid; gap: 2px; min-width: 0; }
+.rainfall-stats dt { color: var(--muted); font-size: 13px; font-weight: 650; }
+.rainfall-stats dd { color: var(--forest); font-size: clamp(25px, 3vw, 36px); font-weight: 750; line-height: 1.12; font-variant-numeric: tabular-nums; }
+.rainfall-stats dd small { font-size: 15px; }
+.rainfall-summary .rainfall-note, .rainfall-note { margin-top: 10px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.soil-outlook-link { display: inline-flex; min-height: 44px; align-items: center; font-size: 14px; }
+.planner-footer { padding-top: 10px; border-top: 1px solid var(--line); }
+.readings-location { grid-template-columns: minmax(0, 400px); padding: 16px; margin: 0 0 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.readings-page .readings-card { min-width: 0; margin: 0; }
+.readings-card .dashboard-heading h2 { font-size: clamp(22px, 2.8vw, 30px); font-weight: 700; letter-spacing: normal; }
+.readings-card .readings-views { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.readings-card .readings-views button { min-height: 44px; font-size: 14px; }
+.readings-card .history-dates { grid-template-columns: repeat(2, minmax(0, 280px)); }
+.history-dates label { display: block; margin-bottom: 4px; font-size: 14px; }
+.history-dates select { min-height: 44px; background: #fff; font-size: 16px; }
+.readings-empty { padding: 16px; border-left: 3px solid var(--leaf); color: var(--muted); }
+.page-loading { padding: 24px; }
+
+/* ==========================================================================
+   Soil & Environmental Conditions Panel
+   ========================================================================== */
+
+.soil-panel {
+  min-width: 0;
+  padding: clamp(14px, 2.4vw, 22px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  scroll-margin-top: var(--anchor-offset);
+}
+
+@media (min-width: 761px) {
+  .soil-panel {
+    --soil-panel-top: calc(var(--anchor-offset) + env(safe-area-inset-top));
+    position: sticky;
+    top: var(--soil-panel-top);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    max-height: calc(100dvh - var(--soil-panel-top) - 16px);
+  }
+  .soil-strata-list {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #849d89 transparent;
+    padding: 4px;
+    margin-inline: -4px;
+    scroll-padding-block: 8px;
+  }
+}
+
+.soil-strata-list { display: grid; gap: 8px; margin-top: 16px; }
+.soil-stratum-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 58px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--forest);
+  text-align: left;
+}
+.soil-stratum-card:hover { background: #f3f6ef; }
+.soil-stratum-card[aria-expanded="true"] { border-color: var(--leaf); background: #edf3ea; }
+.soil-stratum-media {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  background: var(--soft);
+}
+.soil-stratum-icon { width: 19px; height: 19px; }
+.soil-layer-rain .soil-stratum-media { color: var(--coastal-blue); background: #e8f1f5; }
+.soil-layer-roots .soil-stratum-media { color: #843f28; background: #f4ebe4; }
+.soil-stratum-content { display: grid; gap: 1px; }
+.soil-stratum-name { font-size: 15px; font-weight: 700; }
+.soil-status-text { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.soil-status-wet { color: var(--coastal-blue); }
+.soil-status-dry, .soil-status-warning, .soil-status-alert { color: #843f28; }
+.soil-stratum-chevron { width: 17px; height: 17px; }
+.soil-stratum-chevron.is-expanded { transform: rotate(180deg); }
+.soil-stratum-panel {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+.soil-stratum-panel[hidden] { display: none; }
+.soil-summary-callout {
+  padding-left: 10px;
+  border-left: 3px solid var(--leaf);
+  color: var(--ink);
+}
+.soil-summary { font-size: 14px; line-height: 1.5; }
+
+.soil-hint { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.soil-metrics, .soil-telemetry-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr));
+  gap: 10px;
+}
+.soil-metrics dt, .soil-telemetry-label { display: block; color: var(--muted); font-size: 13px; }
+.soil-metrics dd, .soil-telemetry-value { display: block; color: var(--forest); font-weight: 750; font-variant-numeric: tabular-nums; }
+.soil-metrics dd { font-size: clamp(21px, 2.8vw, 29px); line-height: 1.15; }
+.soil-metrics small, .soil-telemetry-unit { font-size: 13px; }
+.soil-telemetry-highlights { margin-top: 12px; grid-template-columns: 1fr; }
+.rain-chart { container-type: inline-size; margin: 12px 0; padding-block: 10px 6px; border-block: 1px solid var(--line); }
+.rain-chart figcaption { margin-bottom: 8px; color: var(--forest); font-size: 13px; font-weight: 700; }
+.rain-chart figcaption span { color: var(--muted); font-weight: 400; }
+.rain-chart-plot { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 5px; font-variant-numeric: tabular-nums; }
+.rain-chart-axis { grid-row: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: end; color: var(--muted); font-size: 11px; line-height: 1; }
+.rain-chart-grid { display: grid; min-height: 80px; }
+.rain-chart-lines { grid-area: 1 / 1; display: flex; flex-direction: column; justify-content: space-between; }
+.rain-chart-lines span { border-top: 1px solid var(--line); }
+.rain-chart-lines span:last-child { border-color: #8b9c90; }
+.rain-chart-bars, .rain-chart-months { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); }
+.rain-chart-bars { grid-area: 1 / 1; }
+.rain-chart-column { display: flex; align-items: end; justify-content: center; padding-inline: 3px; }
+.rain-chart-column span { width: 100%; max-width: 15px; background: #658370; border-radius: 2px 2px 0 0; }
+.rain-chart-column[data-selected="true"] span { background: var(--coastal-blue); }
+.rain-chart-months { grid-column: 2; text-align: center; color: var(--muted); font-size: 10px; }
+.rain-chart-months [data-selected="true"] { color: var(--coastal-blue); font-weight: 800; }
+@container (max-width: 325px) {
+  .rain-chart-months :not([data-selected="true"]):not(:nth-child(3n + 1)) { visibility: hidden; }
+  .rain-chart-months:has([data-selected="true"]:nth-child(3n + 2)) :nth-child(3n + 1):has(+ [data-selected="true"]) { visibility: hidden; }
+  .rain-chart-months [data-selected="true"]:nth-child(3n) + span { visibility: hidden; }
+}
+.soil-month-filter { display: grid; gap: 4px; color: var(--forest); font-size: 14px; font-weight: 650; }
+.soil-month-filter select { min-height: 44px; padding: 7px 9px; border: 1px solid var(--control-line); border-radius: 7px; font-size: 16px; font-weight: 400; }
+.soil-month-table { min-width: 0; width: 100%; margin-top: 8px; }
+.soil-month-table :is(th, td) { padding: 4px 5px; white-space: normal; font-variant-numeric: tabular-nums; }
+.soil-month-table :is(th, td):last-child { text-align: right; }
+.soil-month-table [data-selected="true"] { background: var(--soft); font-weight: 700; }
+
+/* Action wrapper & link */
+.soil-action-wrapper {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.soil-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Readings Disclosures */
+.soil-reading {
+  margin-top: 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #dbe3d6;
+  background: #fafbf9;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.soil-reading > summary {
+  width: fit-content;
+  min-height: 32px;
+  padding-block: 6px;
+  color: var(--forest);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.soil-reading > summary:hover {
+  color: var(--leaf);
+}
+
+.soil-reading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.soil-reading a {
+  color: var(--coastal-blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 650;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+@media (max-width: 850px) {
+  .planner-field-details .field-inputs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .planner-columns { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 650px) {
+  .planner-width { width: calc(100% - 28px); }
+  .planner-title p { font-size: 14px; }
+  .section-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .section-nav a { padding-inline: 9px; }
+  .readings-card .readings-views { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 440px) {
+  .planner-form .field-inputs { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+}

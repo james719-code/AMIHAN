@@ -1,6 +1,7 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import geography from '../data/bicol-map.json';
-import { fieldCoordinates, profileSpacingKm, slopeBands, type FieldSelection } from './field-terrain';
+import { fieldCoordinates } from '../data/field-location';
+import { profileSpacingKm, slopeBands, type FieldSelection } from './field-terrain';
 
 type Props = {
   selection: FieldSelection;
@@ -9,6 +10,7 @@ type Props = {
   onSlopeChange: (visible: boolean) => void;
   onClear: () => void;
   onSampleCenter: () => void;
+  onUseField: () => void;
 };
 
 const number = new Intl.NumberFormat('en-PH', { maximumFractionDigits: 1 });
@@ -20,7 +22,7 @@ function slopeMeaning(slope: number) {
   return 'This spot is steep. Seek local advice on contour planting and erosion control before using it for crops.';
 }
 
-export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onClear, onSampleCenter }: Props) {
+export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onClear, onSampleCenter, onUseField }: Props) {
   const { start, profile } = selection;
   const [longitude, latitude] = start ? fieldCoordinates(start) : [];
   const profileRows = profile?.samples.map((elevationM, i) => ({
@@ -66,6 +68,7 @@ export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onC
       </div>
       {start && !missed && <div className="plain-language-insight">
         <strong>What this means</strong><p>{slopeMeaning(start.slopePercent)}</p>
+        <button className="quiet-button field-planner-button" type="button" onClick={onUseField}>Use this field in Planner</button>
       </div>}
       {profileRows && !approximateOnly && (
         <div className="field-profile" role="group" aria-label="Elevation profile from A to B">

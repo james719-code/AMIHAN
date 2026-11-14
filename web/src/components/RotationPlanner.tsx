@@ -1,44 +1,47 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import {
   bicolRainfedCalendar, bicolRiceCalendar, bicolVegetableGuide, crops, pagasaClimateTypes,
   pagasaFarmWeather, type ClimateType, type Crop
 } from '../data/crops';
 import cropWorkbook from '../data/crop-workbook.json';
+import { cropArtwork, cropArtworkCredit } from '../data/crop-artwork';
 import { climateTypeAt } from '../data/climate-types';
-import { imergSeasonalAt, imergSeasonalPeriod, imergSeasonalSource, imergSeasonalYears } from '../data/imerg-seasonal';
+import { imergSeasonalAt, imergSeasonalYears } from '../data/imerg-seasonal';
 import {
-  climatePeriod, coordinatesLabel, formatReading, labelMonth, months, nearestClimateSite, powerUrl,
+  coordinatesLabel, labelMonth, nearestClimateSite, powerUrl,
   seasonalClimate, soilUrl
 } from '../data/historical-climate';
 import {
-  calendarMonths, dateRangeLabel, daysLabel, formatPlantingDate, growingStep,
+  calendarMonths, compactDateRange, dateRangeLabel, daysLabel, farmerCropName, formatPlantingDate, growingStep,
   nextPlantingMonth, plantingCalendarSource, plantingMonth, rotationRulesVersion, suggestRotations, todayInBicol, turnaroundDays,
   type Drainage, type EstablishmentMoisture, type GrowingStep, type Rotation, type RotationStatus, type Water
 } from '../data/planting-plan';
-import { places, type MapPlace } from '../data/places';
+import type { MapPlace } from '../data/places';
 import { rotationGuides } from '../data/rotation';
 import { provinces } from '../data/sites';
-import { powerHydrologyUrl } from '../data/power-weather';
-import { smapBaseline, smapMonthAt, smapObservationYear } from '../data/smap-seasonal';
-import { fieldCoordinates, type FieldSelection } from './field-terrain';
+import { smapMonthAt } from '../data/smap-seasonal';
+import { SoilLayers } from './SoilLayers';
+import { TownSelect } from './TownSelect';
+import { mapPath } from '../workspace-routes';
 
-type Props = { place: MapPlace; fieldSelection: FieldSelection; onOpenClimate: (placeId: string) => void };
+type Props = {
+  town?: MapPlace;
+  fieldPin: number[] | null;
+  onSelectTown: (id: string) => void;
+  onUseTown: () => void;
+};
 const VegetationTimeline = lazy(() => import('./VegetationTimeline').then(({ VegetationTimeline }) => ({ default: VegetationTimeline })));
-const farmingPlaces = places.filter(({ kind }) => kind !== 'Volcano')
-  .sort((a, b) => a.name.localeCompare(b.name, 'en-PH'));
-const display = (value: number | null, unit: string) => value === null ? 'Unavailable' : `${formatReading.format(value)} ${unit}`;
-const displayMoisture = (value: number | null) => value === null ? 'Unavailable' : `${value.toFixed(3)} m³/m³`;
 const shortName = (crop: Crop) => crop.name.split(' (')[0];
 const rotationStatusLabels: Record<RotationStatus, string> = {
-  suitable: 'Suitable under provided conditions',
-  conditional: 'Conditional',
-  insufficient: 'Insufficient data',
-  unsuitable: 'Unsuitable'
+  suitable: 'Fits your plan',
+  conditional: 'Check before planting',
+  insufficient: 'Field details needed',
+  unsuitable: 'Doesn’t fit your plan'
 };
 const planningDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= '1900-01-01' && value <= '9990-12-31';
+const availableCrops = [...crops].sort((a, b) => farmerCropName(a).localeCompare(farmerCropName(b), 'en-PH'));
 
-export function RotationPlanner({ place, fieldSelection, onOpenClimate }: Props) {
-  const [manualId, setManualId] = useState('');
+export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }: Props) {
   const [date, setDate] = useState('');
   const [water, setWater] = useState<Water>('');
   const [drainage, setDrainage] = useState<Drainage>('');
@@ -50,256 +53,280 @@ export function RotationPlanner({ place, fieldSelection, onOpenClimate }: Props)
   const [pickingDays, setPickingDays] = useState('21');
   const [search, setSearch] = useState('');
   const [vegetationOpen, setVegetationOpen] = useState(false);
+  const [libraryExpanded, setLibraryExpanded] = useState(false);
+  const resourceLibrary = useRef<HTMLDivElement>(null);
+  const resourceGuides = useRef<HTMLDivElement>(null);
+  const browseCrops = useRef<HTMLButtonElement>(null);
+  const [shorterResource, setShorterResource] = useState<'library' | 'guides' | null>(null);
+
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    const target = id && document.getElementById(id);
+    if (target && target.closest('.rotation-card')) target.scrollIntoView();
+  }, []);
+
+  useEffect(() => {
+    if (!libraryExpanded || document.activeElement !== browseCrops.current) return;
+    resourceLibrary.current?.querySelector<HTMLElement>('.crop-profile:nth-child(7) summary')?.focus();
+  }, [libraryExpanded]);
+
+  useEffect(() => {
+    const library = resourceLibrary.current;
+    const guides = resourceGuides.current;
+    if (!library || !guides) return;
+    const observer = new ResizeObserver(() => {
+      const difference = library.offsetHeight - guides.offsetHeight;
+      setShorterResource(difference === 0 ? null : difference < 0 ? 'library' : 'guides');
+    });
+    observer.observe(library);
+    observer.observe(guides);
+    return () => observer.disconnect();
+  }, []);
 
   const start = date || todayInBicol();
   const month = plantingMonth(start);
-  const manual = farmingPlaces.find(({ id }) => id === manualId);
-  const farm = manual ?? place;
-  const pin = !manual && fieldSelection.start ? fieldCoordinates(fieldSelection.start) : null;
-  const reference = nearestClimateSite(pin ?? farm.coordinates);
-  const province = provinces.find(({ code }) => code === farm.provinceCode);
-  const location = pin ? `Field Check point A · ${coordinatesLabel(pin)}` : `${farm.name}, ${province?.name}`;
-  const { types: availableTypes, source: climateTypeSource } = climateTypeAt(pin ?? farm.coordinates, pin ? undefined : farm);
-  const locationId = pin ? pin.join(',') : farm.id;
-  const chosenType = typeOverride?.location === locationId ? typeOverride.type : '';
+  const coordinates = pin ?? town?.coordinates;
+  const reference = coordinates ? nearestClimateSite(coordinates) : null;
+  const province = provinces.find(({ code }) => code === town?.provinceCode);
+  const location = pin ? 'Field Map pin' : town ? `${town.name}, ${province?.name}` : '';
+  const { types: availableTypes, source: climateTypeSource } = coordinates
+    ? climateTypeAt(coordinates, pin ? undefined : town)
+    : { types: [], source: 'unknown' };
+  const locationId = pin ? pin.join(',') : town?.id;
+  const chosenType = typeOverride && typeOverride.location === locationId ? typeOverride.type : '';
   const climateTypes = chosenType ? [chosenType] : availableTypes;
   const climateTypeLabel = availableTypes.length === 1 ? `Type ${availableTypes[0]}` : `Types ${availableTypes.join(' or ')}`;
   const climateTypeDetail = climateTypeSource === 'map'
     ? availableTypes.length > 1 ? 'Near a boundary on the PAGASA map' : `PAGASA map · ${pin ? 'field pin' : 'town or city marker'}`
     : climateTypeSource === 'province' ? 'PAGASA province summary' : 'No match on the PAGASA map';
-  const rainfall = imergSeasonalAt(pin ?? farm.coordinates);
+  const rainfall = coordinates && imergSeasonalAt(coordinates);
   const localRainfall = rainfall !== undefined && rainfall.every((value) => Number.isFinite(value));
-  const season = seasonalClimate(reference).map((reading, index) => localRainfall ? {
+  const season = reference ? seasonalClimate(reference).map((reading, index) => localRainfall ? {
     ...reading, rainfallMm: rainfall[index], yearsWithRainfall: imergSeasonalYears
-  } : reading);
-  const selected = season[month];
-  const soilMoisture = smapMonthAt(farm.id, pin, month);
-  const observed = soilMoisture?.observed ?? null;
-  const moistureComparison = soilMoisture && observed !== null && soilMoisture.low !== null && soilMoisture.high !== null
-    ? observed < soilMoisture.low ? 'Drier than usual' : observed > soilMoisture.high ? 'Wetter than usual' : 'Within typical range'
-    : null;
-  const maxRainfall = Math.max(1, ...season.map(({ rainfallMm }) => rainfallMm ?? 0));
+  } : reading) : null;
+  const soilMoisture = season ? smapMonthAt(town?.id, pin, month) : undefined;
   const previousCrop = crops.find(({ name }) => name === previous);
   const afterRice = previousCrop?.name === 'Rice (Palay)';
   const extraDays = Math.min(365, Math.max(0, Math.round(Number(pickingDays) || 0)));
-  const { suggestions, otherOptions, unsuitable } = suggestRotations({
-    start, season, localRainfall, climateTypes, water, drainage, previousCrop, fallow: previous === 'fallow',
+  const { suggestions, otherOptions, unsuitable } = season ? suggestRotations({
+    start, season, climateTypes, water, drainage, previousCrop, fallow: previous === 'fallow',
     previousHarvest, moisture: afterRice ? moisture : '', nextRicePlanting: afterRice ? nextRicePlanting : '',
-    placeId: pin ? undefined : farm.id, pickingDays: extraDays
-  });
-  const visibleCrops = crops.filter(({ name, artwork }) =>
-    `${name} ${cropWorkbook[artwork].crop}`.toLowerCase().includes(search.trim().toLowerCase()));
+    placeId: pin ? undefined : town?.id, pickingDays: extraDays
+  }) : { suggestions: [], otherOptions: [], unsuitable: [] };
+  const query = search.trim().toLowerCase();
+  const visibleCrops = availableCrops.filter((crop) =>
+    `${crop.name} ${cropWorkbook[crop.artwork].crop} ${farmerCropName(crop)}`.toLowerCase().includes(query));
+  const showAllCrops = libraryExpanded || Boolean(query);
 
   return (
-    <section className="dashboard-card rotation-card" aria-labelledby="rotation-heading">
-      <div className="dashboard-heading">
+    <section className="rotation-card" aria-labelledby="rotation-heading">
+      <header className="planner-title">
         <div>
-          <h2 id="rotation-heading">Plan your next crops</h2>
-          <p className="section-subtitle">{location}</p>
+          <h1 id="rotation-heading">Crop Planner</h1>
+          <p>Compare crop rotations for your planting date and field conditions.</p>
         </div>
-      </div>
+      </header>
 
-      <div className="field-inputs planner-inputs">
-        <div><label htmlFor="planner-location">Farm location</label>
-          <select id="planner-location" value={manualId} onChange={(event) => setManualId(event.target.value)}>
-            <option value="">{pin ? 'Map · Field Check point A' : `Map · ${place.name}`}</option>
-            {provinces.map(({ code, name }) => (
-              <optgroup key={code} label={name}>
-                {farmingPlaces.filter(({ provinceCode }) => provinceCode === code).map(({ id, name: town }) =>
-                  <option key={id} value={id}>{town}</option>)}
-              </optgroup>
-            ))}
-          </select>
+      <nav className="section-nav" aria-label="Crop planner sections">
+        <a href="#field-setup">Field setup</a>
+        <a href="#crop-options">Crop options</a>
+        <a href="#soil-conditions">Rain and soil</a>
+        <a href="#crop-resources">Crop library and guides</a>
+      </nav>
+
+      <section id="field-setup" className="planner-form" aria-labelledby="field-setup-heading" tabIndex={-1}>
+        <div className="planner-section-title">
+          <h2 id="field-setup-heading">Field setup</h2>
+          <a className="planner-inline-link" href={mapPath} data-app-link>Choose a field on the map</a>
         </div>
-        <div><label htmlFor="planting-date">Planting date</label>
-          <input id="planting-date" type="date" min="1900-01-01" max="9990-12-31" value={start} onChange={(event) => {
-            const value = event.target.value;
-            if (value === '' || planningDate(value)) setDate(value);
-          }} />
+        <div className="field-inputs planner-inputs">
+          <div><label htmlFor="planner-location">Town or city</label>
+            <TownSelect id="planner-location" value={town?.id ?? ''} onChange={onSelectTown} />
+          </div>
+          <div><label htmlFor="planting-date">Planting date</label>
+            <input id="planting-date" type="date" min="1900-01-01" max="9990-12-31" value={start} onChange={(event) => {
+              const value = event.target.value;
+              if (value === '' || planningDate(value)) setDate(value);
+            }} />
+          </div>
         </div>
-      </div>
-      <details className="planner-details planner-field-details" open>
-        <summary>Field conditions</summary>
-        <div className="field-inputs planner-detail-content">
-          <div><label htmlFor="previous-crop">Previous crop</label>
-            <select id="previous-crop" value={previous} onChange={(event) => {
-              setPrevious(event.target.value);
-              setPreviousHarvest('');
-              setMoisture('');
-              setNextRicePlanting('');
-            }}>
-              <option value="">Unknown</option><option value="fallow">Fallow</option>
-              {[...crops].sort((a, b) => a.name.localeCompare(b.name)).map(({ name }) => <option key={name}>{name}</option>)}
-            </select>
-          </div>
-          {previousCrop && <div><label htmlFor="previous-harvest">Previous harvest date</label>
-            <input id="previous-harvest" type="date" min="1900-01-01" max="9990-12-31" value={previousHarvest}
-              onChange={({ target: { value } }) => { if (!value || planningDate(value)) setPreviousHarvest(value); }} />
-          </div>}
-          <div><label htmlFor="water-source">Water source</label>
-            <select id="water-source" value={water} onChange={(event) => setWater(event.target.value as Water)}>
-              <option value="">Unknown</option><option value="rainfed">Rainfed</option>
-              <option value="irrigated">Irrigated upland</option><option value="paddy">Irrigated rice paddy</option>
-            </select>
-          </div>
-          <div><label htmlFor="field-drainage">Field drainage</label>
-            <select id="field-drainage" value={drainage} onChange={(event) => setDrainage(event.target.value as Drainage)}>
-              <option value="">Unknown</option><option value="well">Drains well</option>
-              <option value="slow">Drains slowly</option><option value="waterlogged">Often waterlogged</option>
-            </select>
-          </div>
-          <div><label htmlFor="planner-climate-type">Local climate type</label>
-            <select id="planner-climate-type" value={chosenType} onChange={(event) => {
-              setTypeOverride({ location: locationId, type: event.target.value as ClimateType | '' });
-            }}>
-              <option value="">Auto · {climateTypeLabel}</option>
-              {(['I', 'II', 'III', 'IV'] as const).map((type) => <option key={type} value={type}>Type {type}</option>)}
-            </select>
-            <span className="planner-input-hint">{chosenType ? 'Manual selection' : climateTypeDetail}</span>
-          </div>
-          {afterRice && <>
-            <div><label htmlFor="establishment-moisture">Water for sowing mungbean</label>
-              <select id="establishment-moisture" value={moisture} onChange={(event) => setMoisture(event.target.value as EstablishmentMoisture)}>
-                <option value="">Unknown</option><option value="adequate">Enough soil moisture or available water</option>
-                <option value="dry">Soil is dry and water is unavailable</option>
+        {pin && <div className="planner-pin">
+          <span><strong>{location}</strong> · {coordinatesLabel(pin)}</span>
+          <button className="planner-inline-link" type="button" onClick={onUseTown}>Use town estimate</button>
+        </div>}
+        <fieldset className="planner-field-details">
+          <legend>Field conditions</legend>
+          <div className="field-inputs">
+            <div><label htmlFor="previous-crop">Previous crop</label>
+              <select id="previous-crop" value={previous} onChange={(event) => {
+                setPrevious(event.target.value);
+                setPreviousHarvest('');
+                setMoisture('');
+                setNextRicePlanting('');
+              }}>
+                <option value="">I’m not sure</option><option value="fallow">Nothing was planted</option>
+                {availableCrops.map((crop) => <option key={crop.name} value={crop.name}>{farmerCropName(crop)}</option>)}
               </select>
             </div>
-            <div><label htmlFor="next-rice-planting">Next rice planting date</label>
-              <input id="next-rice-planting" type="date" min="1900-01-01" max="9990-12-31" value={nextRicePlanting}
-                onChange={({ target: { value } }) => { if (!value || planningDate(value)) setNextRicePlanting(value); }} />
+            {previousCrop && <div><label htmlFor="previous-harvest">Previous harvest date</label>
+              <input id="previous-harvest" type="date" min="1900-01-01" max="9990-12-31" value={previousHarvest}
+                onChange={({ target: { value } }) => { if (!value || planningDate(value)) setPreviousHarvest(value); }} />
+            </div>}
+            <div><label htmlFor="water-source">Water source</label>
+              <select id="water-source" value={water} onChange={(event) => setWater(event.target.value as Water)}>
+                <option value="">I’m not sure</option><option value="rainfed">Rain only</option>
+                <option value="irrigated">I can water the field</option><option value="paddy">Irrigated rice paddy</option>
+              </select>
             </div>
-          </>}
-        </div>
-      </details>
-
-      <section className="planner-results" aria-labelledby="planner-results-heading">
-        <h3 id="planner-results-heading">Rotation options</h3>
-        <p className="planner-note" aria-live="polite">
-          {suggestions.length
-            ? `${suggestions.length} ${suggestions.length === 1 ? 'option' : 'options'} to consider for ${formatPlantingDate(start)}.`
-            : 'No options fit the selected date and field conditions. Check the reasons below.'}
-        </p>
-        <div className="rotation-results">
-          {suggestions.map((rotation) => <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />)}
-        </div>
-        {otherOptions.length > 0 && <details className="planner-details">
-          <summary>More options <span>{otherOptions.length}</span></summary>
-          <div className="planner-detail-content rotation-results">
-            {otherOptions.map((rotation) => <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />)}
+            <div><label htmlFor="field-drainage">Drainage after rain</label>
+              <select id="field-drainage" value={drainage} onChange={(event) => setDrainage(event.target.value as Drainage)}>
+                <option value="">I’m not sure</option><option value="well">It drains quickly</option>
+                <option value="slow">It takes a while to drain</option><option value="waterlogged">Water often stays</option>
+              </select>
+            </div>
+            {afterRice && <>
+              <div><label htmlFor="establishment-moisture">Is the soil moist, or can you water the monggo?</label>
+                <select id="establishment-moisture" value={moisture} onChange={(event) => setMoisture(event.target.value as EstablishmentMoisture)}>
+                  <option value="">I’m not sure</option><option value="adequate">The soil is moist or I have water</option>
+                  <option value="dry">The soil is dry and I have no water</option>
+                </select>
+              </div>
+              <div><label htmlFor="next-rice-planting">When will you plant palay again?</label>
+                <input id="next-rice-planting" type="date" min="1900-01-01" max="9990-12-31" value={nextRicePlanting}
+                  onChange={({ target: { value } }) => { if (!value || planningDate(value)) setNextRicePlanting(value); }} />
+              </div>
+            </>}
+          </div>
+        </fieldset>
+        {season && <details className="planner-details planner-calendar">
+          <summary>Planting calendar settings</summary>
+          <div className="planner-detail-content">
+            <label htmlFor="planner-climate-type">Local climate type</label>
+            <select id="planner-climate-type" value={chosenType} aria-describedby="planner-climate-hint" onChange={(event) => {
+              if (locationId) setTypeOverride({ location: locationId, type: event.target.value as ClimateType | '' });
+            }}>
+              <option value="">{availableTypes.length ? `Auto · ${climateTypeLabel}` : 'Auto · Climate type unavailable'}</option>
+              {(['I', 'II', 'III', 'IV'] as const).map((type) => <option key={type} value={type}>Type {type}</option>)}
+            </select>
+            <span id="planner-climate-hint" className="planner-input-hint">{chosenType ? 'Manual selection' : climateTypeDetail}</span>
           </div>
         </details>}
-        {unsuitable.length > 0 && <details className="planner-details">
-          <summary>Unsuitable for these conditions <span>{unsuitable.length}</span></summary>
-          <div className="planner-detail-content">
-            <ul className="rotation-exclusions">
-              {unsuitable.map(({ first, findings }) => <li key={first.crop.name}>
-                <strong>{shortName(first.crop)}</strong>
-                {findings.filter(({ status }) => status === 'unsuitable').map(({ message }) => <span key={message}>{message}</span>)}
-              </li>)}
-            </ul>
-          </div>
-        </details>}
-        <details className="planner-details" name="planner-reference">
-          <summary>Adjust time between crops</summary>
-          <div className="planner-detail-content">
-            <label className="picking-input" htmlFor="picking-days">Days to keep picking after the first harvest
-              <input id="picking-days" type="number" min="0" max="365" step="1" value={pickingDays}
-                onChange={(event) => setPickingDays(event.target.value)} onBlur={() => setPickingDays(String(extraDays))} />
-            </label>
-            <p>Repeat-pick crops get this many extra days. The Planner also allows {turnaroundDays} days to clear and prepare the field before a follow-up crop or the next rice planting.</p>
-          </div>
-        </details>
       </section>
 
-      <div className="planner-weather">
-        <div>
-          <strong>{labelMonth(month)} climate</strong>
-          {localRainfall && <span><a href={imergSeasonalSource}>NASA GPM IMERG rainfall</a> · {imergSeasonalPeriod} · 0.1° grid</span>}
-          <span>NASA POWER · {reference.name} reference · {climatePeriod}{localRainfall ? ' · temperature and humidity' : ''}</span>
-        </div>
-        <dl>
-          <div><dt>Rainfall</dt><dd>{display(selected.rainfallMm, 'mm')}</dd></div>
-          <div><dt>Mean temp.</dt><dd>{display(selected.meanTemperatureC, '°C')}</dd></div>
-          <div><dt>Humidity</dt><dd>{display(selected.relativeHumidityPct, '%')}</dd></div>
-          <div><dt>Root-zone moisture · {smapObservationYear}</dt><dd>{displayMoisture(observed)}</dd>
-            {moistureComparison && <span>{moistureComparison}</span>}
+      <div className="planner-columns">
+        <section id="crop-options" className="planner-results" aria-labelledby="planner-results-heading" tabIndex={-1}>
+          <h2 id="planner-results-heading">Crop options</h2>
+          <p className="planner-note" aria-live="polite">
+            {season ? `${location} · Planting ${formatPlantingDate(start)}` : <>Select a <a className="planner-inline-link" href="#planner-location">town or city</a> to see crops for your planting date.</>}
+          </p>
+          {suggestions.length > 0 && <p className="crop-options-artwork-note">{cropArtworkCredit}</p>}
+          {season && !suggestions.length && <p className="planner-note" role="status">No crops fit this date and the field answers provided. See why below.</p>}
+          <div className="rotation-results">
+            {suggestions.map((rotation) => <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />)}
           </div>
-        </dl>
-      </div>
-      <p className="planner-satellite-note">
-        <a href={powerHydrologyUrl}>NASA SMAP</a> estimates moisture in the top metre of soil for a roughly 9 km grid cell.
-        {soilMoisture && <> The {smapBaseline} average for {labelMonth(month)} is {displayMoisture(soilMoisture.mean)}.
-          {soilMoisture.low !== null && soilMoisture.high !== null && <> Typical range {displayMoisture(soilMoisture.low)} to {displayMoisture(soilMoisture.high)}.</>}
-        </>}
-        {!soilMoisture && <> No downloaded SMAP cell covers this selection.</>}
-        {soilMoisture && soilMoisture.observedDays < soilMoisture.daysInObservation &&
-          <> {smapObservationYear} has {soilMoisture.observedDays} of {soilMoisture.daysInObservation} daily readings for this month.</>}
-      </p>
-
-      <details className="planner-details" onToggle={(event) => setVegetationOpen(event.currentTarget.open)}>
-        <summary>Vegetation timeline · NASA HLS</summary>
-        {!pin && <div className="planner-detail-content"><p>Set point A in Field Check and use the map location to see satellite observations for that field pin.</p></div>}
-        {pin && vegetationOpen && <Suspense fallback={<p className="planner-detail-content" role="status">Loading NASA HLS timeline…</p>}>
-          <VegetationTimeline key={locationId} longitude={pin[0]} latitude={pin[1]} />
-        </Suspense>}
-      </details>
-
-      <details className="planner-details" name="planner-reference">
-        <summary>Crop library <span>{crops.length} crops</span></summary>
-        <div className="planner-detail-content">
-          <label className="crop-search" htmlFor="crop-search">Search crops
-            <input id="crop-search" type="search" placeholder="e.g. Monggo" value={search} onChange={(event) => setSearch(event.target.value)} />
-          </label>
-          <div className="crop-library">
-            {visibleCrops.map((crop) => <CropProfile key={crop.name} crop={crop} types={climateTypes} start={start} />)}
-          </div>
-          {!visibleCrops.length && <p role="status">No crops match your search.</p>}
-        </div>
-      </details>
-
-      <details className="planner-details" name="planner-reference">
-        <summary>Rotations studied in Bicol</summary>
-        <div className="guide-grid planner-detail-content">
-          {rotationGuides.map(({ id, crops: sequence, location, detail, fieldCheck, sources }) => (
-            <article className="guide-card" key={id}>
-              <p className="guide-location">{location}</p>
-              <h4 className="guide-sequence">{sequence.join(' → ')}</h4>
-              <ul className="studied-crops">
-                {sequence.map((name, index) => {
-                  const crop = crops.find((entry) => shortName(entry) === name);
-                  return crop && (
-                    <li key={index}><CropArt crop={crop} /><span>{daysLabel(crop.days)} to {crop.milestone.toLowerCase()}</span></li>
-                  );
-                })}
+          {otherOptions.length > 0 && <details className="planner-details">
+            <summary>More options <span>{otherOptions.length}</span></summary>
+            <div className="planner-detail-content rotation-results">
+              {otherOptions.map((rotation) => <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />)}
+            </div>
+          </details>}
+          {unsuitable.length > 0 && <details className="planner-details">
+            <summary>Crops ruled out <span>{unsuitable.length}</span></summary>
+            <div className="planner-detail-content">
+              <ul className="rotation-exclusions">
+                {unsuitable.map(({ first, findings }) => <li key={first.crop.name}>
+                  <strong>{farmerCropName(first.crop)}</strong>
+                  {findings.filter(({ status }) => status === 'unsuitable').map(({ message }) => <span key={message}>{message}</span>)}
+                </li>)}
               </ul>
-              <p>{detail} {fieldCheck}</p>
-              <p className="guide-sources">{sources.map(({ label, url }) => <a href={url} key={url}>{label}</a>)}</p>
-            </article>
-          ))}
-        </div>
-      </details>
+            </div>
+          </details>}
+          {season && <details className="planner-details" name="planner-reference">
+            <summary>Adjust time between crops</summary>
+            <div className="planner-detail-content">
+              <label className="picking-input" htmlFor="picking-days">Days to keep picking after the first harvest
+                <input id="picking-days" type="number" min="0" max="365" step="1" value={pickingDays}
+                  onChange={(event) => setPickingDays(event.target.value)} onBlur={() => setPickingDays(String(extraDays))} />
+              </label>
+              <p>Repeat-pick crops get this many extra days. The Planner also allows {turnaroundDays} days to clear and prepare the field before a follow-up crop or the next rice planting.</p>
+            </div>
+          </details>}
+        </section>
 
-      <details className="planner-details" name="planner-reference">
-        <summary>Rainfall by month</summary>
-        <div className="planner-detail-content">
-          <div className="season-bars" role="group" aria-label="Choose planting month by average rainfall">
-            {months.map((index) => {
-              const { label, rainfallMm } = season[index];
-              const monthLabel = `${labelMonth(index)}, ${display(rainfallMm, 'mm')}`;
-              return (
-                <button key={index} type="button" aria-pressed={month === index} aria-label={monthLabel} title={monthLabel}
-                  onClick={() => setDate(nextPlantingMonth(start, index))}>
-                  <span className="season-bar-track" aria-hidden="true">
-                    <span className="season-bar" style={{ height: `${100 * (rainfallMm ?? 0) / maxRainfall}%` }} />
-                  </span>
-                  <span>{label}</span>
-                </button>
-              );
-            })}
-          </div>
-          <button className="quiet-button" type="button" onClick={() => onOpenClimate(farm.id)}>Explore climate history</button>
+        <SoilLayers month={month} season={season} coordinates={coordinates} rainfallReference={reference?.name ?? ''} localRainfall={localRainfall}
+          drainage={drainage} moisture={soilMoisture} onSelectMonth={(index) => {
+            const next = nextPlantingMonth(start, index);
+            if (planningDate(next)) setDate(next);
+          }} />
+      </div>
+
+      <section id="crop-resources" className="planner-resources" aria-labelledby="crop-resources-heading" tabIndex={-1}>
+        <header className="resource-section-heading">
+          <h2 id="crop-resources-heading">Crop library and guides</h2>
+          <p>{cropArtworkCredit}</p>
+        </header>
+        <div className="resource-cards">
+          <section className="resource-library" aria-labelledby="crop-library-heading" data-sticky={shorterResource === 'library'} tabIndex={shorterResource === 'library' ? 0 : undefined}>
+            <div ref={resourceLibrary} className="resource-card-content">
+              <div className="resource-heading">
+                <h3 id="crop-library-heading">Crop library</h3>
+                <span role="status">{query ? `${visibleCrops.length} of ${crops.length} crops` : `${crops.length} crops`}</span>
+              </div>
+              <label className="crop-search" htmlFor="crop-search">Search by crop name
+                <input id="crop-search" type="search" placeholder="Try monggo or mungbean" value={search} onChange={(event) => setSearch(event.target.value)} />
+              </label>
+              <div id="crop-library-list" className="crop-library">
+                {(showAllCrops ? visibleCrops : visibleCrops.slice(0, 6)).map((crop) => <CropProfile key={crop.name} crop={crop} types={climateTypes} start={start} />)}
+              </div>
+              {!visibleCrops.length && <p className="crop-library-empty" role="status">No crops match your search.</p>}
+              {!query && <button ref={browseCrops} className="quiet-button crop-library-toggle" type="button" aria-expanded={libraryExpanded}
+                aria-controls="crop-library-list" onClick={() => {
+                  if (libraryExpanded) document.getElementById('crop-search')?.focus();
+                  setLibraryExpanded(!libraryExpanded);
+                }}>
+                {libraryExpanded ? 'Show fewer crops' : `Browse all ${crops.length} crops`}
+              </button>}
+            </div>
+          </section>
+
+          <section className="resource-guides" aria-labelledby="rotation-guides-heading" data-sticky={shorterResource === 'guides'} tabIndex={shorterResource === 'guides' ? 0 : undefined}>
+            <div ref={resourceGuides} className="resource-card-content">
+              <div className="resource-heading"><h3 id="rotation-guides-heading">Rotations studied in Bicol</h3></div>
+              <div className="field-study-list">
+                {rotationGuides.map(({ id, crops: sequence, location, detail, fieldCheck, sources }) => (
+                  <article className="field-study" key={id}>
+                    <h4>{location}</h4>
+                    <ol className="study-sequence" aria-label="Crop order" role="list">
+                      {sequence.map((name, index) => {
+                        const crop = availableCrops.find((entry) => shortName(entry) === name);
+                        return <li key={index}>
+                          {index > 0 && <span className="study-arrow" aria-hidden="true">→</span>}
+                          {crop && <CropArt crop={crop} />}
+                          <span>{crop ? farmerCropName(crop) : name}</span>
+                        </li>;
+                      })}
+                    </ol>
+                    <p className="study-field-check">{fieldCheck}</p>
+                    <details className="study-details">
+                      <summary>Study notes and sources</summary>
+                      <p>{detail}</p>
+                      <p className="guide-sources">{sources.map(({ label, url }) => <a href={url} key={url}>{label}</a>)}</p>
+                    </details>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
         </div>
-      </details>
+
+        <details className="planner-details resource-vegetation" onToggle={(event) => setVegetationOpen(event.currentTarget.open)}>
+          <summary>Satellite vegetation timeline</summary>
+          {!pin && <div className="planner-detail-content"><p>Choose a field pin in <a className="planner-inline-link" href={mapPath} data-app-link>Field Map</a> to see NASA satellite observations for that spot.</p></div>}
+          {pin && vegetationOpen && <Suspense fallback={<p className="planner-detail-content" role="status">Loading NASA HLS timeline…</p>}>
+            <VegetationTimeline key={locationId} longitude={pin[0]} latitude={pin[1]} />
+          </Suspense>}
+        </details>
+      </section>
 
       <footer className="data-footer planner-footer">
         <p>Planning pilot v{rotationRulesVersion}. Auto reads the selected location from the PAGASA climate map. Near a boundary, an option that depends on one climate type is shown as conditional. Confirm the plan and variety with your municipal agriculture office before planting.</p>
@@ -318,54 +345,90 @@ export function RotationPlanner({ place, fieldSelection, onOpenClimate }: Props)
 }
 
 function CropArt({ crop }: { crop: Crop }) {
-  const cell = crop.artwork % 16;
+  const { url, column, row } = cropArtwork(crop.artwork);
   return <span className="crop-art" aria-hidden="true" style={{
-    backgroundImage: `url(${import.meta.env.BASE_URL}crops/botanical-${Math.floor(crop.artwork / 16) + 1}.jpg)`,
-    backgroundPosition: `${cell % 4 / 3 * 100}% ${Math.floor(cell / 4) / 3 * 100}%`
+    backgroundImage: `url(${url})`,
+    backgroundPosition: `${column / 3 * 100}% ${row / 3 * 100}%`
   }} />;
 }
 
 function RotationStep({ step, phase }: { step: GrowingStep; phase: string }) {
   const { crop, milestone, start } = step;
   return (
-    <li>
-      <CropArt crop={crop} />
-      <div>
-        <div className="step-phase">{phase}</div>
-        <strong>{shortName(crop)}</strong>
-        <div className="step-dates">Plant {formatPlantingDate(start)} <span>·</span> {daysLabel(crop.days)}{crop.timing ? ' from emergence' : ''}</div>
-        <div className="step-dates">{crop.milestone} {dateRangeLabel(milestone)}</div>
+    <li className="rotation-step">
+      <div className="rotation-step-crop">
+        <CropArt crop={crop} />
+        <div>
+          <span className="rotation-step-label">{phase}</span>
+          <strong>{farmerCropName(crop)}</strong>
+        </div>
       </div>
+      <dl className="rotation-step-dates">
+        <div>
+          <dt className="rotation-step-label">Plant</dt>
+          <dd><time dateTime={start}>{formatPlantingDate(start)}</time></dd>
+        </div>
+        <div>
+          <dt className="rotation-step-label"><abbr title="Estimated">Est.</abbr> {crop.milestone.toLowerCase()}</dt>
+          <dd>{compactDateRange(milestone)}</dd>
+        </div>
+      </dl>
     </li>
   );
 }
 
 function RotationCard({ rotation, previous }: { rotation: Rotation; previous?: Crop }) {
   const { first, next, status, findings, guide, totalDays } = rotation;
-  const missingData = findings.filter(({ status }) => status === 'insufficient');
-  const needsFieldDetails = status === 'insufficient' && missingData.length > 0 && missingData.every(({ fieldInput }) => fieldInput);
-  const sources = [...new Set([first, ...(next ? [next] : [])].map(({ crop }) => plantingCalendarSource(crop)))];
-  const messages = [...new Set([...findings.filter(({ status }) => status !== 'suitable'),
-    ...findings.filter(({ status }) => status === 'suitable')].map(({ message }) => message))];
+  const steps = next ? [first, next] : [first];
+  const sources = [...new Set(steps.map(({ crop }) => plantingCalendarSource(crop)))];
+  const messages = [...new Map(findings.map((finding) => [finding.message, finding])).values()];
+  const lead = messages.find(({ fieldInput }) => fieldInput)
+    ?? messages.find(({ status }) => status === 'insufficient')
+    ?? messages.find(({ status }) => status === 'conditional');
+  const riceWindowFits = messages.some(({ riceWindowFits }) => riceWindowFits);
   const followsPrevious = previous && guide?.crops[0] === shortName(previous) && guide.crops[1] === shortName(first.crop);
   return (
     <article className="rotation-result" data-status={status}>
-      <h4>{followsPrevious && <>{shortName(previous)}<span className="sequence-arrow"> → </span></>}{shortName(first.crop)}{next && <><span className="sequence-arrow"> → </span>{shortName(next.crop)}</>}</h4>
-      <p className="rotation-status">{needsFieldDetails ? 'Field details needed' : rotationStatusLabels[status]}</p>
-      <ol>
-        <RotationStep step={first} phase={followsPrevious ? 'Plant after harvest' : 'First crop'} />
+      <div className="rotation-card-heading">
+        <h3>
+          {farmerCropName(first.crop)}
+          {next && <><span className="sequence-arrow" aria-hidden="true"> → </span><span className="sr-only"> followed by </span>{farmerCropName(next.crop)}</>}
+        </h3>
+        <p className="rotation-status">{rotationStatusLabels[status]}</p>
+      </div>
+      <ol className="rotation-schedule" aria-label="Planting and harvest schedule">
+        <RotationStep step={first} phase={followsPrevious ? `After ${farmerCropName(previous)} harvest` : 'First crop'} />
         {next && <RotationStep step={next} phase="Next crop" />}
       </ol>
-      <ul className="rotation-findings">
-        {messages.map((message) => <li key={message}>{message}</li>)}
-      </ul>
-      {next && totalDays && <p className="rotation-context rotation-total">{daysLabel(totalDays)} to the next crop’s {next.crop.milestone.toLowerCase()}</p>}
-      {guide && <p className="rotation-context">{guide.detail} Study site: {guide.location}.</p>}
-      <p className="guide-sources rotation-context">
-        {sources.map((url) => <a key={url} href={url}>{url === bicolVegetableGuide ? 'DA Bicol vegetable calendar' :
-          url === bicolRiceCalendar ? 'Bicol rice calendar' : 'Bicol rainfed calendar'}</a>)}
-        {guide?.sources.map(({ label, url }) => <a key={url} href={url}>{label}</a>)}
-      </p>
+      <div className="rotation-next-step">
+        {riceWindowFits && <p><strong>Monggo fits before your next palay planting.</strong></p>}
+        <p>{lead?.fieldInput ? <a className="planner-inline-link" href={`#${lead.fieldInput}`}>
+          {lead.fieldInput === 'previous-crop' ? 'Add your previous crop' : lead.message}
+        </a>
+          : lead?.message ?? (riceWindowFits
+            ? 'Check that standing water has drained and the soil is moist or you can water the monggo.'
+            : 'Confirm the variety and planting date with your municipal agriculture office.')}</p>
+      </div>
+      <details className="rotation-more">
+        <summary>Reasons and sources</summary>
+        <div className="rotation-more-content">
+          <ul className="rotation-findings">
+            {messages.filter((finding) => finding !== lead).map(({ message, fieldInput }) => <li key={message}>
+              {fieldInput ? <a className="planner-inline-link" href={`#${fieldInput}`}>{message}</a> : message}
+            </li>)}
+          </ul>
+          {steps.map(({ crop }) => <p className="rotation-context" key={crop.name}>
+            {farmerCropName(crop)} · {daysLabel(crop.days)} to {crop.milestone.toLowerCase()}{crop.timing ? ' from emergence' : ' from planting'}
+          </p>)}
+          {next && totalDays && <p className="rotation-context rotation-total">{daysLabel(totalDays)} to the next crop’s {next.crop.milestone.toLowerCase()}</p>}
+          {guide && <p className="rotation-context">{guide.detail} Study site in {guide.location}.</p>}
+          <p className="guide-sources rotation-context">
+            {sources.map((url) => <a key={url} href={url}>{url === bicolVegetableGuide ? 'DA Bicol vegetable calendar' :
+              url === bicolRiceCalendar ? 'Bicol rice calendar' : 'Bicol rainfed calendar'}</a>)}
+            {guide?.sources.map(({ label, url }) => <a key={url} href={url}>{label}</a>)}
+          </p>
+        </div>
+      </details>
     </article>
   );
 }
@@ -377,9 +440,10 @@ function CropProfile({ crop, types, start }: { crop: Crop; types: readonly Clima
     <details className="crop-profile" name="crop-profile">
       <summary>
         <CropArt crop={crop} />
-        <span><strong>{crop.name}</strong><span>{daysLabel(crop.days)} to {crop.milestone.toLowerCase()}</span></span>
+        <span><strong>{farmerCropName(crop)}</strong><span>{daysLabel(crop.days)} to {crop.milestone.toLowerCase()}</span></span>
       </summary>
       <div className="crop-profile-content">
+        {crop.name !== farmerCropName(crop) && <p>{crop.name}</p>}
         <p>{crop.note}</p>
         {crop.alternative && <p>{crop.alternative}</p>}
         <dl>

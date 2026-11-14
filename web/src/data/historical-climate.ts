@@ -82,3 +82,12 @@ export function seasonalClimate(site: ClimateSite) {
     };
   });
 }
+
+export function rainfallPattern(season: ReturnType<typeof seasonalClimate>, month: number) {
+  const { rainfallMm } = season[month];
+  if (rainfallMm === null) return null;
+  const otherReadings = season.flatMap((reading) => reading.month !== month && reading.rainfallMm !== null ? [reading.rainfallMm] : []);
+  if (otherReadings.filter((reading) => reading < rainfallMm).length >= 9) return 'wetter';
+  if (otherReadings.filter((reading) => reading > rainfallMm).length >= 9) return 'drier';
+  return otherReadings.length >= 9 ? 'middle' : null;
+}

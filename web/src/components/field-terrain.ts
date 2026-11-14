@@ -181,7 +181,3 @@ export function createFieldTerrain(terrain: TerrainMesh) {
     }
   };
 }
-
-export function fieldCoordinates({ x, z }: FieldPoint) {
-  return [origin[0] + x * 1000 / metersPerLongitude, origin[1] - z * 1000 / metersPerDegree];
-}

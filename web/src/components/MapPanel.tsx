@@ -1,53 +1,70 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import geography from '../data/bicol-map.json';
-import { places, waterLabels } from '../data/places';
-import { climateFrameFor, climateLayers, readingColor, type ClimateLayer } from '../data/climate-map';
-import { climateSites, daysInYear, formatReading, lastClimateYear } from '../data/historical-climate';
-import { createBicolMap, RELIEF_SCALE, type MapMode } from './bicol-map';
-import { ClimateMapControls } from './ClimateMapControls';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { places, waterLabels, type MapPlace } from '../data/places';
+import { rainBand, rainFrequencyAt, rainPercent } from '../data/expected-rain';
+import { labelMonth } from '../data/historical-climate';
+import { createBicolMap, type MapMode } from './bicol-map';
+import { ExpectedRain } from './ExpectedRain';
+import { MapLegend } from './MapLegend';
 import { MapToolPanel } from './MapToolPanel';
 import type { FieldSelection } from './field-terrain';
 
 const FieldCheck = lazy(() => import('./FieldCheck').then(({ FieldCheck }) => ({ default: FieldCheck })));
 
-export type MapTool = 'field' | 'climate';
+export type MapTool = 'field' | 'rain';
 
 type MapPanelProps = {
   activeTool: MapTool | null;
+  compactLayout: boolean;
+  placesButton: RefObject<HTMLButtonElement | null>;
   toolPanelVisible: boolean;
   onToolChange: (tool: MapTool | null) => void;
   onToolMinimize: () => void;
-  selectedPlaceId: string;
+  selectedPlace: MapPlace;
+  rainMonth: number;
+  onRainMonthChange: (month: number) => void;
   mapMode: MapMode;
   onMapModeChange: (mode: MapMode) => void;
   onPlaceSelect: (id: string) => void;
+  onRainPlaceSelect: (id: string) => void;
   fieldSelection: FieldSelection;
   onFieldSelection: (selection: FieldSelection) => void;
+  onUseField: () => void;
 };
 
 type MapView = Awaited<ReturnType<ReturnType<typeof createBicolMap>['load']>>;
 
 export function MapPanel({
   activeTool,
+  compactLayout,
+  placesButton,
   toolPanelVisible,
   onToolChange,
   onToolMinimize,
-  selectedPlaceId,
+  selectedPlace,
+  rainMonth,
+  onRainMonthChange,
   mapMode,
   onMapModeChange,
   onPlaceSelect,
+  onRainPlaceSelect,
   fieldSelection,
-  onFieldSelection
+  onFieldSelection,
+  onUseField
 }: MapPanelProps) {
+  const selectedPlaceId = selectedPlace.id;
   const containerRef = useRef<HTMLDivElement>(null);
   const compassRef = useRef<HTMLSpanElement>(null);
   const roadOverlayRef = useRef<HTMLDivElement>(null);
+  const quickToolsRef = useRef<HTMLDivElement>(null);
+  const navigationRef = useRef<HTMLDivElement>(null);
   const legendRef = useRef<HTMLDivElement>(null);
-  const toolsRef = useRef<HTMLDivElement>(null);
+  const fieldToolButton = useRef<HTMLButtonElement>(null);
+  const rainToolButton = useRef<HTMLButtonElement>(null);
+  const settingsButton = useRef<HTMLButtonElement>(null);
   const markers = useRef(new Map<string, HTMLButtonElement>());
-  const climateMarkers = useRef(new Map<string, HTMLButtonElement>());
   const labels = useRef(new Map<string, HTMLElement>());
   const lastSelection = useRef(selectedPlaceId);
+  const lastFieldSelection = useRef(fieldSelection);
   const [view, setView] = useState<MapView | null>(null);
   const [failure, setFailure] = useState<'webgl' | 'asset' | null>(null);
   const [contextLost, setContextLost] = useState(false);
@@ -58,51 +75,47 @@ export function MapPanel({
   const [roadsVisible, setRoadsVisible] = useState(true);
   const [roadsState, setRoadsState] = useState<'idle' | 'loading' | 'ready' | 'error'>('loading');
   const [roadAttempt, setRoadAttempt] = useState(0);
-  const climateVisible = activeTool === 'climate';
-  const [climateMetric, setClimateMetric] = useState<ClimateLayer>('dailyRainfall');
-  const [climateYear, setClimateYear] = useState(lastClimateYear);
-  const [climatePeriod, setClimatePeriod] = useState(0);
-  const [playing, setPlaying] = useState(false);
+  const rainActive = activeTool === 'rain';
   const fieldActive = activeTool === 'field';
-  const [toolsExpanded, setToolsExpanded] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   // The slope overlay expands the terrain into a second mesh, so keep it opt-in.
   const [showSlope, setShowSlope] = useState(false);
   const [fieldMiss, setFieldMiss] = useState(false);
-  const climateFrame = useMemo(() => climateFrameFor(climateMetric, climateYear, climatePeriod), [climateMetric, climateYear, climatePeriod]);
-  const climateLayer = climateLayers[climateMetric];
-  const lastPeriod = (climateMetric === 'dailyRainfall' ? daysInYear(climateYear) : 12) - 1;
+  const rainByPlace = useMemo(() => new Map(places
+    .filter(({ kind }) => kind !== 'Volcano')
+    .map(({ id, coordinates }) => [id, rainFrequencyAt(coordinates, rainMonth)])), [rainMonth]);
 
   useEffect(() => {
     const legend = legendRef.current;
-    const tools = toolsRef.current;
     const shell = legend?.closest<HTMLElement>('.app-shell');
-    if (!legend || !tools || !shell) return;
+    if (!legend || !shell) return;
     const updateOverlaySizes = () => {
       shell.style.setProperty('--map-footer-height', `${Math.ceil(legend.getBoundingClientRect().height)}px`);
-      shell.style.setProperty('--map-tools-height', `${Math.ceil(tools.getBoundingClientRect().height)}px`);
     };
     const observer = new ResizeObserver(updateOverlaySizes);
     observer.observe(legend);
-    observer.observe(tools);
     updateOverlaySizes();
     return () => {
       observer.disconnect();
       shell.style.removeProperty('--map-footer-height');
-      shell.style.removeProperty('--map-tools-height');
     };
   }, []);
 
+  useEffect(() => { lastFieldSelection.current = fieldSelection; }, [fieldSelection]);
   useEffect(() => {
     const container = containerRef.current;
     const compass = compassRef.current;
     const roadOverlay = roadOverlayRef.current;
-    if (!container || !compass || !roadOverlay) return;
+    const quickTools = quickToolsRef.current;
+    const navigation = navigationRef.current;
+    const placesControl = placesButton.current;
+    if (!container || !compass || !roadOverlay || !quickTools || !navigation || !placesControl) return;
     let map;
     try {
-      map = createBicolMap(container, compass, roadOverlay, setContextLost, (selection) => {
+      map = createBicolMap(container, compass, roadOverlay, [quickTools, navigation, placesControl], setContextLost, (selection) => {
         setFieldMiss(false);
         onFieldSelection(selection);
-      }, () => setFieldMiss(true));
+      }, () => setFieldMiss(true), lastFieldSelection.current);
     } catch {
       setFailure('webgl');
       return;
@@ -117,7 +130,7 @@ export function MapPanel({
       active = false;
       map.dispose();
     };
-  }, [attempt, onFieldSelection]);
+  }, [attempt, onFieldSelection, placesButton]);
 
   useEffect(() => { view?.setMode(mapMode); }, [mapMode, view]);
   useEffect(() => {
@@ -150,20 +163,8 @@ export function MapPanel({
     };
   }, [roadAttempt, roadsVisible, view]);
   useEffect(() => {
-    if (view && !contextLost) view.setPlaces(markers.current, labels.current, climateMarkers.current);
+    if (view && !contextLost) view.setPlaces(markers.current, labels.current);
   }, [contextLost, view]);
-  useEffect(() => {
-    if (view && !contextLost) view.setClimateFrame(climateVisible ? climateFrame : null);
-  }, [climateFrame, climateVisible, contextLost, view]);
-  useEffect(() => {
-    if (!playing || !climateVisible || contextLost) return;
-    if (climatePeriod === lastPeriod) {
-      setPlaying(false);
-      return;
-    }
-    const timer = window.setTimeout(() => setClimatePeriod(climatePeriod + 1), 850);
-    return () => window.clearTimeout(timer);
-  }, [climatePeriod, lastPeriod, climateVisible, contextLost, playing]);
   useEffect(() => {
     if (!view || contextLost) return;
     view.selectPlace(selectedPlaceId);
@@ -176,48 +177,66 @@ export function MapPanel({
   const displayedMode = view?.supports3D ? mapMode : '2d';
   return (
     <section className="map-card" aria-label="Bicol Region map">
-      <div ref={toolsRef} className="map-header">
+      <div className="map-header" onKeyDown={(event) => {
+        if (event.key === 'Escape' && settingsOpen) {
+          setSettingsOpen(false);
+          settingsButton.current?.focus();
+        }
+      }}>
         <h2>Bicol terrain map</h2>
-        <button className="quiet-button map-tools-collapse" type="button"
-          aria-expanded={toolsExpanded} aria-controls="map-tools-content"
-          onClick={() => setToolsExpanded(!toolsExpanded)}>
-          <span>Map tools</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d={toolsExpanded ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} />
-          </svg>
-        </button>
-        <div id="map-tools-content" hidden={!toolsExpanded}>
-        <div className="map-header-actions">
+        <div className="map-quick-tools" role="group" aria-label="Map tools" ref={quickToolsRef}>
           <button
+            ref={fieldToolButton}
             className="quiet-button map-tool-toggle"
             type="button"
+            aria-label="Field Check"
+            title="Field Check"
             aria-pressed={fieldActive}
-            aria-expanded={fieldActive && toolPanelVisible && toolsExpanded}
-            aria-controls="field-tool-panel"
+            aria-expanded={fieldActive && toolPanelVisible}
+            aria-controls={mapAvailable && fieldActive ? 'field-tool-panel' : undefined}
             disabled={!mapAvailable}
             onClick={() => {
               onToolChange('field');
-              setPlaying(false);
+              setSettingsOpen(false);
             }}
-          >Field Check</button>
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 18 9 8l4 6 3-5 5 9H3Z"/><path d="m7.3 11 1.7 2 1.5-2"/></svg>
+            <span className="map-tool-label">Field Check</span>
+          </button>
           <button
+            ref={rainToolButton}
             className="quiet-button map-tool-toggle"
             type="button"
-            aria-pressed={climateVisible}
-            aria-expanded={climateVisible && toolPanelVisible && toolsExpanded}
-            aria-controls="climate-tool-panel"
-            disabled={!mapAvailable}
+            aria-label="Expected rain"
+            title="Expected rain"
+            aria-pressed={rainActive}
+            aria-expanded={rainActive && toolPanelVisible}
+            aria-controls={rainActive ? 'rain-tool-panel' : undefined}
             onClick={() => {
-              onToolChange('climate');
-              setPlaying(false);
+              if (compactLayout && !rainActive) view?.focusPlace(selectedPlaceId);
+              onToolChange('rain');
+              setSettingsOpen(false);
             }}
-          >Climate</button>
-          <button className="quiet-button" type="button" onClick={view?.reset} disabled={!mapAvailable}>
-            Reset Bicol view
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 14a4 4 0 1 1 .9-7.9A5.3 5.3 0 0 1 18 8a3 3 0 1 1 0 6h-1M9 16l-1 3m5-3-1 4m5-4-1 3"/></svg>
+            <span className="map-tool-label">Expected rain</span>
+          </button>
+          <button ref={settingsButton} className="quiet-button map-tools-collapse" type="button" disabled={!mapAvailable}
+            aria-label="Settings" title="Settings" aria-expanded={settingsOpen} aria-controls="map-tools-content"
+            onClick={() => setSettingsOpen(!settingsOpen)}>
+            <svg className="map-settings-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 6h4m4 0h8M4 12h9m4 0h3M4 18h4m4 0h8M8 4v4m9 2v4m-9 2v4" />
+            </svg>
+            <span className="map-tool-label">Settings</span>
+            <svg className="map-settings-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d={settingsOpen ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} />
+            </svg>
           </button>
         </div>
+        <div id="map-tools-content" hidden={!settingsOpen}>
         {mapAvailable && (
             <div className="map-toolbar">
+              <strong className="map-settings-heading">Map settings</strong>
               <div className="map-mode-controls" role="group" aria-label="Map view">
                 <button className="quiet-button map-tool-toggle" aria-pressed={displayedMode === '2d'} type="button" onClick={() => onMapModeChange('2d')}>2D</button>
                 <button className="quiet-button map-tool-toggle" aria-pressed={displayedMode === '3d'} type="button" disabled={!view.supports3D}
@@ -243,6 +262,11 @@ export function MapPanel({
                   Roads
                 </label>
               )}
+              <button className="quiet-button" type="button" onClick={view.reset}>Reset Bicol view</button>
+              <p className="map-gesture">
+                <span className="map-gesture-mouse">{displayedMode === '3d' ? 'Drag to rotate · Right-drag to pan' : 'Drag to pan'} · Scroll to zoom</span>
+                <span className="map-gesture-touch">{displayedMode === '3d' ? 'Swipe to rotate · Two fingers to pan' : 'Swipe to pan'} · Pinch to zoom</span>
+              </p>
             </div>
         )}
         </div>
@@ -250,15 +274,6 @@ export function MapPanel({
       <div className={`map-viewport${fieldActive ? ' field-picking' : ''}`}>
         <div ref={containerRef} className="map-container" aria-hidden={!mapAvailable} inert={!mapAvailable} />
         <div ref={roadOverlayRef} className="map-route-labels" hidden={!mapAvailable} aria-hidden="true" />
-        <div className="map-navigation" hidden={!mapAvailable}>
-        <div className="map-compass" hidden={!mapAvailable} aria-hidden="true">
-          <span ref={compassRef}>↑</span><strong>N</strong>
-        </div>
-            <div className="map-zoom" role="group" aria-label="Map zoom">
-              <button className="quiet-button" type="button" aria-label="Zoom in" onClick={() => view?.zoomIn()}>+</button>
-              <button className="quiet-button" type="button" aria-label="Zoom out" onClick={() => view?.zoomOut()}>−</button>
-            </div>
-        </div>
         {mapAvailable ? (
           <>
             <div className="map-markers">
@@ -268,7 +283,12 @@ export function MapPanel({
                   else labels.current.delete(name);
                 }}>{name}</span>
               ))}
-              {places.map((place) => (
+              {places.map((place) => {
+                const frequency = rainActive ? rainByPlace.get(place.id) : null;
+                const hasRain = typeof frequency === 'number';
+                const markerLabel = hasRain && place.id === selectedPlaceId ? `${place.name} · ${rainPercent.format(frequency)}` : place.name;
+                const weather = hasRain ? `${rainPercent.format(frequency)} estimated daily rain chance in ${labelMonth(rainMonth)}` : '';
+                return (
                 <button
                   key={place.id}
                   ref={(element) => {
@@ -276,43 +296,20 @@ export function MapPanel({
                     else markers.current.delete(place.id);
                   }}
                   type="button"
-                  className={`site-marker${place.kind === 'Volcano' ? ' is-volcano' : ''}${place.id === selectedPlaceId ? ' is-selected' : ''}`}
-                  data-label={place.name}
+                  className={`site-marker${place.kind === 'Volcano' ? ' is-volcano' : ''}${place.id === selectedPlaceId ? ' is-selected' : ''}${hasRain ? ' has-rain' : ''}`}
+                  data-label={markerLabel}
                   aria-pressed={place.id === selectedPlaceId}
-                  aria-label={`Explore ${place.name}${place.kind === 'Municipality' && !place.climateSite ? ', municipality' : ''}`}
-                  title={`${place.name} · ${place.kind}`}
+                  aria-label={`Explore ${place.name}${weather ? `, ${weather}` : place.kind === 'Municipality' && !place.climateSite ? ', municipality' : ''}`}
+                  title={`${place.name} · ${weather || place.kind}`}
                   onClick={() => {
                     if (place.id === selectedPlaceId) view.focusPlace(place.id);
-                    onPlaceSelect(place.id);
+                    if (rainActive) onRainPlaceSelect(place.id);
+                    else onPlaceSelect(place.id);
                   }}
                 >
-                  <span aria-hidden="true" className="marker-symbol" />
-                  <span aria-hidden="true" className="marker-label">{place.name}</span>
+                  <span aria-hidden="true" className="marker-symbol" style={hasRain ? { backgroundColor: rainBand(frequency).color } : undefined} />
+                  <span aria-hidden="true" className="marker-label">{markerLabel}</span>
                 </button>
-              ))}
-              {climateSites.map((site) => {
-                const value = climateFrame.readings.get(site.id) ?? null;
-                const formatted = value === null ? 'Missing' : `${formatReading.format(value)} ${climateLayer.unit}`;
-                const label = `${site.name} · ${climateLayer.label} · ${formatted}`;
-                return (
-                  <button
-                    key={`weather-${site.id}`}
-                    ref={(element) => {
-                      if (element) climateMarkers.current.set(site.id, element);
-                      else climateMarkers.current.delete(site.id);
-                    }}
-                    className="climate-reading"
-                    data-site-id={site.id}
-                    hidden={!climateVisible || (climateMetric === 'dailyRainfall' && !site.dailyRainfall)}
-                    style={{ backgroundColor: readingColor(climateMetric, value) }}
-                    aria-label={label}
-                    title={label}
-                    type="button"
-                    onClick={() => {
-                      if (site.id === selectedPlaceId) view.focusPlace(site.id);
-                      onPlaceSelect(site.id);
-                    }}
-                  >{formatted}</button>
                 );
               })}
             </div>
@@ -333,63 +330,37 @@ export function MapPanel({
           </div>
         )}
       </div>
+      <div ref={navigationRef} className="map-navigation">
+        <div className="map-compass" hidden={!mapAvailable} aria-hidden="true">
+          <span ref={compassRef}>↑</span><strong>N</strong>
+        </div>
+        <div className="map-zoom" role="group" aria-label="Map zoom">
+          <button className="quiet-button" type="button" aria-label="Zoom in" disabled={!mapAvailable} onClick={() => view?.zoomIn()}>+</button>
+          <button className="quiet-button" type="button" aria-label="Zoom out" disabled={!mapAvailable} onClick={() => view?.zoomOut()}>−</button>
+        </div>
+      </div>
       {mapAvailable && fieldActive && (
-        <MapToolPanel id="field-tool-panel" title="Field Check" visible={toolsExpanded && toolPanelVisible}
-          onMinimize={onToolMinimize} onClose={() => onToolChange(null)}>
+        <MapToolPanel id="field-tool-panel" title="Field Check" visible={toolPanelVisible}
+          onMinimize={() => { onToolMinimize(); fieldToolButton.current?.focus(); }}
+          onClose={() => { onToolChange(null); fieldToolButton.current?.focus(); }}>
           <Suspense fallback={<p role="status">Loading Field Check…</p>}>
             <FieldCheck selection={fieldSelection} slopeVisible={showSlope} missed={fieldMiss}
-              onSlopeChange={setShowSlope} onClear={view.clearField} onSampleCenter={view.pickFieldCenter} />
+              onSlopeChange={setShowSlope} onClear={view.clearField} onSampleCenter={view.pickFieldCenter} onUseField={onUseField} />
           </Suspense>
         </MapToolPanel>
       )}
-      {mapAvailable && climateVisible && (
-        <MapToolPanel id="climate-tool-panel" title="Climate layer" visible={toolsExpanded && toolPanelVisible}
-          onMinimize={onToolMinimize} onClose={() => { onToolChange(null); setPlaying(false); }}>
-          <ClimateMapControls
-            metric={climateMetric}
-            year={climateYear}
-            period={climatePeriod}
-            playing={playing}
-            onMetricChange={(metric) => {
-              if ((metric === 'dailyRainfall') !== (climateMetric === 'dailyRainfall')) setClimatePeriod(0);
-              setPlaying(false);
-              setClimateMetric(metric);
-            }}
-            onYearChange={(year) => {
-              setPlaying(false);
-              setClimateYear(year);
-              if (climateMetric === 'dailyRainfall') setClimatePeriod((period) => Math.min(period, daysInYear(year) - 1));
-            }}
-            onPeriodChange={(period) => {
-              setPlaying(false);
-              setClimatePeriod(period);
-            }}
-            onPlayingChange={(next) => {
-              if (next && climatePeriod === lastPeriod) setClimatePeriod(0);
-              setPlaying(next);
-            }}
-          />
+      {rainActive && (
+        <MapToolPanel id="rain-tool-panel" title="Expected rain" visible={toolPanelVisible}
+          onMinimize={() => { onToolMinimize(); rainToolButton.current?.focus(); }}
+          onClose={() => { onToolChange(null); rainToolButton.current?.focus(); }}>
+          <ExpectedRain place={selectedPlace} month={rainMonth} onPlaceChange={onRainPlaceSelect} onMonthChange={onRainMonthChange} />
         </MapToolPanel>
       )}
-      <div ref={legendRef} className="map-legend" aria-label="Map legend">
-        <span><i className="legend-dot" /> City or town</span>
-        <span><i className="legend-volcano" /> Volcano</span>
-        {roadsVisible && roadsState === 'ready' && (
-          <span className="road-legend">
-            <span><i className="legend-highway" /> Highway</span>
-            <span><i className="legend-street" /> Street</span>
-            <span><i className="legend-path" /> Path</span>
-          </span>
-        )}
-        {mapAvailable && !view.supports3D && <span>2D mode</span>}
-        <span className="map-gesture map-gesture-mouse">{displayedMode === '3d' ? 'Drag to rotate · Right-drag to pan' : 'Drag to pan'} · Scroll to zoom</span>
-        <span className="map-gesture map-gesture-touch">{displayedMode === '3d' ? 'Swipe to rotate · Two fingers to pan' : 'Swipe to pan'} · Pinch to zoom</span>
-        <span className="map-source">
-          {displayedMode === '3d' && `${RELIEF_SCALE}× vertical scale · `}
-          <a href={geography.attributionUrl}>Elevation · Mapzen, USGS, NOAA</a>
-          {' · '}<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>
-        </span>
-      </div>
+      <MapLegend footerRef={legendRef}
+        rainMonth={rainActive && mapAvailable ? labelMonth(rainMonth) : null}
+        showRoads={roadsVisible && roadsState === 'ready'}
+        mode={displayedMode} limitedTo2D={mapAvailable && !view.supports3D}
+      />
     </section>
   );
 }
