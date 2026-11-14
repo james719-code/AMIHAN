@@ -7,6 +7,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshBVH } from 'three-mesh-bvh';
 import geography from '../data/bicol-map.json';
+import terrainElevations from '../data/terrain-elevations.json';
 import { places, waterLabels } from '../data/places';
 import { climateSites } from '../data/historical-climate';
 import type { ClimateFrame } from '../data/climate-map';
@@ -21,6 +22,55 @@ const METERS_TO_KILOMETERS = 0.001;
 const CAMERA_DISTANCE = 600;
 const TERRAIN_ASSET = `${import.meta.env.BASE_URL}maps/bicol.glb`;
 const { origin, metersPerDegree, metersPerLongitude } = geography;
+const elevationRecord = terrainElevations as Record<string, number>;
+
+const GRID_CELL = 64;
+
+class SpatialGrid {
+  private cells = new Map<number, [number, number, number, number][]>();
+
+  clear() {
+    this.cells.clear();
+  }
+
+  insert(box: [number, number, number, number]) {
+    const [l, t, r, b] = box;
+    const startCol = Math.max(0, Math.floor(l / GRID_CELL));
+    const endCol = Math.max(0, Math.floor(r / GRID_CELL));
+    const startRow = Math.max(0, Math.floor(t / GRID_CELL));
+    const endRow = Math.max(0, Math.floor(b / GRID_CELL));
+    for (let c = startCol; c <= endCol; c++) {
+      for (let r = startRow; r <= endRow; r++) {
+        const k = (c << 16) ^ (r & 0xffff);
+        let list = this.cells.get(k);
+        if (!list) {
+          list = [];
+          this.cells.set(k, list);
+        }
+        list.push(box);
+      }
+    }
+  }
+
+  overlaps(left: number, top: number, right: number, bottom: number): boolean {
+    const startCol = Math.max(0, Math.floor(left / GRID_CELL));
+    const endCol = Math.max(0, Math.floor(right / GRID_CELL));
+    const startRow = Math.max(0, Math.floor(top / GRID_CELL));
+    const endRow = Math.max(0, Math.floor(bottom / GRID_CELL));
+    for (let c = startCol; c <= endCol; c++) {
+      for (let r = startRow; r <= endRow; r++) {
+        const list = this.cells.get((c << 16) ^ (r & 0xffff));
+        if (list) {
+          for (let i = 0; i < list.length; i++) {
+            const b = list[i];
+            if (left < b[2] && right > b[0] && top < b[3] && bottom > b[1]) return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+}
 
 function mapPosition([longitude, latitude]: number[]) {
   return new Vector3(
@@ -57,8 +107,8 @@ export function createBicolMap(
   controls.maxZoom = 36;
   controls.maxTargetRadius = 225;
 
-  const ambientLight = new AmbientLight(0xffffff, 1.28);
-  const sun = new DirectionalLight('#fff3dd', 1.65);
+  const ambientLight = new AmbientLight('#faf9f6', 1.28);
+  const sun = new DirectionalLight('#faf9f6', 1.65);
   sun.position.set(-140, 200, -160);
   scene.add(ambientLight, sun);
   const flatMaterial = new MeshBasicMaterial({ vertexColors: true });
@@ -114,12 +164,23 @@ export function createBicolMap(
     loaded = true;
     requestRender();
 
-    // Keep the terrain's triangle order intact for rendering and slope shading.
-    const terrainIndex = new MeshBVH(terrain.geometry, { indirect: true });
-    const terrainPosition = (coordinates: number[]) => {
+    // Build the BVH lazily only when Field Check is activated, avoiding a main-thread
+    // freeze and 120+ raycasts on initial map startup.
+    let terrainIndex: MeshBVH | undefined;
+    const getTerrainIndex = () => {
+      if (!terrainIndex) {
+        terrainIndex = new MeshBVH(terrain.geometry, { indirect: true });
+      }
+      return terrainIndex;
+    };
+    const terrainPosition = (coordinates: number[], id?: string) => {
       const position = mapPosition(coordinates);
+      if (id && Object.hasOwn(elevationRecord, id)) {
+        position.y = elevationRecord[id] * METERS_TO_KILOMETERS;
+        return position;
+      }
       groundRay.origin.set(position.x / METERS_TO_KILOMETERS, 50000, position.z / METERS_TO_KILOMETERS);
-      const hit = terrainIndex.raycastFirst(groundRay, DoubleSide);
+      const hit = getTerrainIndex().raycastFirst(groundRay, DoubleSide);
       position.y = Math.max(0, hit?.point.y ?? 0) * METERS_TO_KILOMETERS;
       return position;
     };
@@ -129,7 +190,7 @@ export function createBicolMap(
         fieldActive = active;
         pickStart = null;
         if (active && !field) {
-          field = createFieldTerrain(terrain, terrainIndex);
+          field = createFieldTerrain(terrain, getTerrainIndex());
           scene.add(field.group);
           field.setProfile(selection.profile);
         }
@@ -186,7 +247,7 @@ export function createBicolMap(
         for (const [order, place] of places.entries()) {
           const element = elements.get(place.id);
           if (!element) continue;
-          const position = terrainPosition(place.coordinates);
+          const position = terrainPosition(place.coordinates, place.id);
           const priority = place.climateSite ? 3 : place.kind !== 'Municipality' ? 2 : 0;
           markers.push({ id: place.id, element, position, priority, order, volcano: place.kind === 'Volcano' });
         }
@@ -196,7 +257,7 @@ export function createBicolMap(
         });
         climateMarkers = climateSites.flatMap(({ id, coordinates }) => {
           const element = climate.get(id);
-          return element ? [{ id, element, position: terrainPosition(coordinates) }] : [];
+          return element ? [{ id, element, position: terrainPosition(coordinates, `climate_${id}`) }] : [];
         });
         sortMarkers();
         requestRender();
@@ -411,47 +472,86 @@ export function createBicolMap(
     markers.sort((a, b) => priority(b) - priority(a) || a.order - b.order);
   }
 
+  const grid = new SpatialGrid();
+  const climateDimensionCache = new WeakMap<HTMLElement, { halfWidth: number; labelHeight: number; text: string }>();
+  const elementState = new WeakMap<HTMLElement, { visible: boolean; x: number; y: number }>();
+
+  function placeElement(element: HTMLElement, x: number, y: number, visible: boolean) {
+    let state = elementState.get(element);
+    if (!state) {
+      state = { visible: false, x: -9999, y: -9999 };
+      elementState.set(element, state);
+    }
+    if (state.visible !== visible) {
+      element.style.visibility = visible ? 'visible' : 'hidden';
+      state.visible = visible;
+    }
+    if (visible) {
+      const rx = Math.round(x);
+      const ry = Math.round(y);
+      if (state.x !== rx || state.y !== ry) {
+        element.style.translate = `${rx}px ${ry}px`;
+        state.x = rx;
+        state.y = ry;
+      }
+    }
+  }
+
+  function toggleClass(element: HTMLElement, className: string, value: boolean) {
+    if (element.classList.contains(className) !== value) {
+      element.classList.toggle(className, value);
+    }
+  }
+
   function positionOverlays(verticalSpan: number) {
-    // Read all climate label dimensions before moving any overlays.
-    const climateLabels = climateMarkers.filter(({ element }) => !element.hidden).map(({ position, element }) => ({
-      position, element, halfWidth: element.offsetWidth / 2, labelHeight: element.offsetHeight
-    }));
+    // Read and cache climate label dimensions to prevent forced layout reflows on every frame.
+    const climateLabels = climateMarkers.filter(({ element }) => !element.hidden).map(({ position, element }) => {
+      const text = element.textContent ?? '';
+      let dim = climateDimensionCache.get(element);
+      if (!dim || dim.text !== text) {
+        dim = { halfWidth: element.offsetWidth / 2, labelHeight: element.offsetHeight, text };
+        climateDimensionCache.set(element, dim);
+      }
+      return { position, element, halfWidth: dim.halfWidth, labelHeight: dim.labelHeight };
+    });
     const azimuth = controls.getAzimuthalAngle();
     const northAngle = Math.atan2(Math.sin(azimuth), Math.cos(azimuth) * Math.cos(controls.getPolarAngle()));
     compass.style.rotate = `${northAngle}rad`;
-    const occupied: [number, number, number, number][] = [
-      [width - 48, 0, width, 59], [width - 94, height - 56, width, height]
-    ];
-    if (fieldActive) occupied.push([0, height - 54, 126, height]);
+
+    grid.clear();
+    grid.insert([width - 48, 0, width, 59]);
+    grid.insert([width - 94, height - 56, width, height]);
+    if (fieldActive) grid.insert([0, height - 54, 126, height]);
+
     for (const { position, element, halfWidth, labelHeight } of climateLabels) {
       projected.set(position.x, position.y * relief + 0.05, position.z).project(camera);
       const x = (projected.x + 1) * width / 2;
       const y = (1 - projected.y) * height / 2;
       const top = y - labelHeight - 8;
       const bottom = y + labelHeight + 8;
-      const above = top > 4 && !overlaps(x - halfWidth, top, x + halfWidth, y - 7);
-      const below = !above && bottom < height - 4 && !overlaps(x - halfWidth, y + 7, x + halfWidth, bottom);
+      const above = top > 4 && !grid.overlaps(x - halfWidth, top, x + halfWidth, y - 7);
+      const below = !above && bottom < height - 4 && !grid.overlaps(x - halfWidth, y + 7, x + halfWidth, bottom);
       const visible = x > halfWidth + 4 && x < width - halfWidth - 4 && y > 5 && y < height - 5 && (above || below);
-      element.classList.toggle('below-point', below);
+      toggleClass(element, 'below-point', below);
       placeElement(element, x, y, visible);
-      if (visible) occupied.push([x - halfWidth, below ? y + 7 : top, x + halfWidth, below ? bottom : y - 7]);
+      if (visible) grid.insert([x - halfWidth, below ? y + 7 : top, x + halfWidth, below ? bottom : y - 7]);
     }
     const close = verticalSpan <= 105;
     const visibleMarkers = [];
     for (const { position, element, id, priority } of markers) {
       const selected = id === selectedPlaceId;
       if (!selected && !priority && !close) {
-        element.style.visibility = 'hidden';
+        placeElement(element, 0, 0, false);
         continue;
       }
       projected.set(position.x, position.y * relief + 0.35, position.z).project(camera);
       const x = (projected.x + 1) * width / 2;
       const y = (1 - projected.y) * height / 2;
       const visible = x > 13 && x < width - 13 && y > 15 && y < height - 15
-        && !overlaps(x - 6, y - 6, x + 6, y + 6);
+        && !grid.overlaps(x - 6, y - 6, x + 6, y + 6);
       placeElement(element, x, y, visible);
       if (visible) {
-        occupied.push([x - 7, y - 7, x + 7, y + 7]);
+        grid.insert([x - 7, y - 7, x + 7, y + 7]);
         visibleMarkers.push({ element, x, y, selected });
       }
     }
@@ -459,13 +559,13 @@ export function createBicolMap(
       const labelWidth = (selected ? 17 : 2) + (element.dataset.label?.length ?? 0) * (width < 500 ? 5.5 : 6.5);
       const labelHeight = selected ? 12 : 8;
       const right = x + 10 + labelWidth < width - 4
-        && !overlaps(x + 10, y - labelHeight, x + 10 + labelWidth, y + labelHeight);
+        && !grid.overlaps(x + 10, y - labelHeight, x + 10 + labelWidth, y + labelHeight);
       const left = !right && x - 10 - labelWidth > 4
-        && !overlaps(x - 10 - labelWidth, y - labelHeight, x - 10, y + labelHeight);
-      element.classList.toggle('has-label', right || left);
-      element.classList.toggle('label-left', left);
-      if (right) occupied.push([x + 10, y - labelHeight, x + 10 + labelWidth, y + labelHeight]);
-      if (left) occupied.push([x - 10 - labelWidth, y - labelHeight, x - 10, y + labelHeight]);
+        && !grid.overlaps(x - 10 - labelWidth, y - labelHeight, x - 10, y + labelHeight);
+      toggleClass(element, 'has-label', right || left);
+      toggleClass(element, 'label-left', left);
+      if (right) grid.insert([x + 10, y - labelHeight, x + 10 + labelWidth, y + labelHeight]);
+      if (left) grid.insert([x - 10 - labelWidth, y - labelHeight, x - 10, y + labelHeight]);
     }
     for (const { element, position, maxSpan } of contextLabels) {
       projected.copy(position).project(camera);
@@ -473,9 +573,9 @@ export function createBicolMap(
       const y = (1 - projected.y) * height / 2;
       const halfLabelWidth = (element.textContent?.length ?? 0) * (width < 500 ? 3 : 3.75);
       const visible = verticalSpan <= maxSpan && x > halfLabelWidth + 5 && x < width - halfLabelWidth - 5
-        && y > 13 && y < height - 13 && !overlaps(x - halfLabelWidth, y - 8, x + halfLabelWidth, y + 8);
+        && y > 13 && y < height - 13 && !grid.overlaps(x - halfLabelWidth, y - 8, x + halfLabelWidth, y + 8);
       placeElement(element, x, y, visible);
-      if (visible) occupied.push([x - halfLabelWidth, y - 8, x + halfLabelWidth, y + 8]);
+      if (visible) grid.insert([x - halfLabelWidth, y - 8, x + halfLabelWidth, y + 8]);
     }
     for (const { element, position, maxSpan } of roads?.routeLabels ?? []) {
       projected.set(position.x, position.y * relief + 0.025, position.z).project(camera);
@@ -483,18 +583,10 @@ export function createBicolMap(
       const y = (1 - projected.y) * height / 2;
       const halfLabelWidth = (element.textContent?.length ?? 0) * 3.4 + 6;
       const visible = roadsVisible && verticalSpan <= maxSpan && x > halfLabelWidth + 4 && x < width - halfLabelWidth - 4
-        && y > 12 && y < height - 12 && !overlaps(x - halfLabelWidth - 4, y - 12, x + halfLabelWidth + 4, y + 12);
+        && y > 12 && y < height - 12 && !grid.overlaps(x - halfLabelWidth - 4, y - 12, x + halfLabelWidth + 4, y + 12);
       placeElement(element, x, y, visible);
-      if (visible) occupied.push([x - halfLabelWidth - 4, y - 12, x + halfLabelWidth + 4, y + 12]);
+      if (visible) grid.insert([x - halfLabelWidth - 4, y - 12, x + halfLabelWidth + 4, y + 12]);
     }
-    function overlaps(left: number, top: number, right: number, bottom: number) {
-      return occupied.some(([l, t, r, b]) => left < r && right > l && top < b && bottom > t);
-    }
-  }
-
-  function placeElement(element: HTMLElement, x: number, y: number, visible: boolean) {
-    element.style.visibility = visible ? 'visible' : 'hidden';
-    if (visible) element.style.translate = `${x}px ${y}px`;
   }
 
   function resize() {

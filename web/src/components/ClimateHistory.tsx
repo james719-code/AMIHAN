@@ -82,6 +82,15 @@ export function ClimateHistory({ site, place }: { site: ClimateSite; place: MapP
       value: (regional ? imerg.rainfallMm : site.monthly[monthlyMetric.key])[monthlyIndex(year, index)]
     }));
   const count = rows.filter(({ value }) => value !== null).length;
+  const availableRows = rows.filter((row): row is typeof row & { value: number } => row.value !== null);
+  const highest = availableRows.reduce<(typeof availableRows)[number] | null>((current, row) =>
+    !current || row.value > current.value ? row : current, null);
+  const climateMeaning = !highest ? null
+    : weather
+      ? `The highest ${metric.label.toLowerCase()} shown for this month is ${formatReading.format(highest.value)} ${displayUnit}, on ${highest.date}. Use this as a recent-weather reference, not a forecast.`
+      : daily
+        ? `The heaviest daily rainfall shown is ${formatReading.format(highest.value)} mm on ${highest.date}. Check drainage and avoid working the field after heavy rain.`
+        : `${labelMonth(months.find((index) => labelMonth(index, true) === highest.label) ?? 0)} had the highest ${metric.label.toLowerCase()} in ${year}: ${formatReading.format(highest.value)} ${displayUnit}. This is historical climate, not a forecast.`;
   const scope = regional
     ? `NASA GPM IMERG Final Run · Area average · ${west}–${east}° E, ${south}–${north}° N`
     : weather ? `NASA POWER · ${place.name} · ${coordinatesLabel(place.coordinates)}`
@@ -131,6 +140,9 @@ export function ClimateHistory({ site, place }: { site: ClimateSite; place: MapP
       )}
       {count > 0 ? (
         <>
+          {climateMeaning && <div className="plain-language-insight" aria-live="polite">
+            <strong>What this means</strong><p>{climateMeaning}</p>
+          </div>}
           <div className="chart-panel history-chart">
             <div className="chart-title">
               <span><i aria-hidden="true" style={{ backgroundColor: metric.color }} />{title}</span>

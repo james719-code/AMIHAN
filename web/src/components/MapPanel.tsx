@@ -54,7 +54,7 @@ export function MapPanel({
   const [attempt, setAttempt] = useState(0);
   const [hillshade, setHillshade] = useState(true);
   const [roadsVisible, setRoadsVisible] = useState(true);
-  const [roadsState, setRoadsState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [roadsState, setRoadsState] = useState<'idle' | 'loading' | 'ready' | 'error'>('loading');
   const [roadAttempt, setRoadAttempt] = useState(0);
   const climateVisible = activeTool === 'climate';
   const [climateMetric, setClimateMetric] = useState<ClimateLayer>('dailyRainfall');
@@ -63,7 +63,8 @@ export function MapPanel({
   const [playing, setPlaying] = useState(false);
   const fieldActive = activeTool === 'field';
   const [toolsExpanded, setToolsExpanded] = useState(true);
-  const [showSlope, setShowSlope] = useState(true);
+  // The slope overlay expands the terrain into a second mesh, so keep it opt-in.
+  const [showSlope, setShowSlope] = useState(false);
   const [fieldMiss, setFieldMiss] = useState(false);
   const climateFrame = useMemo(() => climateFrameFor(climateMetric, climateYear, climatePeriod), [climateMetric, climateYear, climatePeriod]);
   const climateLayer = climateLayers[climateMetric];
@@ -121,14 +122,20 @@ export function MapPanel({
   useEffect(() => { view?.setRoadsVisible(roadsVisible); }, [roadsVisible, view]);
   useEffect(() => { view?.setFieldCheck(fieldActive, showSlope); }, [fieldActive, showSlope, view]);
   useEffect(() => {
-    if (!view) return;
+    if (!view || !roadsVisible) return;
     let active = true;
-    view.loadRoads().then(
-      () => { if (active) setRoadsState('ready'); },
-      () => { if (active) setRoadsState('error'); }
-    );
-    return () => { active = false; };
-  }, [roadAttempt, view]);
+    setRoadsState('loading');
+    const timer = window.setTimeout(() => {
+      view.loadRoads().then(
+        () => { if (active) setRoadsState('ready'); },
+        () => { if (active) setRoadsState('error'); }
+      );
+    }, 60);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [roadAttempt, roadsVisible, view]);
   useEffect(() => {
     if (view && !contextLost) view.setPlaces(markers.current, labels.current, climateMarkers.current);
   }, [contextLost, view]);
