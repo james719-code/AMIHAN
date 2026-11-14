@@ -4,10 +4,11 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'csv-parse/sync';
+import { readCsvFile } from './source-csv.mjs';
 
 const DATA_DIR = dirname(fileURLToPath(import.meta.url));
 const SITES_PATH = resolve(DATA_DIR, 'sites.json');
-const METRIC_COLUMNS = [
+export const METRIC_COLUMNS = [
   ['PRECTOTCORR', 'rainfallMm'],
   ['T2M', 'meanTemperatureC'],
   ['T2M_MAX', 'maxTemperatureC'],
@@ -48,12 +49,12 @@ function findCsvData(text) {
 
 function numericValue(raw, column, rowNumber) {
   const value = String(raw ?? '').trim();
-  if (value === '' || value === '-999') return null;
+  if (value === '') return null;
   const number = Number(value);
   if (!Number.isFinite(number)) {
     fail(`Invalid numeric reading for ${column} on CSV row ${rowNumber}: ${value}`);
   }
-  return number;
+  return number === -999 ? null : number;
 }
 
 function isoDateFromYearDoy(rawYear, rawDoy, rowNumber) {
@@ -81,7 +82,7 @@ async function loadSite(siteId) {
   return site;
 }
 
-function normalizeRows(csvText) {
+export function normalizeRows(csvText, metricColumns = METRIC_COLUMNS) {
   const csvData = findCsvData(csvText);
   const rows = parse(csvData, {
     bom: true,
@@ -93,7 +94,7 @@ function normalizeRows(csvText) {
   if (rows.length === 0) fail('CSV contains no data rows.');
 
   const sourceHeaders = Object.keys(rows[0]);
-  for (const [column] of METRIC_COLUMNS) {
+  for (const [column] of metricColumns) {
     if (!sourceHeaders.includes(column)) fail(`CSV is missing required column: ${column}`);
   }
 
@@ -104,7 +105,7 @@ function normalizeRows(csvText) {
     if (seenDates.has(date)) fail(`Duplicate date: ${date}`);
     seenDates.add(date);
     const normalizedRow = { date };
-    for (const [sourceColumn, outputColumn] of METRIC_COLUMNS) {
+    for (const [sourceColumn, outputColumn] of metricColumns) {
       normalizedRow[outputColumn] = numericValue(row[sourceColumn], sourceColumn, rowNumber);
     }
     return normalizedRow;
@@ -112,7 +113,7 @@ function normalizeRows(csvText) {
   normalized.sort((left, right) => left.date.localeCompare(right.date));
 
   const availableByMetric = Object.fromEntries(
-    METRIC_COLUMNS.map(([, outputColumn]) => [
+    metricColumns.map(([, outputColumn]) => [
       outputColumn,
       normalized.filter((row) => row[outputColumn] !== null).length
     ])
@@ -145,11 +146,21 @@ async function replaceOutput(outputPath, content) {
   await writeFile(outputPath, content, 'utf8');
 }
 
-export async function importPower({ siteId, inputPath, outputPath }) {
-  const site = await loadSite(siteId);
-  const csvText = await readFile(inputPath, 'utf8');
+export function normalizePower(csvText, site) {
+  const location = csvText.match(/^Location:\s+latitude\s+(-?[\d.]+)\s+longitude\s+(-?[\d.]+)/im);
+  const timeStandard = csvText.match(/^Dates[^\r\n]*\bin (UTC|LST)\s*$/im)?.[1];
+  if (location) {
+    const coordinates = [Number(location[2]), Number(location[1])];
+    // The POWER CSV header rounds decimal degrees to four places.
+    if (coordinates.some((value, index) => Math.abs(value - site.coordinates[index]) > 0.000051)) {
+      fail(`POWER coordinates do not match ${site.id}.`);
+    }
+  }
+  if (timeStandard && timeStandard !== 'UTC') {
+    fail(`Expected UTC daily data for ${site.id}, received ${timeStandard}.`);
+  }
   const { sourceHeaders, rows, coverage } = normalizeRows(csvText);
-  const output = {
+  return {
     schemaVersion: '1.0.0',
     releaseId: 'power-2024-verification',
     sourceId: 'nasa-power-daily-2024',
@@ -167,9 +178,16 @@ export async function importPower({ siteId, inputPath, outputPath }) {
     },
     timeStandard: 'UTC',
     sourceHeaders,
+    sourceMetadata: csvText.match(/^-BEGIN HEADER-\r?\n([\s\S]*?)^-END HEADER-/m)?.[1].trim().split(/\r?\n/),
     coverage,
     rows
   };
+}
+
+export async function importPower({ siteId, inputPath, outputPath }) {
+  const site = await loadSite(siteId);
+  const csvText = await readCsvFile(inputPath);
+  const output = normalizePower(csvText, site);
   await replaceOutput(outputPath, `${JSON.stringify(output, null, 2)}\n`);
   return output;
 }

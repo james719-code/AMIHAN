@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { importPower } from '../import-power.mjs';
+import { importPower, normalizePower } from '../import-power.mjs';
 
 const FIXTURES = resolve(dirname(fileURLToPath(import.meta.url)), 'fixtures');
 
@@ -121,4 +121,22 @@ test('rejects unknown sites before reading or writing data', async () => {
       /Unknown site ID/
     );
   });
+});
+
+test('validates rounded POWER coordinates and UTC metadata and normalizes decimal fill values', () => {
+  const site = { id: 'albay-01', coordinates: [123.74073, 13.14125] };
+  const csv = [
+    '-BEGIN HEADER-',
+    'Dates (month/day/year): 01/01/2024 through 01/01/2024 in UTC',
+    'Location: latitude 13.1413 longitude 123.7407',
+    '-END HEADER-',
+    'YEAR,DOY,PRECTOTCORR,T2M,T2M_MAX,RH2M,ALLSKY_SFC_SW_DWN',
+    '2024,1,-999.0,25,29,80,14'
+  ].join('\n');
+
+  const weather = normalizePower(csv, site);
+  assert.equal(weather.rows[0].rainfallMm, null);
+  assert.equal(weather.sourceMetadata.length, 2);
+  assert.throws(() => normalizePower(csv.replace('in UTC', 'in LST'), site), /Expected UTC/);
+  assert.throws(() => normalizePower(csv.replace('123.7407', '123.7300'), site), /coordinates do not match/);
 });

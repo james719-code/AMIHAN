@@ -4,8 +4,8 @@
     "name": "Legazpi reference point",
     "provinceCode": "0500500000",
     "provinceName": "Albay",
-    "coordinates": [123.7364, 13.1391],
-    "rationale": "Named provincial capital reference point for the starter demo; not a station observation."
+    "coordinates": [123.74073, 13.14125],
+    "rationale": "FieldWise’s mapped reference point in the provincial capital."
   },
   {
     "id": "camarines-norte-01",
@@ -13,38 +13,38 @@
     "provinceCode": "0501600000",
     "provinceName": "Camarines Norte",
     "coordinates": [122.9553, 14.1122],
-    "rationale": "Named provincial capital reference point for the starter demo; not a station observation."
+    "rationale": "FieldWise’s mapped reference point in the provincial capital."
   },
   {
     "id": "camarines-sur-01",
     "name": "Naga reference point",
     "provinceCode": "0501700000",
     "provinceName": "Camarines Sur",
-    "coordinates": [123.1814, 13.6218],
-    "rationale": "Named city reference point for the starter demo; not a station observation."
+    "coordinates": [123.18139, 13.61917],
+    "rationale": "FieldWise’s mapped reference point in Naga City, geographically within Camarines Sur."
   },
   {
     "id": "catanduanes-01",
     "name": "Virac reference point",
     "provinceCode": "0502000000",
     "provinceName": "Catanduanes",
-    "coordinates": [124.2422, 13.5845],
-    "rationale": "Named provincial capital reference point for the starter demo; not a station observation."
+    "coordinates": [124.2374, 13.5848],
+    "rationale": "FieldWise’s mapped reference point in the provincial capital."
   },
   {
     "id": "masbate-01",
     "name": "Masbate City reference point",
     "provinceCode": "0504100000",
     "provinceName": "Masbate",
-    "coordinates": [123.4086, 12.3699],
-    "rationale": "Named provincial capital reference point for the starter demo; not a station observation."
+    "coordinates": [123.62494, 12.37169],
+    "rationale": "FieldWise’s mapped reference point in the provincial capital."
   },
   {
     "id": "sorsogon-01",
     "name": "Sorsogon City reference point",
     "provinceCode": "0506200000",
     "provinceName": "Sorsogon",
-    "coordinates": [124.0055, 12.9741],
-    "rationale": "Named provincial capital reference point for the starter demo; not a station observation."
+    "coordinates": [123.99333, 12.97389],
+    "rationale": "FieldWise’s mapped reference point in the provincial capital."
   }
 ]

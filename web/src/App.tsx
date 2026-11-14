@@ -114,7 +114,7 @@ function App() {
         />
 
         <RotationPlanner place={selectedPlace} site={selectedSite} fieldSelection={fieldSelection} />
-        <ClimateHistory site={selectedSite} placeName={selectedPlace.name} isReference={selectedSite.id !== selectedPlace.id} />
+        <ClimateHistory site={selectedSite} place={selectedPlace} />
       </main>
     </>
   );

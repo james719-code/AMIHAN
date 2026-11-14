@@ -7,28 +7,75 @@
       "url": "https://www.bswm.da.gov.ph/download/philippine-soil-series/",
       "product": "Philippine Soil Series",
       "attribution": "DA–BSWM",
-      "coverage": "Spatial soil mapping units",
-      "status": "awaiting-dataset"
+      "coverage": "Philippine soil mapping units; matches at 105 of 114 FieldWise town and city markers",
+      "sourceUpdated": "2026-04-24",
+      "crs": "Luzon 1911 (EPSG:4253)",
+      "localFile": "raw/field-planning/bswm-philippine-soil-series.zip",
+      "status": "downloaded"
+    },
+    {
+      "id": "isric-soilgrids-bicol",
+      "publisher": "ISRIC – World Soil Information",
+      "url": "https://docs.isric.org/globaldata/soilgrids/index.html",
+      "product": "SoilGrids 2.0 mean predictions at 5–15 cm",
+      "resolution": "250 m native grid",
+      "terms": "CC BY 4.0",
+      "coverage": "Five Bicol raster subsets; all five predictions available at 57 of 114 FieldWise town and city markers",
+      "localManifest": "raw/field-planning/soilgrids-downloads.json",
+      "status": "downloaded"
+    },
+    {
+      "id": "pagasa-bicol-station-normals-1991-2020",
+      "publisher": "DOST–PAGASA",
+      "url": "https://www.pagasa.dost.gov.ph/climate/climate-data",
+      "product": "1991–2020 climatological normals, monthly station averages",
+      "coverage": "Daet, Legazpi, Masbate, and Virac Synop",
+      "localFile": "processed/fieldwise.csv",
+      "status": "downloaded"
+    },
+    {
+      "id": "philrice-bicol-prism-2021",
+      "publisher": "DA–PhilRice Bicol Branch Station",
+      "url": "https://www.philrice.gov.ph/wp-content/uploads/2025/06/2021-Highlights-BS-Bicol.pdf#page=10",
+      "product": "PRiSM rice planting season observations",
+      "coverage": "Bicol Region, 2021",
+      "localFile": "raw/field-planning/philrice-bicol-rd-highlights-2021.pdf",
+      "status": "downloaded"
     },
     {
       "id": "gpm-imerg-v07",
       "publisher": "NASA Global Precipitation Measurement Mission",
       "url": "https://gpm.nasa.gov/resources/documents/imerg-v07-technical-documentation",
-      "product": "IMERG V07 precipitation",
+      "product": "GPM_3IMERGM V07 Final Run monthly precipitation, Giovanni area average",
       "attribution": "NASA GPM IMERG",
-      "resolution": "0.1° grid, half-hourly native product",
-      "status": "awaiting-dataset"
+      "resolution": "0.1° source grid, exported as one monthly area-average series",
+      "coverage": "2015–2024, 122.35–124.45° E and 11.95–14.15° N",
+      "units": { "precipitation": "mm/hour" },
+      "missingValue": -9999.9,
+      "status": "published"
+    },
+    {
+      "id": "nasa-power-bicol-municipal-2024",
+      "publisher": "NASA Langley Research Center POWER Project",
+      "url": "https://power.larc.nasa.gov/docs/services/api/temporal/daily/",
+      "product": "Daily MERRA-2, CERES SYN1deg, GPM IMERG, and SMAP L4",
+      "attribution": "NASA POWER, NASA GPM IMERG, and NASA SMAP",
+      "coverage": "January 1–December 31, 2024 at mapped points in 107 municipalities and seven cities",
+      "crs": "WGS 84 longitude/latitude",
+      "timeStandard": "UTC",
+      "retrievalManifest": "../web/src/data/power-municipal-2024/sources.json",
+      "status": "published"
     },
     {
       "id": "nasa-power-daily-2024",
       "publisher": "NASA Langley Research Center POWER Project",
       "url": "https://power.larc.nasa.gov/docs/services/api/temporal/daily/",
       "product": "Daily Agroclimatology",
-      "versionOrRetrieved": "2024 verification window; record retrieval date when downloaded",
+      "retrievalManifest": "../web/src/data/power-2024/manifest.json",
       "attribution": "NASA POWER",
-      "terms": "NASA POWER data access and usage terms",
-      "coverage": "Daily point data for registered sites",
-      "resolution": "Standard-resolution Agroclimatology",
+      "referenceGuide": "https://power.larc.nasa.gov/docs/referencing/",
+      "coverage": "January 1–December 31, 2024 at six registered Bicol reference points",
+      "resolution": "MERRA-2 meteorology at 0.5° latitude by 0.625° longitude and CERES SYN1deg solar radiation at 1° by 1°",
       "units": {
         "PRECTOTCORR": "mm/day",
         "T2M": "°C",
@@ -37,27 +84,55 @@
         "ALLSKY_SFC_SW_DWN": "MJ/m²/day"
       },
       "crs": "WGS 84 longitude/latitude",
-      "timeStandard": "UTC"
+      "timeStandard": "UTC",
+      "missingValue": -999,
+      "status": "published"
     },
     {
-      "id": "demo-synthetic-2024",
-      "publisher": "FieldWise starter fixtures",
-      "url": "local://web/src/data/demo-weather.ts",
-      "product": "Seven-day synthetic weather series",
-      "versionOrRetrieved": "starter milestone",
-      "attribution": "FieldWise demo data",
-      "terms": "Synthetic data for interface development only",
-      "coverage": "Seven demo days per province reference point",
-      "resolution": "Point reference demo",
+      "id": "nasa-power-imerg-daily-2024",
+      "publisher": "NASA Langley Research Center POWER Project",
+      "url": "https://power.larc.nasa.gov/docs/methodology/data/sources_hydrology/#imerg",
+      "product": "GPM IMERG daily point precipitation via POWER",
+      "attribution": "NASA POWER and NASA GPM IMERG",
+      "retrievalManifest": "raw/power-hydrology-2024/manifest.json",
+      "coverage": "January 1–December 31, 2024 at six registered Bicol reference points",
+      "resolution": "0.1° latitude by 0.1° longitude",
+      "units": { "IMERG_PRECTOT": "mm/day" },
+      "timeStandard": "UTC",
+      "status": "downloaded"
+    },
+    {
+      "id": "nasa-power-smap-daily-2024",
+      "publisher": "NASA Langley Research Center POWER Project",
+      "url": "https://power.larc.nasa.gov/docs/methodology/data/sources_hydrology/#smap",
+      "product": "SMAP L4 daily surface and root-zone soil moisture via POWER",
+      "attribution": "NASA POWER and NASA SMAP",
+      "retrievalManifest": "raw/power-hydrology-2024/manifest.json",
+      "coverage": "January 1–December 31, 2024 at six registered Bicol reference points",
+      "resolution": "Approximately 9 km",
+      "units": { "SFMC": "m³/m³", "RZMC": "m³/m³" },
+      "timeStandard": "UTC",
+      "status": "downloaded"
+    },
+    {
+      "id": "nasa-power-bicol-2015-2024",
+      "publisher": "NASA Langley Research Center POWER Project",
+      "url": "https://power.larc.nasa.gov/docs/methodology/data/sources_meteorology/",
+      "product": "MERRA-2 daily rainfall and monthly agroclimatology",
+      "attribution": "NASA POWER",
+      "coverage": "2015–2024, six requested Bicol points for daily rainfall and seven for monthly climate",
+      "resolution": "0.5° latitude by 0.625° longitude MERRA-2 grid",
       "units": {
-        "rainfallMm": "mm/day",
-        "meanTemperatureC": "°C",
-        "maxTemperatureC": "°C",
-        "relativeHumidityPct": "%",
-        "solarRadiationMjM2": "MJ/m²/day"
+        "PRECTOTCORR": "mm/day",
+        "T2M": "°C",
+        "T2M_MAX": "°C",
+        "T2M_MIN": "°C",
+        "RH2M": "%"
       },
       "crs": "WGS 84 longitude/latitude",
-      "timeStandard": "UTC"
+      "timeStandard": "LST",
+      "missingValue": -999,
+      "status": "published"
     }
   ]
 }

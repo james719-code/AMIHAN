@@ -1,0 +1,661 @@
+{
+  "merra2": {
+    "source": "MERRA2",
+    "resolution": "0.5° × 0.625°",
+    "parameters": {
+      "PRECTOTCORR": [
+        "rainfallMm",
+        "mm/day"
+      ],
+      "T2M": [
+        "meanTemperatureC",
+        "C"
+      ],
+      "T2M_MAX": [
+        "maxTemperatureC",
+        "C"
+      ],
+      "T2M_MIN": [
+        "minTemperatureC",
+        "C"
+      ],
+      "RH2M": [
+        "relativeHumidityPct",
+        "%"
+      ],
+      "T2MDEW": [
+        "dewPointTemperatureC",
+        "C"
+      ],
+      "WS2M": [
+        "windSpeedMps",
+        "m/s"
+      ],
+      "EVLAND": [
+        "landEvaporationMm",
+        "mm/day"
+      ],
+      "EVPTRNS": [
+        "transpirationEnergyMjM2",
+        "MJ/m^2/day"
+      ]
+    },
+    "cellCount": 17,
+    "requests": [
+      {
+        "file": "PRECTOTCORR.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=PRECTOTCORR&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "T2M.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=T2M&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "T2M_MAX.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=T2M_MAX&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "T2M_MIN.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=T2M_MIN&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "RH2M.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=RH2M&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "T2MDEW.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=T2MDEW&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "WS2M.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=WS2M&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "EVLAND.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=EVLAND&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "EVPTRNS.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=EVPTRNS&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7",
+        "apiVersion": "v2.10.3"
+      }
+    ]
+  },
+  "ceres": {
+    "source": "SYN1DEG",
+    "resolution": "1° × 1°",
+    "parameters": {
+      "ALLSKY_SFC_SW_DWN": [
+        "solarRadiationMjM2",
+        "MJ/m^2/day"
+      ]
+    },
+    "cellCount": 10,
+    "requests": [
+      {
+        "file": "ALLSKY_SFC_SW_DWN.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=ALLSKY_SFC_SW_DWN&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7",
+        "apiVersion": "v2.10.3"
+      }
+    ]
+  },
+  "imerg": {
+    "source": "IMERG",
+    "resolution": "0.1° × 0.1°",
+    "parameters": {
+      "IMERG_PRECTOT": [
+        "imergRainfallMm",
+        "mm/day"
+      ]
+    },
+    "cellCount": 91,
+    "requests": [
+      {
+        "file": "IMERG_PRECTOT-202401.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20240101&end=20240131&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "IMERG_PRECTOT-202402.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20240201&end=20240229&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "IMERG_PRECTOT-202403.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20240301&end=20240331&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "IMERG_PRECTOT-202404.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20240401&end=20240430&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "IMERG_PRECTOT-202405.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20240501&end=20240531&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "IMERG_PRECTOT-202406.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20240601&end=20240630&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "IMERG_PRECTOT-202407.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20240701&end=20240731&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "IMERG_PRECTOT-202408.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20240801&end=20240831&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "IMERG_PRECTOT-202409.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20240901&end=20240930&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "IMERG_PRECTOT-202410.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20241001&end=20241031&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "IMERG_PRECTOT-202411.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20241101&end=20241130&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "IMERG_PRECTOT-202412.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/regional?community=AG&parameters=IMERG_PRECTOT&start=20241201&end=20241231&format=JSON&time-standard=UTC&longitude-min=121.8&longitude-max=125.1&latitude-min=11.1&latitude-max=14.7&curation=precise",
+        "apiVersion": "v2.10.3"
+      }
+    ]
+  },
+  "smap": {
+    "source": "SMAP",
+    "resolution": "~9 km",
+    "parameters": {
+      "SFMC": [
+        "surfaceSoilMoisture",
+        "m3 m-3"
+      ],
+      "RZMC": [
+        "rootZoneSoilMoisture",
+        "m3 m-3"
+      ]
+    },
+    "gridSource": "https://nasa-power-smap.s3.amazonaws.com/smap/temporal/power_smap_daily_temporal_utc.zarr/",
+    "cellCount": 92,
+    "requests": [
+      {
+        "file": "smap-123.75001-13.13956.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.75000623577152&latitude=13.139562497360531&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.18984-13.64729.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.18984023244099&latitude=13.647293917337178&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.65665-12.34375.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.65664523521646&latitude=12.343745641382348&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.03009-12.99469.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.0300892374368&latitude=12.994685985718327&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.37656-13.42957.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.37656223355118&latitude=13.429566745905829&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.56328-13.21203.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.56328423466135&latitude=13.21203195885112&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.75001-13.35703.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.75000623577152&latitude=13.357033951053102&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.75001-13.28452.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.75000623577152&latitude=13.28452239944702&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.65665-13.21203.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.65664523521646&latitude=13.21203195885112&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.56328-13.06711.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.56328423466135&latitude=13.067113883399397&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.46992-13.28452.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.46992323410626&latitude=13.28452239944702&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.75001-13.42957.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.75000623577152&latitude=13.429566745905829&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.84337-13.13956.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.84336723632663&latitude=13.139562497360531&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.46992-12.99469.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.46992323410626&latitude=12.994685985718327&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.12345-13.21203.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.12345023799189&latitude=13.21203195885112&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.75001-13.21203.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.75000623577152&latitude=13.21203195885112&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.65665-13.42957.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.65664523521646&latitude=13.429566745905829&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.00312-14.08334.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.00311823133082&latitude=14.08333983220378&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-122.53631-14.30167.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=122.53631322855536&latitude=14.301665855540831&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-122.90976-14.08334.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=122.90975723077572&latitude=14.08333983220378&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-122.90976-14.01061.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=122.90975723077572&latitude=14.01060984147985&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-122.72304-14.30167.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=122.72303522966553&latitude=14.301665855540831&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-122.81640-14.15609.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=122.81639623022063&latitude=14.156092407355462&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-122.81640-14.30167.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=122.81639623022063&latitude=14.301665855540831&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-122.34959-14.15609.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=122.34959122744519&latitude=14.156092407355462&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-122.90976-14.15609.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=122.90975723077572&latitude=14.156092407355462&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.18984-13.35703.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.18984023244099&latitude=13.357033951053102&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.37656-13.35703.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.37656223355118&latitude=13.357033951053102&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.18984-13.71991.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.18984023244099&latitude=13.719913014264291&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.56328-13.42957.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.56328423466135&latitude=13.429566745905829&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.28320-13.50212.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.28320123299609&latitude=13.50212091657587&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.09648-13.71991.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.0964792318859&latitude=13.719913014264291&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.84337-13.79255.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.84336723632663&latitude=13.792554020685719&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-122.62967-13.93790.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=122.62967422911045&latitude=13.937902299485927&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.09648-13.64729.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.0964792318859&latitude=13.647293917337178&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.65665-13.86522.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.65664523521646&latitude=13.86521707088254&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.46992-13.71991.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.46992323410626&latitude=13.719913014264291&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.56328-13.71991.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.56328423466135&latitude=13.719913014264291&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-122.90976-13.79255.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=122.90975723077572&latitude=13.792554020685719&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.18984-13.57470.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.18984023244099&latitude=13.574696595970691&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.37656-13.57470.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.37656223355118&latitude=13.574696595970691&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.09648-13.57470.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.0964792318859&latitude=13.574696595970691&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.00312-13.50212.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.00311823133082&latitude=13.50212091657587&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.28320-13.57470.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.28320123299609&latitude=13.574696595970691&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.75001-13.71991.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.75000623577152&latitude=13.719913014264291&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-122.81640-13.79255.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=122.81639623022063&latitude=13.792554020685719&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.56328-13.57470.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.56328423466135&latitude=13.574696595970691&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.00312-13.79255.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.00311823133082&latitude=13.792554020685719&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.28320-14.01061.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.28320123299609&latitude=14.01060984147985&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.46992-13.64729.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.46992323410626&latitude=13.647293917337178&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.28320-13.79255.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.28320123299609&latitude=13.792554020685719&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.31017-13.93790.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.31017223910206&latitude=13.937902299485927&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.40353-13.64729.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.40353323965716&latitude=13.647293917337178&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.31017-13.57470.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.31017223910206&latitude=13.574696595970691&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.12345-14.01061.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.12345023799189&latitude=14.01060984147985&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.40353-13.79255.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.40353323965716&latitude=13.792554020685719&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.31017-13.86522.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.31017223910206&latitude=13.86521707088254&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.12345-13.57470.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.12345023799189&latitude=13.574696595970691&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.31017-13.64729.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.31017223910206&latitude=13.647293917337178&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.21681-13.57470.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.21681123854697&latitude=13.574696595970691&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.37656-12.48826.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.37656223355118&latitude=12.488259800228542&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.46992-12.48826.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.46992323410626&latitude=12.488259800228542&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.18984-12.05495.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.18984023244099&latitude=12.054949357436385&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.75001-12.41599.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.75000623577152&latitude=12.415992946150261&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.03009-11.98280.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.0300892374368&latitude=11.982797883329921&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.75001-11.91067.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.75000623577152&latitude=11.910665194238858&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.28320-12.92228.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.28320123299609&latitude=12.922278673391833&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.84337-12.19931.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.84336723632663&latitude=12.199309167586458&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.03009-11.76646.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.0300892374368&latitude=11.76645566593634&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.28320-12.19931.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.28320123299609&latitude=12.199309167586458&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.46992-12.19931.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.46992323410626&latitude=12.199309167586458&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.65665-12.63285.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.65664523521646&latitude=12.63285267031712&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.93673-12.12712.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.93672823688172&latitude=12.127119743208555&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.03009-11.91067.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.0300892374368&latitude=11.910665194238858&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.93673-11.83855.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.93672823688172&latitude=11.838551163800286&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.75001-12.48826.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.75000623577152&latitude=12.488259800228542&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.75001-12.56055.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.75000623577152&latitude=12.56054633204141&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.00312-13.13956.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.00311823133082&latitude=13.139562497360531&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.75001-12.19931.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.75000623577152&latitude=12.199309167586458&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.12345-12.84989.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.12345023799189&latitude=12.849891815815795&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.84337-12.70518.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.84336723632663&latitude=12.705178944090417&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.12345-12.77753.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.12345023799189&latitude=12.777525282704959&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.03009-12.84989.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.0300892374368&latitude=12.849891815815795&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.84337-12.99469.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.84336723632663&latitude=12.994685985718327&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.56328-12.92228.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.56328423466135&latitude=12.922278673391833&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.12345-12.92228.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.12345023799189&latitude=12.922278673391833&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.03009-12.70518.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.0300892374368&latitude=12.705178944090417&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.84337-12.84989.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.84336723632663&latitude=12.849891815815795&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.12345-12.56055.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.12345023799189&latitude=12.56054633204141&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-123.65665-12.92228.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=123.65664523521646&latitude=12.922278673391833&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.21681-13.06711.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.21681123854697&latitude=13.067113883399397&curation=precise",
+        "apiVersion": "v2.10.3"
+      },
+      {
+        "file": "smap-124.12345-12.63285.json",
+        "url": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&parameters=SFMC%2CRZMC&start=20240101&end=20241231&format=JSON&time-standard=UTC&longitude=124.12345023799189&latitude=12.63285267031712&curation=precise",
+        "apiVersion": "v2.10.3"
+      }
+    ]
+  }
+}

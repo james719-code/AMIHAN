@@ -6,6 +6,10 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "fetch:power": "node fetch-power.mjs",
+    "fetch:municipal-power": "node fetch-municipal-power.mjs",
+    "consolidate": "node consolidate.mjs",
+    "generate:climate": "node publish-climate.mjs",
     "test": "node --test tests/import-power.test.mjs"
   },
   "dependencies": {

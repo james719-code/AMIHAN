@@ -23,7 +23,7 @@ Select a city, town, or volcano to zoom in on its terrain and roads. **Reset Bic
 
 The **Crop rotation guide** shows seasonal rainfall for a named NASA POWER reference point. Select a planting month for historical rainfall, temperature, and humidity. Previous crop filters the documented Bicol sequences, while water source and drainage change the field checks. The guide provides planning context and links to the original crop studies and soil resources.
 
-Use **Climate** on the map to scrub or play daily rainfall or monthly climate for a selected year. The readings appear at the requested NASA POWER coordinates. In 3D, positive daily rainfall adds animated marks at those points. **Historical climate** also shows daily readings, monthly readings, and the separate IMERG bounding-box rainfall series.
+Use **Climate** on the map to scrub or play daily rainfall or monthly climate for a selected year. The readings appear at the requested NASA POWER coordinates. In 3D, positive daily rainfall adds animated marks at those points. In **Historical climate → 2024 daily weather**, select any of Bicol’s 107 municipalities or seven cities and use **Daily measure** to explore rainfall, temperature, wind, dew point, humidity, solar radiation, soil moisture, land evaporation, and transpiration energy. The chart uses the nearest grid cell to the mapped town or city coordinate. The other tabs include the 2015–2024 reference-point climate history and the IMERG bounding-box rainfall series.
 
 Use **Field Check** to shade the regional terrain by slope and select two land points for an elevation profile. Measurements use the original terrain heights. The display mesh has roughly 660 m spacing across Bicol, so the profile describes regional terrain and leaves gaps over water. The rotation guide uses the closest supplied climate point when Field Check point A is set.
 
@@ -55,10 +55,12 @@ Rebuild the roads after changing the terrain or the place coordinates. The gener
 npm.cmd --prefix web run generate:roads
 ```
 
-## Weather importer
+## NASA POWER downloads
 
-The data importer accepts a registered site ID and NASA POWER daily CSV:
+Build the 2024 municipal weather files from the public NASA POWER API. The first run downloads the source files. Later runs reuse the local downloads.
 
 ```powershell
-node data/import-power.mjs --site albay-01 data/raw/albay-01-2024.csv data/processed/albay-01-2024.json
+npm.cmd --prefix data run fetch:municipal-power
 ```
+
+See the [data notes](data/README.md#2024-municipal-weather) for the source resolutions, download locations, and the earlier six-site verification files.

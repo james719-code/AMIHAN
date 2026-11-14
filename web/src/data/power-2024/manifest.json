@@ -1,0 +1,152 @@
+{
+  "schemaVersion": "1.0.0",
+  "releaseId": "power-2024-verification",
+  "sourceId": "nasa-power-daily-2024",
+  "retrievedAt": "2026-11-14T07:09:17.245Z",
+  "timeStandard": "UTC",
+  "units": {
+    "rainfallMm": "mm/day",
+    "meanTemperatureC": "°C",
+    "maxTemperatureC": "°C",
+    "relativeHumidityPct": "%",
+    "solarRadiationMjM2": "MJ/m²/day"
+  },
+  "selectedDates": {
+    "start": "2024-01-01",
+    "end": "2024-12-31"
+  },
+  "sites": [
+    {
+      "id": "albay-01",
+      "provinceCode": "0500500000",
+      "coordinates": [
+        123.74073,
+        13.14125
+      ],
+      "requestUrl": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&longitude=123.74073&latitude=13.14125&start=20240101&end=20241231&time-standard=UTC&parameters=PRECTOTCORR%2CT2M%2CT2M_MAX%2CRH2M%2CALLSKY_SFC_SW_DWN&format=CSV",
+      "artifact": "albay-01-2024.json",
+      "coverage": {
+        "rowCount": 366,
+        "expectedDaysInRange": 366,
+        "availableByMetric": {
+          "rainfallMm": 366,
+          "meanTemperatureC": 366,
+          "maxTemperatureC": 366,
+          "relativeHumidityPct": 366,
+          "solarRadiationMjM2": 366
+        },
+        "missingDates": []
+      }
+    },
+    {
+      "id": "camarines-norte-01",
+      "provinceCode": "0501600000",
+      "coordinates": [
+        122.9553,
+        14.1122
+      ],
+      "requestUrl": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&longitude=122.9553&latitude=14.1122&start=20240101&end=20241231&time-standard=UTC&parameters=PRECTOTCORR%2CT2M%2CT2M_MAX%2CRH2M%2CALLSKY_SFC_SW_DWN&format=CSV",
+      "artifact": "camarines-norte-01-2024.json",
+      "coverage": {
+        "rowCount": 366,
+        "expectedDaysInRange": 366,
+        "availableByMetric": {
+          "rainfallMm": 366,
+          "meanTemperatureC": 366,
+          "maxTemperatureC": 366,
+          "relativeHumidityPct": 366,
+          "solarRadiationMjM2": 366
+        },
+        "missingDates": []
+      }
+    },
+    {
+      "id": "camarines-sur-01",
+      "provinceCode": "0501700000",
+      "coordinates": [
+        123.18139,
+        13.61917
+      ],
+      "requestUrl": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&longitude=123.18139&latitude=13.61917&start=20240101&end=20241231&time-standard=UTC&parameters=PRECTOTCORR%2CT2M%2CT2M_MAX%2CRH2M%2CALLSKY_SFC_SW_DWN&format=CSV",
+      "artifact": "camarines-sur-01-2024.json",
+      "coverage": {
+        "rowCount": 366,
+        "expectedDaysInRange": 366,
+        "availableByMetric": {
+          "rainfallMm": 366,
+          "meanTemperatureC": 366,
+          "maxTemperatureC": 366,
+          "relativeHumidityPct": 366,
+          "solarRadiationMjM2": 366
+        },
+        "missingDates": []
+      }
+    },
+    {
+      "id": "catanduanes-01",
+      "provinceCode": "0502000000",
+      "coordinates": [
+        124.2374,
+        13.5848
+      ],
+      "requestUrl": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&longitude=124.2374&latitude=13.5848&start=20240101&end=20241231&time-standard=UTC&parameters=PRECTOTCORR%2CT2M%2CT2M_MAX%2CRH2M%2CALLSKY_SFC_SW_DWN&format=CSV",
+      "artifact": "catanduanes-01-2024.json",
+      "coverage": {
+        "rowCount": 366,
+        "expectedDaysInRange": 366,
+        "availableByMetric": {
+          "rainfallMm": 366,
+          "meanTemperatureC": 366,
+          "maxTemperatureC": 366,
+          "relativeHumidityPct": 366,
+          "solarRadiationMjM2": 366
+        },
+        "missingDates": []
+      }
+    },
+    {
+      "id": "masbate-01",
+      "provinceCode": "0504100000",
+      "coordinates": [
+        123.62494,
+        12.37169
+      ],
+      "requestUrl": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&longitude=123.62494&latitude=12.37169&start=20240101&end=20241231&time-standard=UTC&parameters=PRECTOTCORR%2CT2M%2CT2M_MAX%2CRH2M%2CALLSKY_SFC_SW_DWN&format=CSV",
+      "artifact": "masbate-01-2024.json",
+      "coverage": {
+        "rowCount": 366,
+        "expectedDaysInRange": 366,
+        "availableByMetric": {
+          "rainfallMm": 366,
+          "meanTemperatureC": 366,
+          "maxTemperatureC": 366,
+          "relativeHumidityPct": 366,
+          "solarRadiationMjM2": 366
+        },
+        "missingDates": []
+      }
+    },
+    {
+      "id": "sorsogon-01",
+      "provinceCode": "0506200000",
+      "coordinates": [
+        123.99333,
+        12.97389
+      ],
+      "requestUrl": "https://power.larc.nasa.gov/api/temporal/daily/point?community=AG&longitude=123.99333&latitude=12.97389&start=20240101&end=20241231&time-standard=UTC&parameters=PRECTOTCORR%2CT2M%2CT2M_MAX%2CRH2M%2CALLSKY_SFC_SW_DWN&format=CSV",
+      "artifact": "sorsogon-01-2024.json",
+      "coverage": {
+        "rowCount": 366,
+        "expectedDaysInRange": 366,
+        "availableByMetric": {
+          "rainfallMm": 366,
+          "meanTemperatureC": 366,
+          "maxTemperatureC": 366,
+          "relativeHumidityPct": 366,
+          "solarRadiationMjM2": 366
+        },
+        "missingDates": []
+      }
+    }
+  ]
+}

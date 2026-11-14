@@ -1,0 +1,2992 @@
+{
+  "schemaVersion": "1.0.0",
+  "releaseId": "power-2024-verification",
+  "sourceId": "nasa-power-daily-2024",
+  "site": {
+    "id": "masbate-01",
+    "name": "Masbate City reference point",
+    "provinceCode": "0504100000",
+    "provinceName": "Masbate",
+    "coordinates": [
+      123.62494,
+      12.37169
+    ],
+    "rationale": "FieldWise’s mapped reference point in the provincial capital."
+  },
+  "selectedDates": {
+    "start": "2024-01-01",
+    "end": "2024-12-31"
+  },
+  "units": {
+    "rainfallMm": "mm/day",
+    "meanTemperatureC": "°C",
+    "maxTemperatureC": "°C",
+    "relativeHumidityPct": "%",
+    "solarRadiationMjM2": "MJ/m²/day"
+  },
+  "timeStandard": "UTC",
+  "sourceHeaders": [
+    "YEAR",
+    "DOY",
+    "PRECTOTCORR",
+    "T2M",
+    "T2M_MAX",
+    "RH2M",
+    "ALLSKY_SFC_SW_DWN"
+  ],
+  "sourceMetadata": [
+    "NASA/POWER Source Native Resolution Daily Data ",
+    "Dates (month/day/year): 01/01/2024 through 12/31/2024 in UTC",
+    "Location: latitude  12.3717   longitude 123.6249 ",
+    "elevation from MERRA-2: Average for 0.5 x 0.625 degree lat/lon region = 30.43 meters",
+    "The value for missing source data that cannot be computed or is outside of the sources availability range: -999 ",
+    "parameter(s): ",
+    "PRECTOTCORR           MERRA-2 Precipitation Corrected (mm/day) ",
+    "T2M                   MERRA-2 Temperature at 2 Meters (C) ",
+    "T2M_MAX               MERRA-2 Temperature at 2 Meters Maximum (C) ",
+    "RH2M                  MERRA-2 Relative Humidity at 2 Meters (%) ",
+    "ALLSKY_SFC_SW_DWN     CERES SYN1deg All Sky Surface Shortwave Downward Irradiance (MJ/m^2/day)"
+  ],
+  "coverage": {
+    "rowCount": 366,
+    "expectedDaysInRange": 366,
+    "availableByMetric": {
+      "rainfallMm": 366,
+      "meanTemperatureC": 366,
+      "maxTemperatureC": 366,
+      "relativeHumidityPct": 366,
+      "solarRadiationMjM2": 366
+    },
+    "missingDates": []
+  },
+  "rows": [
+    {
+      "date": "2024-01-01",
+      "rainfallMm": 1.93,
+      "meanTemperatureC": 27.24,
+      "maxTemperatureC": 29.44,
+      "relativeHumidityPct": 87.87,
+      "solarRadiationMjM2": 18.99
+    },
+    {
+      "date": "2024-01-02",
+      "rainfallMm": 0.22,
+      "meanTemperatureC": 27.36,
+      "maxTemperatureC": 29.7,
+      "relativeHumidityPct": 84.28,
+      "solarRadiationMjM2": 16.99
+    },
+    {
+      "date": "2024-01-03",
+      "rainfallMm": 1.14,
+      "meanTemperatureC": 27.51,
+      "maxTemperatureC": 29.97,
+      "relativeHumidityPct": 82.48,
+      "solarRadiationMjM2": 19.32
+    },
+    {
+      "date": "2024-01-04",
+      "rainfallMm": 22.16,
+      "meanTemperatureC": 27.42,
+      "maxTemperatureC": 29.41,
+      "relativeHumidityPct": 86.9,
+      "solarRadiationMjM2": 17.55
+    },
+    {
+      "date": "2024-01-05",
+      "rainfallMm": 18.99,
+      "meanTemperatureC": 27.38,
+      "maxTemperatureC": 29,
+      "relativeHumidityPct": 89.23,
+      "solarRadiationMjM2": 7.32
+    },
+    {
+      "date": "2024-01-06",
+      "rainfallMm": 23.73,
+      "meanTemperatureC": 27.23,
+      "maxTemperatureC": 28.43,
+      "relativeHumidityPct": 91.2,
+      "solarRadiationMjM2": 10.58
+    },
+    {
+      "date": "2024-01-07",
+      "rainfallMm": 7.63,
+      "meanTemperatureC": 27.04,
+      "maxTemperatureC": 28.47,
+      "relativeHumidityPct": 90.42,
+      "solarRadiationMjM2": 11.48
+    },
+    {
+      "date": "2024-01-08",
+      "rainfallMm": 9.02,
+      "meanTemperatureC": 27.22,
+      "maxTemperatureC": 29.19,
+      "relativeHumidityPct": 89.89,
+      "solarRadiationMjM2": 14.48
+    },
+    {
+      "date": "2024-01-09",
+      "rainfallMm": 2.17,
+      "meanTemperatureC": 27.37,
+      "maxTemperatureC": 29.32,
+      "relativeHumidityPct": 89.07,
+      "solarRadiationMjM2": 18.12
+    },
+    {
+      "date": "2024-01-10",
+      "rainfallMm": 9.35,
+      "meanTemperatureC": 26.95,
+      "maxTemperatureC": 29.08,
+      "relativeHumidityPct": 86.16,
+      "solarRadiationMjM2": 18.6
+    },
+    {
+      "date": "2024-01-11",
+      "rainfallMm": 19.75,
+      "meanTemperatureC": 26.57,
+      "maxTemperatureC": 28.86,
+      "relativeHumidityPct": 87.02,
+      "solarRadiationMjM2": 10.27
+    },
+    {
+      "date": "2024-01-12",
+      "rainfallMm": 9.32,
+      "meanTemperatureC": 25.9,
+      "maxTemperatureC": 27.66,
+      "relativeHumidityPct": 86.91,
+      "solarRadiationMjM2": 11.89
+    },
+    {
+      "date": "2024-01-13",
+      "rainfallMm": 2.69,
+      "meanTemperatureC": 25.98,
+      "maxTemperatureC": 27.71,
+      "relativeHumidityPct": 86.76,
+      "solarRadiationMjM2": 14.48
+    },
+    {
+      "date": "2024-01-14",
+      "rainfallMm": 8.09,
+      "meanTemperatureC": 25.86,
+      "maxTemperatureC": 27.81,
+      "relativeHumidityPct": 85.14,
+      "solarRadiationMjM2": 14.9
+    },
+    {
+      "date": "2024-01-15",
+      "rainfallMm": 0.87,
+      "meanTemperatureC": 25.6,
+      "maxTemperatureC": 27.56,
+      "relativeHumidityPct": 80.94,
+      "solarRadiationMjM2": 18.6
+    },
+    {
+      "date": "2024-01-16",
+      "rainfallMm": 1.51,
+      "meanTemperatureC": 25.36,
+      "maxTemperatureC": 27.28,
+      "relativeHumidityPct": 81.36,
+      "solarRadiationMjM2": 16.2
+    },
+    {
+      "date": "2024-01-17",
+      "rainfallMm": 0.19,
+      "meanTemperatureC": 25.5,
+      "maxTemperatureC": 27.29,
+      "relativeHumidityPct": 80.38,
+      "solarRadiationMjM2": 19.38
+    },
+    {
+      "date": "2024-01-18",
+      "rainfallMm": 3.22,
+      "meanTemperatureC": 25.91,
+      "maxTemperatureC": 27.9,
+      "relativeHumidityPct": 86.3,
+      "solarRadiationMjM2": 15.34
+    },
+    {
+      "date": "2024-01-19",
+      "rainfallMm": 2.69,
+      "meanTemperatureC": 25.92,
+      "maxTemperatureC": 28.21,
+      "relativeHumidityPct": 85.79,
+      "solarRadiationMjM2": 12.71
+    },
+    {
+      "date": "2024-01-20",
+      "rainfallMm": 4.07,
+      "meanTemperatureC": 26.22,
+      "maxTemperatureC": 28.48,
+      "relativeHumidityPct": 85.36,
+      "solarRadiationMjM2": 17.3
+    },
+    {
+      "date": "2024-01-21",
+      "rainfallMm": 6.88,
+      "meanTemperatureC": 26.51,
+      "maxTemperatureC": 28.58,
+      "relativeHumidityPct": 87.12,
+      "solarRadiationMjM2": 14.59
+    },
+    {
+      "date": "2024-01-22",
+      "rainfallMm": 3.56,
+      "meanTemperatureC": 26.34,
+      "maxTemperatureC": 28.6,
+      "relativeHumidityPct": 85.74,
+      "solarRadiationMjM2": 13.64
+    },
+    {
+      "date": "2024-01-23",
+      "rainfallMm": 0.31,
+      "meanTemperatureC": 26.33,
+      "maxTemperatureC": 28.41,
+      "relativeHumidityPct": 84.93,
+      "solarRadiationMjM2": 18.4
+    },
+    {
+      "date": "2024-01-24",
+      "rainfallMm": 28.76,
+      "meanTemperatureC": 25.99,
+      "maxTemperatureC": 28.19,
+      "relativeHumidityPct": 86.76,
+      "solarRadiationMjM2": 14.97
+    },
+    {
+      "date": "2024-01-25",
+      "rainfallMm": 11.44,
+      "meanTemperatureC": 25.34,
+      "maxTemperatureC": 27.41,
+      "relativeHumidityPct": 85.08,
+      "solarRadiationMjM2": 10.05
+    },
+    {
+      "date": "2024-01-26",
+      "rainfallMm": 0.24,
+      "meanTemperatureC": 24.85,
+      "maxTemperatureC": 26.62,
+      "relativeHumidityPct": 77.38,
+      "solarRadiationMjM2": 15.25
+    },
+    {
+      "date": "2024-01-27",
+      "rainfallMm": 0.99,
+      "meanTemperatureC": 24.73,
+      "maxTemperatureC": 26.97,
+      "relativeHumidityPct": 77.28,
+      "solarRadiationMjM2": 17.09
+    },
+    {
+      "date": "2024-01-28",
+      "rainfallMm": 5.83,
+      "meanTemperatureC": 24.98,
+      "maxTemperatureC": 26.63,
+      "relativeHumidityPct": 82.8,
+      "solarRadiationMjM2": 13.1
+    },
+    {
+      "date": "2024-01-29",
+      "rainfallMm": 4.71,
+      "meanTemperatureC": 25.29,
+      "maxTemperatureC": 27.08,
+      "relativeHumidityPct": 83.02,
+      "solarRadiationMjM2": 12.67
+    },
+    {
+      "date": "2024-01-30",
+      "rainfallMm": 3.99,
+      "meanTemperatureC": 25.42,
+      "maxTemperatureC": 26.89,
+      "relativeHumidityPct": 88.23,
+      "solarRadiationMjM2": 11.58
+    },
+    {
+      "date": "2024-01-31",
+      "rainfallMm": 0.46,
+      "meanTemperatureC": 25.66,
+      "maxTemperatureC": 28,
+      "relativeHumidityPct": 84.38,
+      "solarRadiationMjM2": 17.75
+    },
+    {
+      "date": "2024-02-01",
+      "rainfallMm": 0.2,
+      "meanTemperatureC": 25.69,
+      "maxTemperatureC": 28.05,
+      "relativeHumidityPct": 83.32,
+      "solarRadiationMjM2": 18.74
+    },
+    {
+      "date": "2024-02-02",
+      "rainfallMm": 1.89,
+      "meanTemperatureC": 25.56,
+      "maxTemperatureC": 27.89,
+      "relativeHumidityPct": 84.98,
+      "solarRadiationMjM2": 20.85
+    },
+    {
+      "date": "2024-02-03",
+      "rainfallMm": 0.09,
+      "meanTemperatureC": 26.01,
+      "maxTemperatureC": 28.47,
+      "relativeHumidityPct": 86.77,
+      "solarRadiationMjM2": 18.3
+    },
+    {
+      "date": "2024-02-04",
+      "rainfallMm": 0.29,
+      "meanTemperatureC": 26.39,
+      "maxTemperatureC": 29.03,
+      "relativeHumidityPct": 85.68,
+      "solarRadiationMjM2": 22.63
+    },
+    {
+      "date": "2024-02-05",
+      "rainfallMm": 8.39,
+      "meanTemperatureC": 26.46,
+      "maxTemperatureC": 28.74,
+      "relativeHumidityPct": 85.02,
+      "solarRadiationMjM2": 20.49
+    },
+    {
+      "date": "2024-02-06",
+      "rainfallMm": 4.28,
+      "meanTemperatureC": 26.12,
+      "maxTemperatureC": 28.56,
+      "relativeHumidityPct": 82.41,
+      "solarRadiationMjM2": 14.69
+    },
+    {
+      "date": "2024-02-07",
+      "rainfallMm": 0.17,
+      "meanTemperatureC": 25.92,
+      "maxTemperatureC": 28.49,
+      "relativeHumidityPct": 83.43,
+      "solarRadiationMjM2": 19.73
+    },
+    {
+      "date": "2024-02-08",
+      "rainfallMm": 1.17,
+      "meanTemperatureC": 26.23,
+      "maxTemperatureC": 28.89,
+      "relativeHumidityPct": 83.5,
+      "solarRadiationMjM2": 21.87
+    },
+    {
+      "date": "2024-02-09",
+      "rainfallMm": 6,
+      "meanTemperatureC": 25.79,
+      "maxTemperatureC": 28.38,
+      "relativeHumidityPct": 85.33,
+      "solarRadiationMjM2": 15.46
+    },
+    {
+      "date": "2024-02-10",
+      "rainfallMm": 4.33,
+      "meanTemperatureC": 25.72,
+      "maxTemperatureC": 28.36,
+      "relativeHumidityPct": 82.98,
+      "solarRadiationMjM2": 14.49
+    },
+    {
+      "date": "2024-02-11",
+      "rainfallMm": 4.09,
+      "meanTemperatureC": 25.47,
+      "maxTemperatureC": 27.47,
+      "relativeHumidityPct": 82.56,
+      "solarRadiationMjM2": 20.86
+    },
+    {
+      "date": "2024-02-12",
+      "rainfallMm": 8.43,
+      "meanTemperatureC": 25.49,
+      "maxTemperatureC": 27.32,
+      "relativeHumidityPct": 87.36,
+      "solarRadiationMjM2": 12.01
+    },
+    {
+      "date": "2024-02-13",
+      "rainfallMm": 11.21,
+      "meanTemperatureC": 25.58,
+      "maxTemperatureC": 27.45,
+      "relativeHumidityPct": 88.7,
+      "solarRadiationMjM2": 11.48
+    },
+    {
+      "date": "2024-02-14",
+      "rainfallMm": 1.89,
+      "meanTemperatureC": 25.9,
+      "maxTemperatureC": 28.44,
+      "relativeHumidityPct": 84.47,
+      "solarRadiationMjM2": 18.72
+    },
+    {
+      "date": "2024-02-15",
+      "rainfallMm": 10.81,
+      "meanTemperatureC": 26,
+      "maxTemperatureC": 28.39,
+      "relativeHumidityPct": 88.2,
+      "solarRadiationMjM2": 13.81
+    },
+    {
+      "date": "2024-02-16",
+      "rainfallMm": 0.23,
+      "meanTemperatureC": 25.52,
+      "maxTemperatureC": 28.13,
+      "relativeHumidityPct": 84.04,
+      "solarRadiationMjM2": 19.91
+    },
+    {
+      "date": "2024-02-17",
+      "rainfallMm": 2.32,
+      "meanTemperatureC": 25.75,
+      "maxTemperatureC": 28.23,
+      "relativeHumidityPct": 82.97,
+      "solarRadiationMjM2": 21.32
+    },
+    {
+      "date": "2024-02-18",
+      "rainfallMm": 2.27,
+      "meanTemperatureC": 26.01,
+      "maxTemperatureC": 28.66,
+      "relativeHumidityPct": 85.54,
+      "solarRadiationMjM2": 16.38
+    },
+    {
+      "date": "2024-02-19",
+      "rainfallMm": 0.05,
+      "meanTemperatureC": 26.16,
+      "maxTemperatureC": 28.67,
+      "relativeHumidityPct": 80.62,
+      "solarRadiationMjM2": 23.94
+    },
+    {
+      "date": "2024-02-20",
+      "rainfallMm": 0.02,
+      "meanTemperatureC": 26.11,
+      "maxTemperatureC": 28.67,
+      "relativeHumidityPct": 79.1,
+      "solarRadiationMjM2": 23.18
+    },
+    {
+      "date": "2024-02-21",
+      "rainfallMm": 0.34,
+      "meanTemperatureC": 26.21,
+      "maxTemperatureC": 28.82,
+      "relativeHumidityPct": 81.5,
+      "solarRadiationMjM2": 21.68
+    },
+    {
+      "date": "2024-02-22",
+      "rainfallMm": 1.2,
+      "meanTemperatureC": 26.36,
+      "maxTemperatureC": 29.04,
+      "relativeHumidityPct": 82.9,
+      "solarRadiationMjM2": 21.18
+    },
+    {
+      "date": "2024-02-23",
+      "rainfallMm": 0.91,
+      "meanTemperatureC": 26.36,
+      "maxTemperatureC": 29.08,
+      "relativeHumidityPct": 83.57,
+      "solarRadiationMjM2": 22.42
+    },
+    {
+      "date": "2024-02-24",
+      "rainfallMm": 3.59,
+      "meanTemperatureC": 26.63,
+      "maxTemperatureC": 28.96,
+      "relativeHumidityPct": 86.49,
+      "solarRadiationMjM2": 16.62
+    },
+    {
+      "date": "2024-02-25",
+      "rainfallMm": 2.63,
+      "meanTemperatureC": 26.22,
+      "maxTemperatureC": 28.76,
+      "relativeHumidityPct": 81.2,
+      "solarRadiationMjM2": 19.98
+    },
+    {
+      "date": "2024-02-26",
+      "rainfallMm": 0.16,
+      "meanTemperatureC": 26.08,
+      "maxTemperatureC": 28.32,
+      "relativeHumidityPct": 77.02,
+      "solarRadiationMjM2": 21.44
+    },
+    {
+      "date": "2024-02-27",
+      "rainfallMm": 0.05,
+      "meanTemperatureC": 26.12,
+      "maxTemperatureC": 28.59,
+      "relativeHumidityPct": 74.91,
+      "solarRadiationMjM2": 22.22
+    },
+    {
+      "date": "2024-02-28",
+      "rainfallMm": 0.27,
+      "meanTemperatureC": 25.85,
+      "maxTemperatureC": 28.54,
+      "relativeHumidityPct": 77.27,
+      "solarRadiationMjM2": 23.13
+    },
+    {
+      "date": "2024-02-29",
+      "rainfallMm": 0.09,
+      "meanTemperatureC": 26.18,
+      "maxTemperatureC": 28.8,
+      "relativeHumidityPct": 78.03,
+      "solarRadiationMjM2": 23.59
+    },
+    {
+      "date": "2024-03-01",
+      "rainfallMm": 0.02,
+      "meanTemperatureC": 26.15,
+      "maxTemperatureC": 28.77,
+      "relativeHumidityPct": 78.41,
+      "solarRadiationMjM2": 21.93
+    },
+    {
+      "date": "2024-03-02",
+      "rainfallMm": 2.24,
+      "meanTemperatureC": 26.27,
+      "maxTemperatureC": 28.69,
+      "relativeHumidityPct": 82.1,
+      "solarRadiationMjM2": 19.63
+    },
+    {
+      "date": "2024-03-03",
+      "rainfallMm": 2.98,
+      "meanTemperatureC": 26.03,
+      "maxTemperatureC": 28.72,
+      "relativeHumidityPct": 85.64,
+      "solarRadiationMjM2": 14.31
+    },
+    {
+      "date": "2024-03-04",
+      "rainfallMm": 0.05,
+      "meanTemperatureC": 26.06,
+      "maxTemperatureC": 29.1,
+      "relativeHumidityPct": 80.03,
+      "solarRadiationMjM2": 23.61
+    },
+    {
+      "date": "2024-03-05",
+      "rainfallMm": 0.04,
+      "meanTemperatureC": 26.71,
+      "maxTemperatureC": 29.65,
+      "relativeHumidityPct": 84.05,
+      "solarRadiationMjM2": 24.82
+    },
+    {
+      "date": "2024-03-06",
+      "rainfallMm": 0.05,
+      "meanTemperatureC": 27.03,
+      "maxTemperatureC": 30.3,
+      "relativeHumidityPct": 82.79,
+      "solarRadiationMjM2": 22.65
+    },
+    {
+      "date": "2024-03-07",
+      "rainfallMm": 0.09,
+      "meanTemperatureC": 26.66,
+      "maxTemperatureC": 29.63,
+      "relativeHumidityPct": 78.91,
+      "solarRadiationMjM2": 23.15
+    },
+    {
+      "date": "2024-03-08",
+      "rainfallMm": 0.01,
+      "meanTemperatureC": 26.62,
+      "maxTemperatureC": 29.36,
+      "relativeHumidityPct": 77.44,
+      "solarRadiationMjM2": 25.42
+    },
+    {
+      "date": "2024-03-09",
+      "rainfallMm": 3.41,
+      "meanTemperatureC": 26.26,
+      "maxTemperatureC": 29.2,
+      "relativeHumidityPct": 80.06,
+      "solarRadiationMjM2": 23.36
+    },
+    {
+      "date": "2024-03-10",
+      "rainfallMm": 8.71,
+      "meanTemperatureC": 26.23,
+      "maxTemperatureC": 28.8,
+      "relativeHumidityPct": 81.69,
+      "solarRadiationMjM2": 15.31
+    },
+    {
+      "date": "2024-03-11",
+      "rainfallMm": 1.64,
+      "meanTemperatureC": 26.51,
+      "maxTemperatureC": 29.47,
+      "relativeHumidityPct": 82.56,
+      "solarRadiationMjM2": 20.4
+    },
+    {
+      "date": "2024-03-12",
+      "rainfallMm": 0.27,
+      "meanTemperatureC": 26.92,
+      "maxTemperatureC": 29.77,
+      "relativeHumidityPct": 83.07,
+      "solarRadiationMjM2": 23.61
+    },
+    {
+      "date": "2024-03-13",
+      "rainfallMm": 0.6,
+      "meanTemperatureC": 26.48,
+      "maxTemperatureC": 29.3,
+      "relativeHumidityPct": 83.17,
+      "solarRadiationMjM2": 24.81
+    },
+    {
+      "date": "2024-03-14",
+      "rainfallMm": 1.19,
+      "meanTemperatureC": 26.43,
+      "maxTemperatureC": 29.38,
+      "relativeHumidityPct": 83.12,
+      "solarRadiationMjM2": 21.87
+    },
+    {
+      "date": "2024-03-15",
+      "rainfallMm": 0.18,
+      "meanTemperatureC": 26.63,
+      "maxTemperatureC": 29.41,
+      "relativeHumidityPct": 82.13,
+      "solarRadiationMjM2": 21.82
+    },
+    {
+      "date": "2024-03-16",
+      "rainfallMm": 0.04,
+      "meanTemperatureC": 26.55,
+      "maxTemperatureC": 29.39,
+      "relativeHumidityPct": 79.9,
+      "solarRadiationMjM2": 24.92
+    },
+    {
+      "date": "2024-03-17",
+      "rainfallMm": 0.32,
+      "meanTemperatureC": 26.2,
+      "maxTemperatureC": 28.92,
+      "relativeHumidityPct": 82.58,
+      "solarRadiationMjM2": 21.65
+    },
+    {
+      "date": "2024-03-18",
+      "rainfallMm": 2.67,
+      "meanTemperatureC": 26.25,
+      "maxTemperatureC": 28.92,
+      "relativeHumidityPct": 78.77,
+      "solarRadiationMjM2": 14.88
+    },
+    {
+      "date": "2024-03-19",
+      "rainfallMm": 0.89,
+      "meanTemperatureC": 26.63,
+      "maxTemperatureC": 29.28,
+      "relativeHumidityPct": 81.9,
+      "solarRadiationMjM2": 20.04
+    },
+    {
+      "date": "2024-03-20",
+      "rainfallMm": 0.54,
+      "meanTemperatureC": 26.55,
+      "maxTemperatureC": 29.15,
+      "relativeHumidityPct": 77.25,
+      "solarRadiationMjM2": 23.28
+    },
+    {
+      "date": "2024-03-21",
+      "rainfallMm": 1.81,
+      "meanTemperatureC": 26.17,
+      "maxTemperatureC": 28.99,
+      "relativeHumidityPct": 78.73,
+      "solarRadiationMjM2": 22.95
+    },
+    {
+      "date": "2024-03-22",
+      "rainfallMm": 6.78,
+      "meanTemperatureC": 26.76,
+      "maxTemperatureC": 29.52,
+      "relativeHumidityPct": 82.92,
+      "solarRadiationMjM2": 22.91
+    },
+    {
+      "date": "2024-03-23",
+      "rainfallMm": 2.07,
+      "meanTemperatureC": 26.91,
+      "maxTemperatureC": 29.85,
+      "relativeHumidityPct": 81.94,
+      "solarRadiationMjM2": 21.98
+    },
+    {
+      "date": "2024-03-24",
+      "rainfallMm": 1.69,
+      "meanTemperatureC": 26.92,
+      "maxTemperatureC": 29.78,
+      "relativeHumidityPct": 81.34,
+      "solarRadiationMjM2": 18.18
+    },
+    {
+      "date": "2024-03-25",
+      "rainfallMm": 10.31,
+      "meanTemperatureC": 27.41,
+      "maxTemperatureC": 29.57,
+      "relativeHumidityPct": 85.15,
+      "solarRadiationMjM2": 20.81
+    },
+    {
+      "date": "2024-03-26",
+      "rainfallMm": 3.06,
+      "meanTemperatureC": 27.62,
+      "maxTemperatureC": 29.35,
+      "relativeHumidityPct": 90.54,
+      "solarRadiationMjM2": 22.09
+    },
+    {
+      "date": "2024-03-27",
+      "rainfallMm": 6.58,
+      "meanTemperatureC": 27.79,
+      "maxTemperatureC": 30.04,
+      "relativeHumidityPct": 86.68,
+      "solarRadiationMjM2": 21.45
+    },
+    {
+      "date": "2024-03-28",
+      "rainfallMm": 2.13,
+      "meanTemperatureC": 27.72,
+      "maxTemperatureC": 29.98,
+      "relativeHumidityPct": 87.07,
+      "solarRadiationMjM2": 23.44
+    },
+    {
+      "date": "2024-03-29",
+      "rainfallMm": 0.02,
+      "meanTemperatureC": 26.88,
+      "maxTemperatureC": 30.03,
+      "relativeHumidityPct": 82.93,
+      "solarRadiationMjM2": 25.64
+    },
+    {
+      "date": "2024-03-30",
+      "rainfallMm": 0.22,
+      "meanTemperatureC": 27.03,
+      "maxTemperatureC": 29.88,
+      "relativeHumidityPct": 80.04,
+      "solarRadiationMjM2": 25.32
+    },
+    {
+      "date": "2024-03-31",
+      "rainfallMm": 0.32,
+      "meanTemperatureC": 27.61,
+      "maxTemperatureC": 30.97,
+      "relativeHumidityPct": 81.91,
+      "solarRadiationMjM2": 23.09
+    },
+    {
+      "date": "2024-04-01",
+      "rainfallMm": 0.39,
+      "meanTemperatureC": 27.64,
+      "maxTemperatureC": 30.91,
+      "relativeHumidityPct": 81.73,
+      "solarRadiationMjM2": 26.89
+    },
+    {
+      "date": "2024-04-02",
+      "rainfallMm": 1.35,
+      "meanTemperatureC": 27.43,
+      "maxTemperatureC": 30.53,
+      "relativeHumidityPct": 81.15,
+      "solarRadiationMjM2": 22.96
+    },
+    {
+      "date": "2024-04-03",
+      "rainfallMm": 0.3,
+      "meanTemperatureC": 27.8,
+      "maxTemperatureC": 30.91,
+      "relativeHumidityPct": 80.72,
+      "solarRadiationMjM2": 26.76
+    },
+    {
+      "date": "2024-04-04",
+      "rainfallMm": 1.87,
+      "meanTemperatureC": 27.71,
+      "maxTemperatureC": 30.58,
+      "relativeHumidityPct": 81.3,
+      "solarRadiationMjM2": 25.76
+    },
+    {
+      "date": "2024-04-05",
+      "rainfallMm": 1.81,
+      "meanTemperatureC": 27.68,
+      "maxTemperatureC": 30.72,
+      "relativeHumidityPct": 82.9,
+      "solarRadiationMjM2": 25.27
+    },
+    {
+      "date": "2024-04-06",
+      "rainfallMm": 1.22,
+      "meanTemperatureC": 27.65,
+      "maxTemperatureC": 30.96,
+      "relativeHumidityPct": 81.07,
+      "solarRadiationMjM2": 24.88
+    },
+    {
+      "date": "2024-04-07",
+      "rainfallMm": 0.05,
+      "meanTemperatureC": 27.48,
+      "maxTemperatureC": 30.69,
+      "relativeHumidityPct": 78.68,
+      "solarRadiationMjM2": 24.04
+    },
+    {
+      "date": "2024-04-08",
+      "rainfallMm": 3.25,
+      "meanTemperatureC": 27.63,
+      "maxTemperatureC": 30.39,
+      "relativeHumidityPct": 82.84,
+      "solarRadiationMjM2": 22.02
+    },
+    {
+      "date": "2024-04-09",
+      "rainfallMm": 0.17,
+      "meanTemperatureC": 27.73,
+      "maxTemperatureC": 30.69,
+      "relativeHumidityPct": 81.49,
+      "solarRadiationMjM2": 25.58
+    },
+    {
+      "date": "2024-04-10",
+      "rainfallMm": 1.16,
+      "meanTemperatureC": 27.37,
+      "maxTemperatureC": 30.33,
+      "relativeHumidityPct": 80.74,
+      "solarRadiationMjM2": 26.31
+    },
+    {
+      "date": "2024-04-11",
+      "rainfallMm": 5.41,
+      "meanTemperatureC": 27.51,
+      "maxTemperatureC": 30.34,
+      "relativeHumidityPct": 83.5,
+      "solarRadiationMjM2": 25.92
+    },
+    {
+      "date": "2024-04-12",
+      "rainfallMm": 1.48,
+      "meanTemperatureC": 27.81,
+      "maxTemperatureC": 30.77,
+      "relativeHumidityPct": 82.66,
+      "solarRadiationMjM2": 21.18
+    },
+    {
+      "date": "2024-04-13",
+      "rainfallMm": 0.6,
+      "meanTemperatureC": 27.86,
+      "maxTemperatureC": 30.94,
+      "relativeHumidityPct": 81.69,
+      "solarRadiationMjM2": 24.91
+    },
+    {
+      "date": "2024-04-14",
+      "rainfallMm": 0.74,
+      "meanTemperatureC": 28.08,
+      "maxTemperatureC": 30.99,
+      "relativeHumidityPct": 82.36,
+      "solarRadiationMjM2": 24.5
+    },
+    {
+      "date": "2024-04-15",
+      "rainfallMm": 0,
+      "meanTemperatureC": 28.02,
+      "maxTemperatureC": 31.4,
+      "relativeHumidityPct": 77.98,
+      "solarRadiationMjM2": 26.48
+    },
+    {
+      "date": "2024-04-16",
+      "rainfallMm": 0,
+      "meanTemperatureC": 27.98,
+      "maxTemperatureC": 31.09,
+      "relativeHumidityPct": 77.4,
+      "solarRadiationMjM2": 26.21
+    },
+    {
+      "date": "2024-04-17",
+      "rainfallMm": 0.04,
+      "meanTemperatureC": 28.26,
+      "maxTemperatureC": 31.51,
+      "relativeHumidityPct": 79.4,
+      "solarRadiationMjM2": 26.84
+    },
+    {
+      "date": "2024-04-18",
+      "rainfallMm": 0,
+      "meanTemperatureC": 28.49,
+      "maxTemperatureC": 32.51,
+      "relativeHumidityPct": 75.87,
+      "solarRadiationMjM2": 26.46
+    },
+    {
+      "date": "2024-04-19",
+      "rainfallMm": 0.13,
+      "meanTemperatureC": 28.6,
+      "maxTemperatureC": 32.02,
+      "relativeHumidityPct": 78.1,
+      "solarRadiationMjM2": 26.54
+    },
+    {
+      "date": "2024-04-20",
+      "rainfallMm": 0,
+      "meanTemperatureC": 28.41,
+      "maxTemperatureC": 31.77,
+      "relativeHumidityPct": 76.1,
+      "solarRadiationMjM2": 26.98
+    },
+    {
+      "date": "2024-04-21",
+      "rainfallMm": 3.11,
+      "meanTemperatureC": 28.64,
+      "maxTemperatureC": 31.62,
+      "relativeHumidityPct": 79.86,
+      "solarRadiationMjM2": 23.89
+    },
+    {
+      "date": "2024-04-22",
+      "rainfallMm": 5.11,
+      "meanTemperatureC": 29.09,
+      "maxTemperatureC": 32,
+      "relativeHumidityPct": 83.12,
+      "solarRadiationMjM2": 23.04
+    },
+    {
+      "date": "2024-04-23",
+      "rainfallMm": 1.81,
+      "meanTemperatureC": 28.67,
+      "maxTemperatureC": 30.94,
+      "relativeHumidityPct": 83.2,
+      "solarRadiationMjM2": 23.92
+    },
+    {
+      "date": "2024-04-24",
+      "rainfallMm": 0.07,
+      "meanTemperatureC": 28.38,
+      "maxTemperatureC": 32,
+      "relativeHumidityPct": 78.55,
+      "solarRadiationMjM2": 25.78
+    },
+    {
+      "date": "2024-04-25",
+      "rainfallMm": 0.07,
+      "meanTemperatureC": 28.82,
+      "maxTemperatureC": 32.52,
+      "relativeHumidityPct": 77.02,
+      "solarRadiationMjM2": 26.48
+    },
+    {
+      "date": "2024-04-26",
+      "rainfallMm": 1.61,
+      "meanTemperatureC": 29.37,
+      "maxTemperatureC": 32.4,
+      "relativeHumidityPct": 80.46,
+      "solarRadiationMjM2": 25
+    },
+    {
+      "date": "2024-04-27",
+      "rainfallMm": 1.1,
+      "meanTemperatureC": 29.22,
+      "maxTemperatureC": 32.13,
+      "relativeHumidityPct": 82.08,
+      "solarRadiationMjM2": 25.74
+    },
+    {
+      "date": "2024-04-28",
+      "rainfallMm": 0,
+      "meanTemperatureC": 29.07,
+      "maxTemperatureC": 32.43,
+      "relativeHumidityPct": 76.45,
+      "solarRadiationMjM2": 26.4
+    },
+    {
+      "date": "2024-04-29",
+      "rainfallMm": 0.82,
+      "meanTemperatureC": 29.15,
+      "maxTemperatureC": 32.5,
+      "relativeHumidityPct": 79.01,
+      "solarRadiationMjM2": 26.66
+    },
+    {
+      "date": "2024-04-30",
+      "rainfallMm": 0.03,
+      "meanTemperatureC": 28.98,
+      "maxTemperatureC": 32.16,
+      "relativeHumidityPct": 77.7,
+      "solarRadiationMjM2": 25.59
+    },
+    {
+      "date": "2024-05-01",
+      "rainfallMm": 0.01,
+      "meanTemperatureC": 28.71,
+      "maxTemperatureC": 32.3,
+      "relativeHumidityPct": 75.57,
+      "solarRadiationMjM2": 23.6
+    },
+    {
+      "date": "2024-05-02",
+      "rainfallMm": 0.18,
+      "meanTemperatureC": 28.75,
+      "maxTemperatureC": 31.73,
+      "relativeHumidityPct": 77.35,
+      "solarRadiationMjM2": 27.03
+    },
+    {
+      "date": "2024-05-03",
+      "rainfallMm": 0.03,
+      "meanTemperatureC": 28.8,
+      "maxTemperatureC": 32.02,
+      "relativeHumidityPct": 76.1,
+      "solarRadiationMjM2": 25.15
+    },
+    {
+      "date": "2024-05-04",
+      "rainfallMm": 0.12,
+      "meanTemperatureC": 29.12,
+      "maxTemperatureC": 32.45,
+      "relativeHumidityPct": 77.65,
+      "solarRadiationMjM2": 25.82
+    },
+    {
+      "date": "2024-05-05",
+      "rainfallMm": 0.42,
+      "meanTemperatureC": 29.41,
+      "maxTemperatureC": 33.13,
+      "relativeHumidityPct": 74.55,
+      "solarRadiationMjM2": 26.75
+    },
+    {
+      "date": "2024-05-06",
+      "rainfallMm": 0.3,
+      "meanTemperatureC": 29.07,
+      "maxTemperatureC": 32.57,
+      "relativeHumidityPct": 76.34,
+      "solarRadiationMjM2": 26.86
+    },
+    {
+      "date": "2024-05-07",
+      "rainfallMm": 3.93,
+      "meanTemperatureC": 29.04,
+      "maxTemperatureC": 31.92,
+      "relativeHumidityPct": 79.17,
+      "solarRadiationMjM2": 25.75
+    },
+    {
+      "date": "2024-05-08",
+      "rainfallMm": 0.29,
+      "meanTemperatureC": 29.2,
+      "maxTemperatureC": 32.19,
+      "relativeHumidityPct": 77.18,
+      "solarRadiationMjM2": 25.87
+    },
+    {
+      "date": "2024-05-09",
+      "rainfallMm": 0.32,
+      "meanTemperatureC": 29.28,
+      "maxTemperatureC": 32.61,
+      "relativeHumidityPct": 77.19,
+      "solarRadiationMjM2": 24.41
+    },
+    {
+      "date": "2024-05-10",
+      "rainfallMm": 0.02,
+      "meanTemperatureC": 29.31,
+      "maxTemperatureC": 33.03,
+      "relativeHumidityPct": 74.27,
+      "solarRadiationMjM2": 27
+    },
+    {
+      "date": "2024-05-11",
+      "rainfallMm": 1.89,
+      "meanTemperatureC": 29.51,
+      "maxTemperatureC": 32.56,
+      "relativeHumidityPct": 77.52,
+      "solarRadiationMjM2": 25.97
+    },
+    {
+      "date": "2024-05-12",
+      "rainfallMm": 2.26,
+      "meanTemperatureC": 29.6,
+      "maxTemperatureC": 32.33,
+      "relativeHumidityPct": 78.99,
+      "solarRadiationMjM2": 22.98
+    },
+    {
+      "date": "2024-05-13",
+      "rainfallMm": 0.18,
+      "meanTemperatureC": 29.81,
+      "maxTemperatureC": 33.09,
+      "relativeHumidityPct": 76.39,
+      "solarRadiationMjM2": 26.21
+    },
+    {
+      "date": "2024-05-14",
+      "rainfallMm": 0.6,
+      "meanTemperatureC": 29.73,
+      "maxTemperatureC": 33.22,
+      "relativeHumidityPct": 76.75,
+      "solarRadiationMjM2": 23.36
+    },
+    {
+      "date": "2024-05-15",
+      "rainfallMm": 0.56,
+      "meanTemperatureC": 30.03,
+      "maxTemperatureC": 33.42,
+      "relativeHumidityPct": 75.04,
+      "solarRadiationMjM2": 24.41
+    },
+    {
+      "date": "2024-05-16",
+      "rainfallMm": 0.46,
+      "meanTemperatureC": 29.96,
+      "maxTemperatureC": 33.3,
+      "relativeHumidityPct": 75.74,
+      "solarRadiationMjM2": 24.98
+    },
+    {
+      "date": "2024-05-17",
+      "rainfallMm": 0.45,
+      "meanTemperatureC": 30.02,
+      "maxTemperatureC": 33.31,
+      "relativeHumidityPct": 74.91,
+      "solarRadiationMjM2": 26.18
+    },
+    {
+      "date": "2024-05-18",
+      "rainfallMm": 0.47,
+      "meanTemperatureC": 29.87,
+      "maxTemperatureC": 33.17,
+      "relativeHumidityPct": 74.43,
+      "solarRadiationMjM2": 24.78
+    },
+    {
+      "date": "2024-05-19",
+      "rainfallMm": 0.46,
+      "meanTemperatureC": 30.26,
+      "maxTemperatureC": 33.2,
+      "relativeHumidityPct": 73.62,
+      "solarRadiationMjM2": 23.44
+    },
+    {
+      "date": "2024-05-20",
+      "rainfallMm": 1.63,
+      "meanTemperatureC": 30.11,
+      "maxTemperatureC": 33.59,
+      "relativeHumidityPct": 75.36,
+      "solarRadiationMjM2": 23.35
+    },
+    {
+      "date": "2024-05-21",
+      "rainfallMm": 0.98,
+      "meanTemperatureC": 29.85,
+      "maxTemperatureC": 33.22,
+      "relativeHumidityPct": 76.01,
+      "solarRadiationMjM2": 22.65
+    },
+    {
+      "date": "2024-05-22",
+      "rainfallMm": 0.04,
+      "meanTemperatureC": 30.01,
+      "maxTemperatureC": 33.1,
+      "relativeHumidityPct": 75.21,
+      "solarRadiationMjM2": 24.92
+    },
+    {
+      "date": "2024-05-23",
+      "rainfallMm": 4.33,
+      "meanTemperatureC": 30.15,
+      "maxTemperatureC": 33.64,
+      "relativeHumidityPct": 78.05,
+      "solarRadiationMjM2": 25.28
+    },
+    {
+      "date": "2024-05-24",
+      "rainfallMm": 46.91,
+      "meanTemperatureC": 28.86,
+      "maxTemperatureC": 31.33,
+      "relativeHumidityPct": 81.95,
+      "solarRadiationMjM2": 12.05
+    },
+    {
+      "date": "2024-05-25",
+      "rainfallMm": 30.09,
+      "meanTemperatureC": 27.98,
+      "maxTemperatureC": 28.91,
+      "relativeHumidityPct": 86.64,
+      "solarRadiationMjM2": 6.15
+    },
+    {
+      "date": "2024-05-26",
+      "rainfallMm": 9.04,
+      "meanTemperatureC": 29.26,
+      "maxTemperatureC": 30.74,
+      "relativeHumidityPct": 84.33,
+      "solarRadiationMjM2": 12.22
+    },
+    {
+      "date": "2024-05-27",
+      "rainfallMm": 0.81,
+      "meanTemperatureC": 28.99,
+      "maxTemperatureC": 30.07,
+      "relativeHumidityPct": 83.96,
+      "solarRadiationMjM2": 13.49
+    },
+    {
+      "date": "2024-05-28",
+      "rainfallMm": 0.64,
+      "meanTemperatureC": 29.08,
+      "maxTemperatureC": 30.47,
+      "relativeHumidityPct": 82.67,
+      "solarRadiationMjM2": 21.44
+    },
+    {
+      "date": "2024-05-29",
+      "rainfallMm": 2.56,
+      "meanTemperatureC": 29.24,
+      "maxTemperatureC": 30.51,
+      "relativeHumidityPct": 83.07,
+      "solarRadiationMjM2": 18.45
+    },
+    {
+      "date": "2024-05-30",
+      "rainfallMm": 1.17,
+      "meanTemperatureC": 29.22,
+      "maxTemperatureC": 31.31,
+      "relativeHumidityPct": 82.82,
+      "solarRadiationMjM2": 22.73
+    },
+    {
+      "date": "2024-05-31",
+      "rainfallMm": 1.87,
+      "meanTemperatureC": 29.31,
+      "maxTemperatureC": 31.16,
+      "relativeHumidityPct": 83.57,
+      "solarRadiationMjM2": 23.65
+    },
+    {
+      "date": "2024-06-01",
+      "rainfallMm": 0.24,
+      "meanTemperatureC": 29.43,
+      "maxTemperatureC": 32.08,
+      "relativeHumidityPct": 81.08,
+      "solarRadiationMjM2": 25.93
+    },
+    {
+      "date": "2024-06-02",
+      "rainfallMm": 0.09,
+      "meanTemperatureC": 30.04,
+      "maxTemperatureC": 33.45,
+      "relativeHumidityPct": 75.74,
+      "solarRadiationMjM2": 24.44
+    },
+    {
+      "date": "2024-06-03",
+      "rainfallMm": 0.87,
+      "meanTemperatureC": 30.68,
+      "maxTemperatureC": 32.35,
+      "relativeHumidityPct": 72.54,
+      "solarRadiationMjM2": 24.97
+    },
+    {
+      "date": "2024-06-04",
+      "rainfallMm": 1.6,
+      "meanTemperatureC": 30.08,
+      "maxTemperatureC": 31.55,
+      "relativeHumidityPct": 78.18,
+      "solarRadiationMjM2": 21.02
+    },
+    {
+      "date": "2024-06-05",
+      "rainfallMm": 7.62,
+      "meanTemperatureC": 29.34,
+      "maxTemperatureC": 30.73,
+      "relativeHumidityPct": 77.53,
+      "solarRadiationMjM2": 17.06
+    },
+    {
+      "date": "2024-06-06",
+      "rainfallMm": 8.5,
+      "meanTemperatureC": 28.66,
+      "maxTemperatureC": 30.15,
+      "relativeHumidityPct": 81.71,
+      "solarRadiationMjM2": 20.68
+    },
+    {
+      "date": "2024-06-07",
+      "rainfallMm": 2,
+      "meanTemperatureC": 28.84,
+      "maxTemperatureC": 30.55,
+      "relativeHumidityPct": 81.64,
+      "solarRadiationMjM2": 17.31
+    },
+    {
+      "date": "2024-06-08",
+      "rainfallMm": 32.61,
+      "meanTemperatureC": 29.24,
+      "maxTemperatureC": 30.99,
+      "relativeHumidityPct": 79.56,
+      "solarRadiationMjM2": 19.57
+    },
+    {
+      "date": "2024-06-09",
+      "rainfallMm": 0.84,
+      "meanTemperatureC": 29.56,
+      "maxTemperatureC": 32.09,
+      "relativeHumidityPct": 78.17,
+      "solarRadiationMjM2": 21.89
+    },
+    {
+      "date": "2024-06-10",
+      "rainfallMm": 4.74,
+      "meanTemperatureC": 29.21,
+      "maxTemperatureC": 31.35,
+      "relativeHumidityPct": 82.38,
+      "solarRadiationMjM2": 22.01
+    },
+    {
+      "date": "2024-06-11",
+      "rainfallMm": 3.61,
+      "meanTemperatureC": 29.24,
+      "maxTemperatureC": 31.25,
+      "relativeHumidityPct": 82.5,
+      "solarRadiationMjM2": 22.3
+    },
+    {
+      "date": "2024-06-12",
+      "rainfallMm": 2.69,
+      "meanTemperatureC": 29.86,
+      "maxTemperatureC": 32.06,
+      "relativeHumidityPct": 78.6,
+      "solarRadiationMjM2": 24.69
+    },
+    {
+      "date": "2024-06-13",
+      "rainfallMm": 1.01,
+      "meanTemperatureC": 29.61,
+      "maxTemperatureC": 32.22,
+      "relativeHumidityPct": 79.47,
+      "solarRadiationMjM2": 22.66
+    },
+    {
+      "date": "2024-06-14",
+      "rainfallMm": 5,
+      "meanTemperatureC": 29.23,
+      "maxTemperatureC": 30.87,
+      "relativeHumidityPct": 79.72,
+      "solarRadiationMjM2": 21.14
+    },
+    {
+      "date": "2024-06-15",
+      "rainfallMm": 1.38,
+      "meanTemperatureC": 29.55,
+      "maxTemperatureC": 31.05,
+      "relativeHumidityPct": 79.91,
+      "solarRadiationMjM2": 23.66
+    },
+    {
+      "date": "2024-06-16",
+      "rainfallMm": 6.7,
+      "meanTemperatureC": 29.4,
+      "maxTemperatureC": 31.28,
+      "relativeHumidityPct": 79.9,
+      "solarRadiationMjM2": 21.04
+    },
+    {
+      "date": "2024-06-17",
+      "rainfallMm": 2.61,
+      "meanTemperatureC": 29.13,
+      "maxTemperatureC": 30.86,
+      "relativeHumidityPct": 77.61,
+      "solarRadiationMjM2": 18.88
+    },
+    {
+      "date": "2024-06-18",
+      "rainfallMm": 7.51,
+      "meanTemperatureC": 29.51,
+      "maxTemperatureC": 32.17,
+      "relativeHumidityPct": 77.78,
+      "solarRadiationMjM2": 21.7
+    },
+    {
+      "date": "2024-06-19",
+      "rainfallMm": 6.66,
+      "meanTemperatureC": 28.82,
+      "maxTemperatureC": 30.16,
+      "relativeHumidityPct": 81.05,
+      "solarRadiationMjM2": 20.07
+    },
+    {
+      "date": "2024-06-20",
+      "rainfallMm": 5.84,
+      "meanTemperatureC": 28.4,
+      "maxTemperatureC": 29.85,
+      "relativeHumidityPct": 83.26,
+      "solarRadiationMjM2": 11.52
+    },
+    {
+      "date": "2024-06-21",
+      "rainfallMm": 1.04,
+      "meanTemperatureC": 28.93,
+      "maxTemperatureC": 30.53,
+      "relativeHumidityPct": 80.62,
+      "solarRadiationMjM2": 20.99
+    },
+    {
+      "date": "2024-06-22",
+      "rainfallMm": 1.64,
+      "meanTemperatureC": 29.7,
+      "maxTemperatureC": 31.52,
+      "relativeHumidityPct": 74.6,
+      "solarRadiationMjM2": 22.63
+    },
+    {
+      "date": "2024-06-23",
+      "rainfallMm": 4.69,
+      "meanTemperatureC": 29.46,
+      "maxTemperatureC": 31.75,
+      "relativeHumidityPct": 76.1,
+      "solarRadiationMjM2": 16.23
+    },
+    {
+      "date": "2024-06-24",
+      "rainfallMm": 14.29,
+      "meanTemperatureC": 28.3,
+      "maxTemperatureC": 30.97,
+      "relativeHumidityPct": 83.53,
+      "solarRadiationMjM2": 14.03
+    },
+    {
+      "date": "2024-06-25",
+      "rainfallMm": 6.63,
+      "meanTemperatureC": 28.61,
+      "maxTemperatureC": 30.55,
+      "relativeHumidityPct": 85.62,
+      "solarRadiationMjM2": 18.7
+    },
+    {
+      "date": "2024-06-26",
+      "rainfallMm": 14.29,
+      "meanTemperatureC": 28.19,
+      "maxTemperatureC": 29.98,
+      "relativeHumidityPct": 86.22,
+      "solarRadiationMjM2": 19.82
+    },
+    {
+      "date": "2024-06-27",
+      "rainfallMm": 2.21,
+      "meanTemperatureC": 28.53,
+      "maxTemperatureC": 30.58,
+      "relativeHumidityPct": 82.9,
+      "solarRadiationMjM2": 18.13
+    },
+    {
+      "date": "2024-06-28",
+      "rainfallMm": 7.52,
+      "meanTemperatureC": 29.31,
+      "maxTemperatureC": 32.01,
+      "relativeHumidityPct": 81.14,
+      "solarRadiationMjM2": 22.12
+    },
+    {
+      "date": "2024-06-29",
+      "rainfallMm": 6.33,
+      "meanTemperatureC": 28.92,
+      "maxTemperatureC": 31,
+      "relativeHumidityPct": 82.94,
+      "solarRadiationMjM2": 19.16
+    },
+    {
+      "date": "2024-06-30",
+      "rainfallMm": 6.36,
+      "meanTemperatureC": 28.72,
+      "maxTemperatureC": 30.5,
+      "relativeHumidityPct": 84.82,
+      "solarRadiationMjM2": 20.06
+    },
+    {
+      "date": "2024-07-01",
+      "rainfallMm": 2.44,
+      "meanTemperatureC": 28.91,
+      "maxTemperatureC": 31.3,
+      "relativeHumidityPct": 79,
+      "solarRadiationMjM2": 22.58
+    },
+    {
+      "date": "2024-07-02",
+      "rainfallMm": 10.08,
+      "meanTemperatureC": 28.01,
+      "maxTemperatureC": 29.3,
+      "relativeHumidityPct": 84.1,
+      "solarRadiationMjM2": 11.21
+    },
+    {
+      "date": "2024-07-03",
+      "rainfallMm": 4.16,
+      "meanTemperatureC": 29.15,
+      "maxTemperatureC": 31.69,
+      "relativeHumidityPct": 81.38,
+      "solarRadiationMjM2": 22.82
+    },
+    {
+      "date": "2024-07-04",
+      "rainfallMm": 20.41,
+      "meanTemperatureC": 28.16,
+      "maxTemperatureC": 29.69,
+      "relativeHumidityPct": 86.34,
+      "solarRadiationMjM2": 15.86
+    },
+    {
+      "date": "2024-07-05",
+      "rainfallMm": 3.07,
+      "meanTemperatureC": 28.79,
+      "maxTemperatureC": 30.95,
+      "relativeHumidityPct": 80.24,
+      "solarRadiationMjM2": 23.08
+    },
+    {
+      "date": "2024-07-06",
+      "rainfallMm": 5.01,
+      "meanTemperatureC": 28.32,
+      "maxTemperatureC": 30.08,
+      "relativeHumidityPct": 84.79,
+      "solarRadiationMjM2": 16.96
+    },
+    {
+      "date": "2024-07-07",
+      "rainfallMm": 3.34,
+      "meanTemperatureC": 28.7,
+      "maxTemperatureC": 30.93,
+      "relativeHumidityPct": 84.6,
+      "solarRadiationMjM2": 22.07
+    },
+    {
+      "date": "2024-07-08",
+      "rainfallMm": 22.44,
+      "meanTemperatureC": 28.54,
+      "maxTemperatureC": 30.59,
+      "relativeHumidityPct": 82.42,
+      "solarRadiationMjM2": 20.51
+    },
+    {
+      "date": "2024-07-09",
+      "rainfallMm": 6.45,
+      "meanTemperatureC": 28.56,
+      "maxTemperatureC": 30.34,
+      "relativeHumidityPct": 85.87,
+      "solarRadiationMjM2": 17.56
+    },
+    {
+      "date": "2024-07-10",
+      "rainfallMm": 3.59,
+      "meanTemperatureC": 28.68,
+      "maxTemperatureC": 30.99,
+      "relativeHumidityPct": 81.22,
+      "solarRadiationMjM2": 14.23
+    },
+    {
+      "date": "2024-07-11",
+      "rainfallMm": 3.21,
+      "meanTemperatureC": 28.74,
+      "maxTemperatureC": 30.96,
+      "relativeHumidityPct": 80.7,
+      "solarRadiationMjM2": 17.53
+    },
+    {
+      "date": "2024-07-12",
+      "rainfallMm": 6.41,
+      "meanTemperatureC": 28.7,
+      "maxTemperatureC": 30.68,
+      "relativeHumidityPct": 82.04,
+      "solarRadiationMjM2": 19.22
+    },
+    {
+      "date": "2024-07-13",
+      "rainfallMm": 5.1,
+      "meanTemperatureC": 28.66,
+      "maxTemperatureC": 30.13,
+      "relativeHumidityPct": 81.94,
+      "solarRadiationMjM2": 17.4
+    },
+    {
+      "date": "2024-07-14",
+      "rainfallMm": 4.44,
+      "meanTemperatureC": 27.91,
+      "maxTemperatureC": 29.44,
+      "relativeHumidityPct": 84.65,
+      "solarRadiationMjM2": 18.07
+    },
+    {
+      "date": "2024-07-15",
+      "rainfallMm": 9.89,
+      "meanTemperatureC": 28.28,
+      "maxTemperatureC": 30.67,
+      "relativeHumidityPct": 81.7,
+      "solarRadiationMjM2": 18.45
+    },
+    {
+      "date": "2024-07-16",
+      "rainfallMm": 19.17,
+      "meanTemperatureC": 28.44,
+      "maxTemperatureC": 30.76,
+      "relativeHumidityPct": 82.23,
+      "solarRadiationMjM2": 11.91
+    },
+    {
+      "date": "2024-07-17",
+      "rainfallMm": 58.92,
+      "meanTemperatureC": 27.73,
+      "maxTemperatureC": 28.14,
+      "relativeHumidityPct": 91.14,
+      "solarRadiationMjM2": 9.52
+    },
+    {
+      "date": "2024-07-18",
+      "rainfallMm": 26.86,
+      "meanTemperatureC": 27.88,
+      "maxTemperatureC": 28.62,
+      "relativeHumidityPct": 88.92,
+      "solarRadiationMjM2": 11.5
+    },
+    {
+      "date": "2024-07-19",
+      "rainfallMm": 3.7,
+      "meanTemperatureC": 27.96,
+      "maxTemperatureC": 29.02,
+      "relativeHumidityPct": 84.92,
+      "solarRadiationMjM2": 20.63
+    },
+    {
+      "date": "2024-07-20",
+      "rainfallMm": 2.82,
+      "meanTemperatureC": 28.82,
+      "maxTemperatureC": 30.35,
+      "relativeHumidityPct": 83.06,
+      "solarRadiationMjM2": 19.64
+    },
+    {
+      "date": "2024-07-21",
+      "rainfallMm": 6.32,
+      "meanTemperatureC": 28.61,
+      "maxTemperatureC": 29.87,
+      "relativeHumidityPct": 84.78,
+      "solarRadiationMjM2": 15.74
+    },
+    {
+      "date": "2024-07-22",
+      "rainfallMm": 25.42,
+      "meanTemperatureC": 28.15,
+      "maxTemperatureC": 28.66,
+      "relativeHumidityPct": 85.96,
+      "solarRadiationMjM2": 4.78
+    },
+    {
+      "date": "2024-07-23",
+      "rainfallMm": 9.88,
+      "meanTemperatureC": 28.01,
+      "maxTemperatureC": 28.69,
+      "relativeHumidityPct": 86.14,
+      "solarRadiationMjM2": 6.03
+    },
+    {
+      "date": "2024-07-24",
+      "rainfallMm": 5.17,
+      "meanTemperatureC": 28.33,
+      "maxTemperatureC": 29.28,
+      "relativeHumidityPct": 85.08,
+      "solarRadiationMjM2": 15.44
+    },
+    {
+      "date": "2024-07-25",
+      "rainfallMm": 0.28,
+      "meanTemperatureC": 28.77,
+      "maxTemperatureC": 30.05,
+      "relativeHumidityPct": 83.79,
+      "solarRadiationMjM2": 18.48
+    },
+    {
+      "date": "2024-07-26",
+      "rainfallMm": 1.21,
+      "meanTemperatureC": 29,
+      "maxTemperatureC": 30.57,
+      "relativeHumidityPct": 82.62,
+      "solarRadiationMjM2": 20.01
+    },
+    {
+      "date": "2024-07-27",
+      "rainfallMm": 18.62,
+      "meanTemperatureC": 28.06,
+      "maxTemperatureC": 29.88,
+      "relativeHumidityPct": 81.13,
+      "solarRadiationMjM2": 14.49
+    },
+    {
+      "date": "2024-07-28",
+      "rainfallMm": 29.31,
+      "meanTemperatureC": 27.47,
+      "maxTemperatureC": 28.48,
+      "relativeHumidityPct": 84.7,
+      "solarRadiationMjM2": 13.21
+    },
+    {
+      "date": "2024-07-29",
+      "rainfallMm": 5.85,
+      "meanTemperatureC": 28.77,
+      "maxTemperatureC": 30.04,
+      "relativeHumidityPct": 76.98,
+      "solarRadiationMjM2": 23.29
+    },
+    {
+      "date": "2024-07-30",
+      "rainfallMm": 0.49,
+      "meanTemperatureC": 29.12,
+      "maxTemperatureC": 30.11,
+      "relativeHumidityPct": 75.16,
+      "solarRadiationMjM2": 21.29
+    },
+    {
+      "date": "2024-07-31",
+      "rainfallMm": 0.22,
+      "meanTemperatureC": 29.13,
+      "maxTemperatureC": 30.78,
+      "relativeHumidityPct": 76.58,
+      "solarRadiationMjM2": 21.65
+    },
+    {
+      "date": "2024-08-01",
+      "rainfallMm": 1.38,
+      "meanTemperatureC": 29.01,
+      "maxTemperatureC": 30.77,
+      "relativeHumidityPct": 81.35,
+      "solarRadiationMjM2": 18.29
+    },
+    {
+      "date": "2024-08-02",
+      "rainfallMm": 3.82,
+      "meanTemperatureC": 28.22,
+      "maxTemperatureC": 29.45,
+      "relativeHumidityPct": 86.25,
+      "solarRadiationMjM2": 19.88
+    },
+    {
+      "date": "2024-08-03",
+      "rainfallMm": 3.46,
+      "meanTemperatureC": 28.4,
+      "maxTemperatureC": 29.5,
+      "relativeHumidityPct": 85.15,
+      "solarRadiationMjM2": 18.38
+    },
+    {
+      "date": "2024-08-04",
+      "rainfallMm": 7.33,
+      "meanTemperatureC": 28.56,
+      "maxTemperatureC": 30,
+      "relativeHumidityPct": 86.01,
+      "solarRadiationMjM2": 19.2
+    },
+    {
+      "date": "2024-08-05",
+      "rainfallMm": 9.51,
+      "meanTemperatureC": 28.22,
+      "maxTemperatureC": 29.44,
+      "relativeHumidityPct": 85.49,
+      "solarRadiationMjM2": 17.96
+    },
+    {
+      "date": "2024-08-06",
+      "rainfallMm": 2.72,
+      "meanTemperatureC": 28.3,
+      "maxTemperatureC": 29.31,
+      "relativeHumidityPct": 85.2,
+      "solarRadiationMjM2": 19.18
+    },
+    {
+      "date": "2024-08-07",
+      "rainfallMm": 0.79,
+      "meanTemperatureC": 28.96,
+      "maxTemperatureC": 30.47,
+      "relativeHumidityPct": 83.19,
+      "solarRadiationMjM2": 23.18
+    },
+    {
+      "date": "2024-08-08",
+      "rainfallMm": 1.39,
+      "meanTemperatureC": 29.06,
+      "maxTemperatureC": 30.76,
+      "relativeHumidityPct": 81.24,
+      "solarRadiationMjM2": 19.87
+    },
+    {
+      "date": "2024-08-09",
+      "rainfallMm": 0.77,
+      "meanTemperatureC": 28.74,
+      "maxTemperatureC": 29.89,
+      "relativeHumidityPct": 82.92,
+      "solarRadiationMjM2": 22.56
+    },
+    {
+      "date": "2024-08-10",
+      "rainfallMm": 1.97,
+      "meanTemperatureC": 28.54,
+      "maxTemperatureC": 29.82,
+      "relativeHumidityPct": 83.72,
+      "solarRadiationMjM2": 15.69
+    },
+    {
+      "date": "2024-08-11",
+      "rainfallMm": 0.96,
+      "meanTemperatureC": 29.13,
+      "maxTemperatureC": 30.92,
+      "relativeHumidityPct": 82.85,
+      "solarRadiationMjM2": 22.12
+    },
+    {
+      "date": "2024-08-12",
+      "rainfallMm": 0.93,
+      "meanTemperatureC": 28.92,
+      "maxTemperatureC": 30.58,
+      "relativeHumidityPct": 83.71,
+      "solarRadiationMjM2": 21.61
+    },
+    {
+      "date": "2024-08-13",
+      "rainfallMm": 3.68,
+      "meanTemperatureC": 28.85,
+      "maxTemperatureC": 30.16,
+      "relativeHumidityPct": 84.24,
+      "solarRadiationMjM2": 20.18
+    },
+    {
+      "date": "2024-08-14",
+      "rainfallMm": 0.46,
+      "meanTemperatureC": 29.13,
+      "maxTemperatureC": 30.54,
+      "relativeHumidityPct": 81.22,
+      "solarRadiationMjM2": 22.16
+    },
+    {
+      "date": "2024-08-15",
+      "rainfallMm": 3.78,
+      "meanTemperatureC": 29.07,
+      "maxTemperatureC": 30.1,
+      "relativeHumidityPct": 81.13,
+      "solarRadiationMjM2": 21.42
+    },
+    {
+      "date": "2024-08-16",
+      "rainfallMm": 0.37,
+      "meanTemperatureC": 29.51,
+      "maxTemperatureC": 30.67,
+      "relativeHumidityPct": 77.1,
+      "solarRadiationMjM2": 21.3
+    },
+    {
+      "date": "2024-08-17",
+      "rainfallMm": 2.64,
+      "meanTemperatureC": 29.67,
+      "maxTemperatureC": 32.03,
+      "relativeHumidityPct": 79.32,
+      "solarRadiationMjM2": 23.46
+    },
+    {
+      "date": "2024-08-18",
+      "rainfallMm": 1.27,
+      "meanTemperatureC": 29.42,
+      "maxTemperatureC": 32.14,
+      "relativeHumidityPct": 76.74,
+      "solarRadiationMjM2": 21.61
+    },
+    {
+      "date": "2024-08-19",
+      "rainfallMm": 6.67,
+      "meanTemperatureC": 28.45,
+      "maxTemperatureC": 29.32,
+      "relativeHumidityPct": 83.67,
+      "solarRadiationMjM2": 17.53
+    },
+    {
+      "date": "2024-08-20",
+      "rainfallMm": 1.46,
+      "meanTemperatureC": 29.53,
+      "maxTemperatureC": 31.33,
+      "relativeHumidityPct": 79.46,
+      "solarRadiationMjM2": 23.3
+    },
+    {
+      "date": "2024-08-21",
+      "rainfallMm": 0.69,
+      "meanTemperatureC": 29.17,
+      "maxTemperatureC": 30.85,
+      "relativeHumidityPct": 79.75,
+      "solarRadiationMjM2": 22.25
+    },
+    {
+      "date": "2024-08-22",
+      "rainfallMm": 9.99,
+      "meanTemperatureC": 29.39,
+      "maxTemperatureC": 32.09,
+      "relativeHumidityPct": 80.72,
+      "solarRadiationMjM2": 20.79
+    },
+    {
+      "date": "2024-08-23",
+      "rainfallMm": 6.59,
+      "meanTemperatureC": 29.14,
+      "maxTemperatureC": 31.29,
+      "relativeHumidityPct": 80.87,
+      "solarRadiationMjM2": 17.11
+    },
+    {
+      "date": "2024-08-24",
+      "rainfallMm": 12.56,
+      "meanTemperatureC": 28.32,
+      "maxTemperatureC": 29.2,
+      "relativeHumidityPct": 81.81,
+      "solarRadiationMjM2": 18.25
+    },
+    {
+      "date": "2024-08-25",
+      "rainfallMm": 5.27,
+      "meanTemperatureC": 28.63,
+      "maxTemperatureC": 30.08,
+      "relativeHumidityPct": 83.89,
+      "solarRadiationMjM2": 16.63
+    },
+    {
+      "date": "2024-08-26",
+      "rainfallMm": 6.4,
+      "meanTemperatureC": 28.93,
+      "maxTemperatureC": 30.1,
+      "relativeHumidityPct": 83.22,
+      "solarRadiationMjM2": 13.21
+    },
+    {
+      "date": "2024-08-27",
+      "rainfallMm": 6.22,
+      "meanTemperatureC": 28.73,
+      "maxTemperatureC": 29.79,
+      "relativeHumidityPct": 84.07,
+      "solarRadiationMjM2": 10.44
+    },
+    {
+      "date": "2024-08-28",
+      "rainfallMm": 10.23,
+      "meanTemperatureC": 28.51,
+      "maxTemperatureC": 29.71,
+      "relativeHumidityPct": 85.47,
+      "solarRadiationMjM2": 12.34
+    },
+    {
+      "date": "2024-08-29",
+      "rainfallMm": 6.71,
+      "meanTemperatureC": 28.34,
+      "maxTemperatureC": 29.58,
+      "relativeHumidityPct": 86.19,
+      "solarRadiationMjM2": 20.33
+    },
+    {
+      "date": "2024-08-30",
+      "rainfallMm": 17.8,
+      "meanTemperatureC": 28.97,
+      "maxTemperatureC": 30.79,
+      "relativeHumidityPct": 81.93,
+      "solarRadiationMjM2": 16.3
+    },
+    {
+      "date": "2024-08-31",
+      "rainfallMm": 36.06,
+      "meanTemperatureC": 28.91,
+      "maxTemperatureC": 30.55,
+      "relativeHumidityPct": 80.29,
+      "solarRadiationMjM2": 18.18
+    },
+    {
+      "date": "2024-09-01",
+      "rainfallMm": 96.76,
+      "meanTemperatureC": 28.14,
+      "maxTemperatureC": 29.09,
+      "relativeHumidityPct": 86.87,
+      "solarRadiationMjM2": 2.64
+    },
+    {
+      "date": "2024-09-02",
+      "rainfallMm": 9.75,
+      "meanTemperatureC": 28.18,
+      "maxTemperatureC": 29.45,
+      "relativeHumidityPct": 87.09,
+      "solarRadiationMjM2": 14.05
+    },
+    {
+      "date": "2024-09-03",
+      "rainfallMm": 3.91,
+      "meanTemperatureC": 28.68,
+      "maxTemperatureC": 29.85,
+      "relativeHumidityPct": 86.16,
+      "solarRadiationMjM2": 19.91
+    },
+    {
+      "date": "2024-09-04",
+      "rainfallMm": 6.27,
+      "meanTemperatureC": 28.56,
+      "maxTemperatureC": 29.79,
+      "relativeHumidityPct": 85.74,
+      "solarRadiationMjM2": 19.23
+    },
+    {
+      "date": "2024-09-05",
+      "rainfallMm": 2.27,
+      "meanTemperatureC": 28.56,
+      "maxTemperatureC": 29.55,
+      "relativeHumidityPct": 84.44,
+      "solarRadiationMjM2": 18.57
+    },
+    {
+      "date": "2024-09-06",
+      "rainfallMm": 1.37,
+      "meanTemperatureC": 28.95,
+      "maxTemperatureC": 30.52,
+      "relativeHumidityPct": 82.99,
+      "solarRadiationMjM2": 18.76
+    },
+    {
+      "date": "2024-09-07",
+      "rainfallMm": 3.09,
+      "meanTemperatureC": 29.15,
+      "maxTemperatureC": 30.73,
+      "relativeHumidityPct": 78.99,
+      "solarRadiationMjM2": 19.59
+    },
+    {
+      "date": "2024-09-08",
+      "rainfallMm": 0.82,
+      "meanTemperatureC": 29.43,
+      "maxTemperatureC": 31.37,
+      "relativeHumidityPct": 78.02,
+      "solarRadiationMjM2": 22.72
+    },
+    {
+      "date": "2024-09-09",
+      "rainfallMm": 0.65,
+      "meanTemperatureC": 28.93,
+      "maxTemperatureC": 30.45,
+      "relativeHumidityPct": 81.55,
+      "solarRadiationMjM2": 20.33
+    },
+    {
+      "date": "2024-09-10",
+      "rainfallMm": 4.58,
+      "meanTemperatureC": 29.16,
+      "maxTemperatureC": 30.8,
+      "relativeHumidityPct": 83.29,
+      "solarRadiationMjM2": 20.37
+    },
+    {
+      "date": "2024-09-11",
+      "rainfallMm": 12.11,
+      "meanTemperatureC": 28.68,
+      "maxTemperatureC": 29.97,
+      "relativeHumidityPct": 86.45,
+      "solarRadiationMjM2": 20.08
+    },
+    {
+      "date": "2024-09-12",
+      "rainfallMm": 28,
+      "meanTemperatureC": 28.49,
+      "maxTemperatureC": 29.29,
+      "relativeHumidityPct": 87.95,
+      "solarRadiationMjM2": 13.96
+    },
+    {
+      "date": "2024-09-13",
+      "rainfallMm": 10.39,
+      "meanTemperatureC": 28.13,
+      "maxTemperatureC": 28.93,
+      "relativeHumidityPct": 88.66,
+      "solarRadiationMjM2": 8.38
+    },
+    {
+      "date": "2024-09-14",
+      "rainfallMm": 20.15,
+      "meanTemperatureC": 28.33,
+      "maxTemperatureC": 29.13,
+      "relativeHumidityPct": 86.89,
+      "solarRadiationMjM2": 7.27
+    },
+    {
+      "date": "2024-09-15",
+      "rainfallMm": 19.97,
+      "meanTemperatureC": 28.37,
+      "maxTemperatureC": 29.35,
+      "relativeHumidityPct": 87.99,
+      "solarRadiationMjM2": 13.15
+    },
+    {
+      "date": "2024-09-16",
+      "rainfallMm": 18.83,
+      "meanTemperatureC": 27.82,
+      "maxTemperatureC": 28.68,
+      "relativeHumidityPct": 88.25,
+      "solarRadiationMjM2": 11.71
+    },
+    {
+      "date": "2024-09-17",
+      "rainfallMm": 15.62,
+      "meanTemperatureC": 27.71,
+      "maxTemperatureC": 28.42,
+      "relativeHumidityPct": 88.71,
+      "solarRadiationMjM2": 12.7
+    },
+    {
+      "date": "2024-09-18",
+      "rainfallMm": 12.21,
+      "meanTemperatureC": 27.86,
+      "maxTemperatureC": 28.68,
+      "relativeHumidityPct": 88.37,
+      "solarRadiationMjM2": 13.9
+    },
+    {
+      "date": "2024-09-19",
+      "rainfallMm": 5.45,
+      "meanTemperatureC": 27.96,
+      "maxTemperatureC": 29.36,
+      "relativeHumidityPct": 87.67,
+      "solarRadiationMjM2": 17.01
+    },
+    {
+      "date": "2024-09-20",
+      "rainfallMm": 5.83,
+      "meanTemperatureC": 27.54,
+      "maxTemperatureC": 28.58,
+      "relativeHumidityPct": 88.13,
+      "solarRadiationMjM2": 9.47
+    },
+    {
+      "date": "2024-09-21",
+      "rainfallMm": 11.32,
+      "meanTemperatureC": 27.8,
+      "maxTemperatureC": 28.53,
+      "relativeHumidityPct": 81.51,
+      "solarRadiationMjM2": 13.26
+    },
+    {
+      "date": "2024-09-22",
+      "rainfallMm": 2.17,
+      "meanTemperatureC": 28.5,
+      "maxTemperatureC": 30.18,
+      "relativeHumidityPct": 81.41,
+      "solarRadiationMjM2": 20.39
+    },
+    {
+      "date": "2024-09-23",
+      "rainfallMm": 1.98,
+      "meanTemperatureC": 28.38,
+      "maxTemperatureC": 30.29,
+      "relativeHumidityPct": 85.96,
+      "solarRadiationMjM2": 22.91
+    },
+    {
+      "date": "2024-09-24",
+      "rainfallMm": 4.78,
+      "meanTemperatureC": 28.54,
+      "maxTemperatureC": 30.86,
+      "relativeHumidityPct": 84.89,
+      "solarRadiationMjM2": 23.52
+    },
+    {
+      "date": "2024-09-25",
+      "rainfallMm": 3.53,
+      "meanTemperatureC": 28.76,
+      "maxTemperatureC": 30.83,
+      "relativeHumidityPct": 82.45,
+      "solarRadiationMjM2": 20.92
+    },
+    {
+      "date": "2024-09-26",
+      "rainfallMm": 1.76,
+      "meanTemperatureC": 28.64,
+      "maxTemperatureC": 30.28,
+      "relativeHumidityPct": 81.89,
+      "solarRadiationMjM2": 21.54
+    },
+    {
+      "date": "2024-09-27",
+      "rainfallMm": 1.62,
+      "meanTemperatureC": 28.99,
+      "maxTemperatureC": 30.49,
+      "relativeHumidityPct": 84.06,
+      "solarRadiationMjM2": 20.45
+    },
+    {
+      "date": "2024-09-28",
+      "rainfallMm": 2.19,
+      "meanTemperatureC": 28.65,
+      "maxTemperatureC": 29.71,
+      "relativeHumidityPct": 85.49,
+      "solarRadiationMjM2": 16.59
+    },
+    {
+      "date": "2024-09-29",
+      "rainfallMm": 1.06,
+      "meanTemperatureC": 28.81,
+      "maxTemperatureC": 29.88,
+      "relativeHumidityPct": 84.64,
+      "solarRadiationMjM2": 19.32
+    },
+    {
+      "date": "2024-09-30",
+      "rainfallMm": 1.57,
+      "meanTemperatureC": 28.56,
+      "maxTemperatureC": 29.95,
+      "relativeHumidityPct": 85.01,
+      "solarRadiationMjM2": 22.5
+    },
+    {
+      "date": "2024-10-01",
+      "rainfallMm": 6.33,
+      "meanTemperatureC": 28.63,
+      "maxTemperatureC": 30.17,
+      "relativeHumidityPct": 80.13,
+      "solarRadiationMjM2": 21.64
+    },
+    {
+      "date": "2024-10-02",
+      "rainfallMm": 1.82,
+      "meanTemperatureC": 28.45,
+      "maxTemperatureC": 30.45,
+      "relativeHumidityPct": 83.23,
+      "solarRadiationMjM2": 20.53
+    },
+    {
+      "date": "2024-10-03",
+      "rainfallMm": 2.62,
+      "meanTemperatureC": 28.48,
+      "maxTemperatureC": 30.52,
+      "relativeHumidityPct": 84.3,
+      "solarRadiationMjM2": 17.36
+    },
+    {
+      "date": "2024-10-04",
+      "rainfallMm": 4.07,
+      "meanTemperatureC": 28.37,
+      "maxTemperatureC": 30.57,
+      "relativeHumidityPct": 82.91,
+      "solarRadiationMjM2": 15.08
+    },
+    {
+      "date": "2024-10-05",
+      "rainfallMm": 13.75,
+      "meanTemperatureC": 28.26,
+      "maxTemperatureC": 30.02,
+      "relativeHumidityPct": 83.14,
+      "solarRadiationMjM2": 17.9
+    },
+    {
+      "date": "2024-10-06",
+      "rainfallMm": 12.84,
+      "meanTemperatureC": 27.95,
+      "maxTemperatureC": 29.22,
+      "relativeHumidityPct": 80.12,
+      "solarRadiationMjM2": 14.02
+    },
+    {
+      "date": "2024-10-07",
+      "rainfallMm": 9.33,
+      "meanTemperatureC": 29.1,
+      "maxTemperatureC": 30.61,
+      "relativeHumidityPct": 75.3,
+      "solarRadiationMjM2": 21.36
+    },
+    {
+      "date": "2024-10-08",
+      "rainfallMm": 18.29,
+      "meanTemperatureC": 29.08,
+      "maxTemperatureC": 30.63,
+      "relativeHumidityPct": 76.8,
+      "solarRadiationMjM2": 19.74
+    },
+    {
+      "date": "2024-10-09",
+      "rainfallMm": 0.54,
+      "meanTemperatureC": 29.23,
+      "maxTemperatureC": 30.9,
+      "relativeHumidityPct": 76.69,
+      "solarRadiationMjM2": 21.16
+    },
+    {
+      "date": "2024-10-10",
+      "rainfallMm": 11.2,
+      "meanTemperatureC": 29.01,
+      "maxTemperatureC": 31.09,
+      "relativeHumidityPct": 78.8,
+      "solarRadiationMjM2": 18.08
+    },
+    {
+      "date": "2024-10-11",
+      "rainfallMm": 2.32,
+      "meanTemperatureC": 28.7,
+      "maxTemperatureC": 30.58,
+      "relativeHumidityPct": 82.61,
+      "solarRadiationMjM2": 20
+    },
+    {
+      "date": "2024-10-12",
+      "rainfallMm": 4.1,
+      "meanTemperatureC": 28.76,
+      "maxTemperatureC": 30.79,
+      "relativeHumidityPct": 82.9,
+      "solarRadiationMjM2": 20.66
+    },
+    {
+      "date": "2024-10-13",
+      "rainfallMm": 2.35,
+      "meanTemperatureC": 29.31,
+      "maxTemperatureC": 31.89,
+      "relativeHumidityPct": 79.03,
+      "solarRadiationMjM2": 19.55
+    },
+    {
+      "date": "2024-10-14",
+      "rainfallMm": 3.16,
+      "meanTemperatureC": 28.86,
+      "maxTemperatureC": 30.73,
+      "relativeHumidityPct": 83.8,
+      "solarRadiationMjM2": 19.68
+    },
+    {
+      "date": "2024-10-15",
+      "rainfallMm": 1.51,
+      "meanTemperatureC": 28.8,
+      "maxTemperatureC": 30.97,
+      "relativeHumidityPct": 84.71,
+      "solarRadiationMjM2": 21.17
+    },
+    {
+      "date": "2024-10-16",
+      "rainfallMm": 2.54,
+      "meanTemperatureC": 28.9,
+      "maxTemperatureC": 30.91,
+      "relativeHumidityPct": 83.18,
+      "solarRadiationMjM2": 20.22
+    },
+    {
+      "date": "2024-10-17",
+      "rainfallMm": 5.13,
+      "meanTemperatureC": 28.95,
+      "maxTemperatureC": 31.03,
+      "relativeHumidityPct": 81.49,
+      "solarRadiationMjM2": 21.76
+    },
+    {
+      "date": "2024-10-18",
+      "rainfallMm": 2.19,
+      "meanTemperatureC": 28.86,
+      "maxTemperatureC": 31.15,
+      "relativeHumidityPct": 82.89,
+      "solarRadiationMjM2": 20.51
+    },
+    {
+      "date": "2024-10-19",
+      "rainfallMm": 7.68,
+      "meanTemperatureC": 29.16,
+      "maxTemperatureC": 30.96,
+      "relativeHumidityPct": 82.32,
+      "solarRadiationMjM2": 19.54
+    },
+    {
+      "date": "2024-10-20",
+      "rainfallMm": 62.37,
+      "meanTemperatureC": 28.61,
+      "maxTemperatureC": 30.02,
+      "relativeHumidityPct": 86.73,
+      "solarRadiationMjM2": 16.52
+    },
+    {
+      "date": "2024-10-21",
+      "rainfallMm": 68.42,
+      "meanTemperatureC": 28.96,
+      "maxTemperatureC": 30.73,
+      "relativeHumidityPct": 84.13,
+      "solarRadiationMjM2": 13.72
+    },
+    {
+      "date": "2024-10-22",
+      "rainfallMm": 175.11,
+      "meanTemperatureC": 27.63,
+      "maxTemperatureC": 28.58,
+      "relativeHumidityPct": 84.81,
+      "solarRadiationMjM2": 1.27
+    },
+    {
+      "date": "2024-10-23",
+      "rainfallMm": 8.47,
+      "meanTemperatureC": 28.31,
+      "maxTemperatureC": 29.05,
+      "relativeHumidityPct": 84.45,
+      "solarRadiationMjM2": 9.76
+    },
+    {
+      "date": "2024-10-24",
+      "rainfallMm": 6.19,
+      "meanTemperatureC": 28.62,
+      "maxTemperatureC": 29.87,
+      "relativeHumidityPct": 85.42,
+      "solarRadiationMjM2": 11.27
+    },
+    {
+      "date": "2024-10-25",
+      "rainfallMm": 8.07,
+      "meanTemperatureC": 28.06,
+      "maxTemperatureC": 29.33,
+      "relativeHumidityPct": 88.68,
+      "solarRadiationMjM2": 14.8
+    },
+    {
+      "date": "2024-10-26",
+      "rainfallMm": 8.63,
+      "meanTemperatureC": 27.82,
+      "maxTemperatureC": 28.94,
+      "relativeHumidityPct": 84.39,
+      "solarRadiationMjM2": 15.17
+    },
+    {
+      "date": "2024-10-27",
+      "rainfallMm": 3.39,
+      "meanTemperatureC": 28.01,
+      "maxTemperatureC": 28.96,
+      "relativeHumidityPct": 81.55,
+      "solarRadiationMjM2": 15.84
+    },
+    {
+      "date": "2024-10-28",
+      "rainfallMm": 1.73,
+      "meanTemperatureC": 28.4,
+      "maxTemperatureC": 29.39,
+      "relativeHumidityPct": 84.29,
+      "solarRadiationMjM2": 16.32
+    },
+    {
+      "date": "2024-10-29",
+      "rainfallMm": 2.73,
+      "meanTemperatureC": 28.65,
+      "maxTemperatureC": 29.67,
+      "relativeHumidityPct": 85.56,
+      "solarRadiationMjM2": 13.92
+    },
+    {
+      "date": "2024-10-30",
+      "rainfallMm": 3.28,
+      "meanTemperatureC": 28.19,
+      "maxTemperatureC": 29.54,
+      "relativeHumidityPct": 85.01,
+      "solarRadiationMjM2": 12.15
+    },
+    {
+      "date": "2024-10-31",
+      "rainfallMm": 2.39,
+      "meanTemperatureC": 27.99,
+      "maxTemperatureC": 29.09,
+      "relativeHumidityPct": 88.27,
+      "solarRadiationMjM2": 15.75
+    },
+    {
+      "date": "2024-11-01",
+      "rainfallMm": 1.57,
+      "meanTemperatureC": 28.42,
+      "maxTemperatureC": 30.64,
+      "relativeHumidityPct": 82.92,
+      "solarRadiationMjM2": 20.45
+    },
+    {
+      "date": "2024-11-02",
+      "rainfallMm": 2.46,
+      "meanTemperatureC": 28.05,
+      "maxTemperatureC": 30.27,
+      "relativeHumidityPct": 85.91,
+      "solarRadiationMjM2": 20.91
+    },
+    {
+      "date": "2024-11-03",
+      "rainfallMm": 13.26,
+      "meanTemperatureC": 27.58,
+      "maxTemperatureC": 28.98,
+      "relativeHumidityPct": 88.89,
+      "solarRadiationMjM2": 16.47
+    },
+    {
+      "date": "2024-11-04",
+      "rainfallMm": 17.03,
+      "meanTemperatureC": 27.52,
+      "maxTemperatureC": 29.35,
+      "relativeHumidityPct": 85.07,
+      "solarRadiationMjM2": 18.51
+    },
+    {
+      "date": "2024-11-05",
+      "rainfallMm": 5.83,
+      "meanTemperatureC": 28,
+      "maxTemperatureC": 29.92,
+      "relativeHumidityPct": 80.91,
+      "solarRadiationMjM2": 17.62
+    },
+    {
+      "date": "2024-11-06",
+      "rainfallMm": 1.32,
+      "meanTemperatureC": 28.12,
+      "maxTemperatureC": 29.56,
+      "relativeHumidityPct": 80.17,
+      "solarRadiationMjM2": 19.24
+    },
+    {
+      "date": "2024-11-07",
+      "rainfallMm": 2.27,
+      "meanTemperatureC": 28.01,
+      "maxTemperatureC": 29.73,
+      "relativeHumidityPct": 85.49,
+      "solarRadiationMjM2": 19.18
+    },
+    {
+      "date": "2024-11-08",
+      "rainfallMm": 0.68,
+      "meanTemperatureC": 28.19,
+      "maxTemperatureC": 30.63,
+      "relativeHumidityPct": 85.33,
+      "solarRadiationMjM2": 19.12
+    },
+    {
+      "date": "2024-11-09",
+      "rainfallMm": 2.7,
+      "meanTemperatureC": 27.96,
+      "maxTemperatureC": 29.54,
+      "relativeHumidityPct": 86.32,
+      "solarRadiationMjM2": 20.49
+    },
+    {
+      "date": "2024-11-10",
+      "rainfallMm": 5.78,
+      "meanTemperatureC": 28.09,
+      "maxTemperatureC": 29.14,
+      "relativeHumidityPct": 86.8,
+      "solarRadiationMjM2": 9.27
+    },
+    {
+      "date": "2024-11-11",
+      "rainfallMm": 0.71,
+      "meanTemperatureC": 28.24,
+      "maxTemperatureC": 29.59,
+      "relativeHumidityPct": 84.77,
+      "solarRadiationMjM2": 18.61
+    },
+    {
+      "date": "2024-11-12",
+      "rainfallMm": 1.01,
+      "meanTemperatureC": 28.69,
+      "maxTemperatureC": 31.59,
+      "relativeHumidityPct": 81.92,
+      "solarRadiationMjM2": 19.21
+    },
+    {
+      "date": "2024-11-13",
+      "rainfallMm": 0.17,
+      "meanTemperatureC": 28.26,
+      "maxTemperatureC": 30.13,
+      "relativeHumidityPct": 81.98,
+      "solarRadiationMjM2": 15.07
+    },
+    {
+      "date": "2024-11-14",
+      "rainfallMm": 0.75,
+      "meanTemperatureC": 28.45,
+      "maxTemperatureC": 30.39,
+      "relativeHumidityPct": 84.09,
+      "solarRadiationMjM2": 15.76
+    },
+    {
+      "date": "2024-11-15",
+      "rainfallMm": 3.68,
+      "meanTemperatureC": 28.17,
+      "maxTemperatureC": 30.5,
+      "relativeHumidityPct": 86.98,
+      "solarRadiationMjM2": 18.89
+    },
+    {
+      "date": "2024-11-16",
+      "rainfallMm": 30.3,
+      "meanTemperatureC": 27.88,
+      "maxTemperatureC": 28.98,
+      "relativeHumidityPct": 86.29,
+      "solarRadiationMjM2": 8.94
+    },
+    {
+      "date": "2024-11-17",
+      "rainfallMm": 1.65,
+      "meanTemperatureC": 27.9,
+      "maxTemperatureC": 29.44,
+      "relativeHumidityPct": 88.79,
+      "solarRadiationMjM2": 14.89
+    },
+    {
+      "date": "2024-11-18",
+      "rainfallMm": 0.9,
+      "meanTemperatureC": 27.94,
+      "maxTemperatureC": 30.32,
+      "relativeHumidityPct": 86.42,
+      "solarRadiationMjM2": 19.44
+    },
+    {
+      "date": "2024-11-19",
+      "rainfallMm": 1.18,
+      "meanTemperatureC": 27.84,
+      "maxTemperatureC": 29.98,
+      "relativeHumidityPct": 86.14,
+      "solarRadiationMjM2": 18.98
+    },
+    {
+      "date": "2024-11-20",
+      "rainfallMm": 2.65,
+      "meanTemperatureC": 27.65,
+      "maxTemperatureC": 30.01,
+      "relativeHumidityPct": 84.61,
+      "solarRadiationMjM2": 19.44
+    },
+    {
+      "date": "2024-11-21",
+      "rainfallMm": 3.62,
+      "meanTemperatureC": 27.74,
+      "maxTemperatureC": 29.87,
+      "relativeHumidityPct": 87.2,
+      "solarRadiationMjM2": 16.12
+    },
+    {
+      "date": "2024-11-22",
+      "rainfallMm": 4.38,
+      "meanTemperatureC": 27.79,
+      "maxTemperatureC": 30.02,
+      "relativeHumidityPct": 85.1,
+      "solarRadiationMjM2": 19.19
+    },
+    {
+      "date": "2024-11-23",
+      "rainfallMm": 1.34,
+      "meanTemperatureC": 27.59,
+      "maxTemperatureC": 29.96,
+      "relativeHumidityPct": 83.84,
+      "solarRadiationMjM2": 18.53
+    },
+    {
+      "date": "2024-11-24",
+      "rainfallMm": 1.51,
+      "meanTemperatureC": 27.71,
+      "maxTemperatureC": 29.96,
+      "relativeHumidityPct": 84.97,
+      "solarRadiationMjM2": 18.89
+    },
+    {
+      "date": "2024-11-25",
+      "rainfallMm": 2.41,
+      "meanTemperatureC": 27.59,
+      "maxTemperatureC": 29.7,
+      "relativeHumidityPct": 83,
+      "solarRadiationMjM2": 19.94
+    },
+    {
+      "date": "2024-11-26",
+      "rainfallMm": 5.35,
+      "meanTemperatureC": 27.89,
+      "maxTemperatureC": 30.19,
+      "relativeHumidityPct": 87.47,
+      "solarRadiationMjM2": 17.08
+    },
+    {
+      "date": "2024-11-27",
+      "rainfallMm": 5.04,
+      "meanTemperatureC": 28.07,
+      "maxTemperatureC": 30.45,
+      "relativeHumidityPct": 85.41,
+      "solarRadiationMjM2": 18.62
+    },
+    {
+      "date": "2024-11-28",
+      "rainfallMm": 8.83,
+      "meanTemperatureC": 27.94,
+      "maxTemperatureC": 29.85,
+      "relativeHumidityPct": 88.75,
+      "solarRadiationMjM2": 15.19
+    },
+    {
+      "date": "2024-11-29",
+      "rainfallMm": 14.71,
+      "meanTemperatureC": 27.36,
+      "maxTemperatureC": 28.84,
+      "relativeHumidityPct": 86.82,
+      "solarRadiationMjM2": 14.44
+    },
+    {
+      "date": "2024-11-30",
+      "rainfallMm": 77.71,
+      "meanTemperatureC": 27.45,
+      "maxTemperatureC": 28.72,
+      "relativeHumidityPct": 90.07,
+      "solarRadiationMjM2": 11.4
+    },
+    {
+      "date": "2024-12-01",
+      "rainfallMm": 49.54,
+      "meanTemperatureC": 27.1,
+      "maxTemperatureC": 28.63,
+      "relativeHumidityPct": 90.74,
+      "solarRadiationMjM2": 4.99
+    },
+    {
+      "date": "2024-12-02",
+      "rainfallMm": 10.5,
+      "meanTemperatureC": 27.53,
+      "maxTemperatureC": 28.82,
+      "relativeHumidityPct": 89.67,
+      "solarRadiationMjM2": 16.16
+    },
+    {
+      "date": "2024-12-03",
+      "rainfallMm": 0.71,
+      "meanTemperatureC": 27.46,
+      "maxTemperatureC": 29.13,
+      "relativeHumidityPct": 89.3,
+      "solarRadiationMjM2": 17.56
+    },
+    {
+      "date": "2024-12-04",
+      "rainfallMm": 0.27,
+      "meanTemperatureC": 27.81,
+      "maxTemperatureC": 30.04,
+      "relativeHumidityPct": 86.78,
+      "solarRadiationMjM2": 17.66
+    },
+    {
+      "date": "2024-12-05",
+      "rainfallMm": 3.7,
+      "meanTemperatureC": 27.49,
+      "maxTemperatureC": 29.46,
+      "relativeHumidityPct": 84,
+      "solarRadiationMjM2": 15.09
+    },
+    {
+      "date": "2024-12-06",
+      "rainfallMm": 4.04,
+      "meanTemperatureC": 27.54,
+      "maxTemperatureC": 29.3,
+      "relativeHumidityPct": 90.17,
+      "solarRadiationMjM2": 15.93
+    },
+    {
+      "date": "2024-12-07",
+      "rainfallMm": 3.84,
+      "meanTemperatureC": 27.97,
+      "maxTemperatureC": 29.76,
+      "relativeHumidityPct": 89.25,
+      "solarRadiationMjM2": 16.69
+    },
+    {
+      "date": "2024-12-08",
+      "rainfallMm": 22,
+      "meanTemperatureC": 27.54,
+      "maxTemperatureC": 28.66,
+      "relativeHumidityPct": 91.21,
+      "solarRadiationMjM2": 12.01
+    },
+    {
+      "date": "2024-12-09",
+      "rainfallMm": 15.1,
+      "meanTemperatureC": 27.22,
+      "maxTemperatureC": 28.29,
+      "relativeHumidityPct": 92.45,
+      "solarRadiationMjM2": 12.42
+    },
+    {
+      "date": "2024-12-10",
+      "rainfallMm": 11.81,
+      "meanTemperatureC": 27.6,
+      "maxTemperatureC": 29.22,
+      "relativeHumidityPct": 89.9,
+      "solarRadiationMjM2": 14.18
+    },
+    {
+      "date": "2024-12-11",
+      "rainfallMm": 3.84,
+      "meanTemperatureC": 27.78,
+      "maxTemperatureC": 29.91,
+      "relativeHumidityPct": 88.16,
+      "solarRadiationMjM2": 17.13
+    },
+    {
+      "date": "2024-12-12",
+      "rainfallMm": 17.89,
+      "meanTemperatureC": 28.06,
+      "maxTemperatureC": 30,
+      "relativeHumidityPct": 90.19,
+      "solarRadiationMjM2": 15.76
+    },
+    {
+      "date": "2024-12-13",
+      "rainfallMm": 4.3,
+      "meanTemperatureC": 27.76,
+      "maxTemperatureC": 29.88,
+      "relativeHumidityPct": 89.01,
+      "solarRadiationMjM2": 16.77
+    },
+    {
+      "date": "2024-12-14",
+      "rainfallMm": 20.73,
+      "meanTemperatureC": 27.63,
+      "maxTemperatureC": 29.64,
+      "relativeHumidityPct": 88.3,
+      "solarRadiationMjM2": 13.07
+    },
+    {
+      "date": "2024-12-15",
+      "rainfallMm": 21.73,
+      "meanTemperatureC": 27.26,
+      "maxTemperatureC": 29.41,
+      "relativeHumidityPct": 88.02,
+      "solarRadiationMjM2": 10.73
+    },
+    {
+      "date": "2024-12-16",
+      "rainfallMm": 28.49,
+      "meanTemperatureC": 27.01,
+      "maxTemperatureC": 28.31,
+      "relativeHumidityPct": 90.08,
+      "solarRadiationMjM2": 12.07
+    },
+    {
+      "date": "2024-12-17",
+      "rainfallMm": 32.44,
+      "meanTemperatureC": 27.04,
+      "maxTemperatureC": 28.62,
+      "relativeHumidityPct": 88.99,
+      "solarRadiationMjM2": 10.7
+    },
+    {
+      "date": "2024-12-18",
+      "rainfallMm": 11.48,
+      "meanTemperatureC": 26.72,
+      "maxTemperatureC": 27.9,
+      "relativeHumidityPct": 89.77,
+      "solarRadiationMjM2": 13.29
+    },
+    {
+      "date": "2024-12-19",
+      "rainfallMm": 22.65,
+      "meanTemperatureC": 27.14,
+      "maxTemperatureC": 28.84,
+      "relativeHumidityPct": 89.13,
+      "solarRadiationMjM2": 9.34
+    },
+    {
+      "date": "2024-12-20",
+      "rainfallMm": 46.89,
+      "meanTemperatureC": 26.91,
+      "maxTemperatureC": 27.75,
+      "relativeHumidityPct": 91.97,
+      "solarRadiationMjM2": 3.98
+    },
+    {
+      "date": "2024-12-21",
+      "rainfallMm": 19.02,
+      "meanTemperatureC": 27.4,
+      "maxTemperatureC": 29,
+      "relativeHumidityPct": 90.83,
+      "solarRadiationMjM2": 11.29
+    },
+    {
+      "date": "2024-12-22",
+      "rainfallMm": 72.98,
+      "meanTemperatureC": 27.15,
+      "maxTemperatureC": 28.07,
+      "relativeHumidityPct": 93.53,
+      "solarRadiationMjM2": 8.69
+    },
+    {
+      "date": "2024-12-23",
+      "rainfallMm": 9.03,
+      "meanTemperatureC": 26.76,
+      "maxTemperatureC": 27.83,
+      "relativeHumidityPct": 93.66,
+      "solarRadiationMjM2": 7.55
+    },
+    {
+      "date": "2024-12-24",
+      "rainfallMm": 72.5,
+      "meanTemperatureC": 27.16,
+      "maxTemperatureC": 28.69,
+      "relativeHumidityPct": 91.64,
+      "solarRadiationMjM2": 12.12
+    },
+    {
+      "date": "2024-12-25",
+      "rainfallMm": 11.03,
+      "meanTemperatureC": 26.43,
+      "maxTemperatureC": 27.28,
+      "relativeHumidityPct": 92.8,
+      "solarRadiationMjM2": 8.19
+    },
+    {
+      "date": "2024-12-26",
+      "rainfallMm": 7.91,
+      "meanTemperatureC": 26.95,
+      "maxTemperatureC": 28.9,
+      "relativeHumidityPct": 89.64,
+      "solarRadiationMjM2": 15.6
+    },
+    {
+      "date": "2024-12-27",
+      "rainfallMm": 15.47,
+      "meanTemperatureC": 26.21,
+      "maxTemperatureC": 27.25,
+      "relativeHumidityPct": 88.32,
+      "solarRadiationMjM2": 6.65
+    },
+    {
+      "date": "2024-12-28",
+      "rainfallMm": 10.34,
+      "meanTemperatureC": 26.7,
+      "maxTemperatureC": 28.43,
+      "relativeHumidityPct": 88.87,
+      "solarRadiationMjM2": 10.18
+    },
+    {
+      "date": "2024-12-29",
+      "rainfallMm": 15.96,
+      "meanTemperatureC": 26.83,
+      "maxTemperatureC": 28.4,
+      "relativeHumidityPct": 90.32,
+      "solarRadiationMjM2": 13.57
+    },
+    {
+      "date": "2024-12-30",
+      "rainfallMm": 5.12,
+      "meanTemperatureC": 26.99,
+      "maxTemperatureC": 28.78,
+      "relativeHumidityPct": 90.57,
+      "solarRadiationMjM2": 11.99
+    },
+    {
+      "date": "2024-12-31",
+      "rainfallMm": 4.35,
+      "meanTemperatureC": 26.77,
+      "maxTemperatureC": 28.21,
+      "relativeHumidityPct": 89.69,
+      "solarRadiationMjM2": 15.85
+    }
+  ]
+}
