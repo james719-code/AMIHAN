@@ -707,7 +707,7 @@ tbody tr:hover { background: var(--soft); }
 .app-shell {
   --map-footer-height: 32px;
   --map-controls-top: 12px;
-  --map-controls-width: 152px;
+  --map-controls-width: 168px;
   position: absolute;
   inset: 0;
   display: grid;
@@ -735,6 +735,8 @@ tbody tr:hover { background: var(--soft); }
   right: 12px;
   width: var(--map-controls-width);
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
   gap: 4px;
   padding: 4px;
   border: 1px solid var(--line);

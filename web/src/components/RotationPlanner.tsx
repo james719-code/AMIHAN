@@ -26,6 +26,7 @@ import { SoilLayers } from './SoilLayers';
 import { TownSelect } from './TownSelect';
 import { WateringGuide } from './WateringGuide';
 import { MapControlIcon } from './MapControlIcon';
+import { PlannerGuidePreview } from './PlannerGuidePreview';
 import { mapPath } from '../workspace-routes';
 
 type Props = {
@@ -67,6 +68,7 @@ type PlannerTab = typeof plannerTabs[number]['id'];
 type RecFilter = 'suitable' | 'other' | 'unsuitable';
 const plannerAnchors: Record<string, { tab: PlannerTab; target: string }> = {
   'crop-options': { tab: 'recommendations', target: 'crop-options' },
+  'field-setup': { tab: 'recommendations', target: 'field-setup' },
   'soil-conditions': { tab: 'soil', target: 'soil-conditions' },
   soil: { tab: 'soil', target: 'soil-conditions' },
   watering: { tab: 'watering', target: 'watering' },
@@ -85,9 +87,15 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
   const [search, setSearch] = useState('');
   const [vegetationOpen, setVegetationOpen] = useState(false);
   const [exportState, setExportState] = useState<'ready' | 'loading' | 'error'>('ready');
+  const [guidePreview, setGuidePreview] = useState<{ url: string; filename: string; location: string } | null>(null);
   const [libraryExpanded, setLibraryExpanded] = useState(false);
   const resourceLibrary = useRef<HTMLDivElement>(null);
   const browseCrops = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    return () => { if (guidePreview) URL.revokeObjectURL(guidePreview.url); };
+  }, [guidePreview]);
+
   useEffect(() => {
     function followAnchor() {
       const id = window.location.hash.slice(1);
@@ -174,7 +182,7 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
     if (!season || !coordinates || exportState === 'loading') return;
     setExportState('loading');
     try {
-      const { downloadPlannerGuide } = await import('./planner-guide');
+      const { createPlannerGuide } = await import('./planner-guide');
       const fields: [string, string][] = [
         ['Plot', plotName(plot)],
         ['Previous crop', previousCrop ? farmerCropName(previousCrop) : previous === 'fallow' ? 'Nothing was planted' : 'Unknown'],
@@ -189,7 +197,7 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
         if (nextRicePlanting) fields.push(['Next palay planting', formatPlantingDate(nextRicePlanting)]);
       }
       const wetDays = localRainfall ? imergRainDaysAt(coordinates, month) : undefined;
-      await downloadPlannerGuide({
+      const { image, filename } = await createPlannerGuide({
         location: pin ? `${location} · ${coordinatesLabel(pin)}` : location,
         date: start,
         fields,
@@ -204,6 +212,7 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
         rotations: suggestions.map((rotation) => ({ rotation, status: rotationStatusLabels[rotation.status] })),
         excluded: unsuitable
       });
+      setGuidePreview({ url: URL.createObjectURL(image), filename, location });
       setExportState('ready');
     } catch {
       setExportState('error');
@@ -219,12 +228,14 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
         </div>
         <div className="planner-export">
           <button type="button" className="planner-download" onClick={exportPlan} disabled={!season || exportState === 'loading'} aria-describedby="planner-export-note">
-            {exportState === 'loading' ? 'Preparing guide…' : 'Download PNG guide'}
+            {exportState === 'loading' ? 'Preparing guide…' : 'Preview PNG guide'}
           </button>
-          <p id="planner-export-note">{season ? 'Save the top crop options and field notes as an image.' : 'Choose a town or select a field to download.'}</p>
-          {exportState === 'error' && <p role="alert">Couldn’t download the guide. Try again.</p>}
+          <p id="planner-export-note">{season ? 'Preview the top crop options and field notes before saving.' : 'Choose a town or select a field to preview.'}</p>
+          {exportState === 'error' && <p role="alert">Couldn’t prepare the guide. Try again.</p>}
         </div>
       </header>
+
+      {guidePreview && <PlannerGuidePreview {...guidePreview} onClose={() => setGuidePreview(null)} />}
 
       <div className="planner-workspace-split">
         <aside className="planner-sidebar">
