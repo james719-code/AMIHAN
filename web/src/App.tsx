@@ -30,7 +30,7 @@ function getRoute(url: URL) {
   const panel = url.searchParams.get('panel');
   const place = url.searchParams.get('place');
   const path = url.pathname.replace(/\/index\.html$/, '/').replace(/\/$/, '');
-  const plannerAnchors = /^#(?:field-setup|crop-options|soil-conditions|watering|crop-resources|planner-location|previous-crop|previous-harvest|water-source|field-drainage|establishment-moisture|next-rice-planting|planting-date)$/;
+  const plannerAnchors = /^#(?:field-setup|crop-options|soil-conditions|soil|watering|crop-resources|crop-library|library|field-studies|studies|planner-location|previous-crop|previous-harvest|water-source|field-drainage|establishment-moisture|next-rice-planting|planting-date)$/;
   const legacyPlanner = (Boolean(place) && url.hash !== '#sources') || plannerAnchors.test(url.hash);
   const view: WorkspaceView = path === `${home}overview`
     ? 'overview'
