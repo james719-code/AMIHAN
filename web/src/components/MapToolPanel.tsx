@@ -11,7 +11,7 @@ export function MapToolPanel({ id, title, visible, onMinimize, onClose, children
 }) {
   const [expanded, setExpanded] = useState(false);
   return (
-    <aside id={id} className={`map-tool-popup${expanded ? ' is-expanded' : ''}`} hidden={!visible} aria-labelledby={`${id}-title`}
+    <aside id={id} className={`map-tool-popup map-sheet${expanded ? ' is-expanded' : ''}`} hidden={!visible} aria-labelledby={`${id}-title`}
       onKeyDown={(event) => {
         if (event.key === 'Escape') {
           event.stopPropagation();

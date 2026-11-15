@@ -443,10 +443,9 @@ export function MapPanel({
             disabled={!mapAvailable}
             onClick={() => {
               onToolChange("field");
-              setSettingsOpen(false);
             }}
           >
-            <MapControlIcon name="hillshade" />
+            <MapControlIcon name="field" />
             <span className="map-tool-label">Field Check</span>
           </button>
           <button
@@ -462,45 +461,36 @@ export function MapPanel({
               if (compactLayout && !rainActive)
                 view?.focusPlace(selectedPlaceId);
               onToolChange("rain");
-              setSettingsOpen(false);
             }}
           >
             <MapControlIcon name="climate" />
             <span className="map-tool-label">Expected Rain</span>
           </button>
+        </div>
+        <div className={`map-settings${settingsOpen ? " is-expanded" : ""}`}>
           <button
             ref={settingsButton}
             className="quiet-button map-tools-collapse"
             type="button"
             disabled={!mapAvailable}
-            aria-label="Settings"
-            title="Settings"
+            aria-label={settingsOpen ? "Collapse map settings" : "Expand map settings"}
+            title={settingsOpen ? "Collapse map settings" : "Expand map settings"}
             aria-expanded={settingsOpen}
             aria-controls="map-tools-content"
             onClick={() => setSettingsOpen(!settingsOpen)}
           >
-            <span className="map-settings-icon">
-              <MapControlIcon name="tools" />
-            </span>
-            <span className="map-tool-label">Settings</span>
-            <svg
-              className="map-settings-chevron"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d={settingsOpen ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} />
-            </svg>
+            {settingsOpen && <span className="map-tool-label">Settings</span>}
+            {compactLayout ? (
+              <MapControlIcon name="settings" />
+            ) : (
+              <span className="map-settings-chevron" style={{ rotate: settingsOpen ? "-90deg" : "90deg" }}>
+                <MapControlIcon name="chevron" />
+              </span>
+            )}
           </button>
-        </div>
-        <div id="map-tools-content" hidden={!settingsOpen}>
+        <div id="map-tools-content" hidden={compactLayout && !settingsOpen}>
           {mapAvailable && (
             <div className="map-toolbar">
-              <strong className="map-settings-heading">Map settings</strong>
               <div
                 className="map-mode-controls"
                 role="group"
@@ -508,30 +498,34 @@ export function MapPanel({
               >
                 <button
                   className="quiet-button map-tool-toggle"
+                  aria-label="2D View"
+                  title="2D View"
                   aria-pressed={displayedMode === "2d"}
                   type="button"
                   onClick={() => onMapModeChange("2d")}
                 >
-                  2D
+                  {settingsOpen ? "2D View" : "2D"}
                 </button>
                 <button
                   className="quiet-button map-tool-toggle"
+                  aria-label="3D View"
                   aria-pressed={displayedMode === "3d"}
                   type="button"
                   disabled={!view.supports3D}
                   title={
                     view.supports3D
-                      ? undefined
+                      ? "3D View"
                       : "3D requires hardware acceleration"
                   }
                   onClick={() => onMapModeChange("3d")}
                 >
-                  3D
+                  {settingsOpen ? "3D View" : "3D"}
                 </button>
               </div>
-              <label className="switch-label">
+              <label className="switch-label" title="Hillshade">
                 <input
                   type="checkbox"
+                  aria-label="Hillshade"
                   checked={hillshadeFailed ? !hillshade : hillshade}
                   onChange={(event) => {
                     setHillshade(event.target.checked);
@@ -539,59 +533,54 @@ export function MapPanel({
                       setHillshadeAttempt((count) => count + 1);
                   }}
                 />
-                Hillshade
+                <MapControlIcon name="hillshade" />
+                <span className="map-setting-label">Hillshade</span>
               </label>
               {roadsState === "error" ? (
                 <button
                   className="quiet-button"
                   type="button"
+                  aria-label="Retry roads"
+                  title="Retry roads"
                   onClick={() => {
                     setRoadsState("loading");
                     setRoadAttempt((count) => count + 1);
                   }}
                 >
-                  Retry roads
+                  <MapControlIcon name="reset" />
+                  <span className="map-setting-label">Retry roads</span>
                 </button>
               ) : roadsState === "loading" ? (
-                <span className="switch-label" role="status">
+                <span className="switch-label" role="status" aria-label="Loading roads" title="Loading roads">
                   Loading roads…
                 </span>
               ) : (
-                <label className="switch-label">
+                <label className="switch-label" title="Roads">
                   <input
                     type="checkbox"
+                    aria-label="Roads"
                     checked={roadsVisible}
                     onChange={(event) => setRoadsVisible(event.target.checked)}
                   />
-                  Roads
+                  <MapControlIcon name="roads" />
+                  <span className="map-setting-label">Roads</span>
                 </label>
               )}
-              <button
-                className="quiet-button"
-                type="button"
-                onClick={view.reset}
-              >
-                Reset view
-              </button>
-              <p className="map-gesture">
-                <span className="map-gesture-mouse">
-                  {displayedMode === "3d"
-                    ? "Drag to rotate · Right-drag to pan"
-                    : "Drag to pan"}{" "}
-                  · Scroll to zoom
-                </span>
-                <span className="map-gesture-touch">
-                  {displayedMode === "3d"
-                    ? "Swipe to rotate · Two fingers to pan"
-                    : "Swipe to pan"}{" "}
-                  · Pinch to zoom
-                </span>
-              </p>
             </div>
           )}
         </div>
+        </div>
       </div>
       <div className={`map-viewport${fieldActive ? " field-picking" : ""}`}>
+        <div id="map-navigation-help" className="map-navigation-help" hidden={!mapAvailable}>
+          <span className="map-gesture-mouse">
+            {displayedMode === "3d" ? "Drag to rotate \u00b7 Right-drag to pan" : "Drag to pan"} &middot; Scroll to zoom
+          </span>
+          <span className="map-gesture-touch">
+            {displayedMode === "3d" ? "Swipe to rotate \u00b7 Two fingers to pan" : "Swipe to pan"} &middot; Pinch to zoom
+          </span>
+          <span className="map-keyboard-help">Use arrow keys to pan.</span>
+        </div>
         <div
           ref={containerRef}
           className="map-container"
@@ -746,33 +735,16 @@ export function MapPanel({
         )}
       </div>
       <div ref={navigationRef} className="map-navigation">
-        <div className="map-compass" hidden={!mapAvailable} aria-hidden="true">
+        <div className="map-orientation" hidden={!mapAvailable}>
+          <button className="quiet-button map-reset" type="button" aria-label="Reset view" title="Reset view" onClick={() => view?.reset()}>
+            <MapControlIcon name="reset" />
+          </button>
+        <div className="map-compass" role="img" aria-label="North direction" title="North direction">
           <span ref={compassRef}>
-            <svg
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill="none"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <circle
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="1.25"
-              />
-              <path d="M12 4 16 12 12 10 8 12Z" fill="currentColor" />
-              <path
-                d="M12 20 8 12 12 14 16 12Z"
-                fill="currentColor"
-                opacity="0.35"
-              />
-              <circle cx="12" cy="12" r="1" fill="currentColor" />
-            </svg>
+            <MapControlIcon name="north" />
           </span>
-          <strong>N</strong>
+          <strong aria-hidden="true">N</strong>
+        </div>
         </div>
         <div
           className="map-zoom"
@@ -783,15 +755,17 @@ export function MapPanel({
             className="quiet-button"
             type="button"
             aria-label="Zoom in"
+            title="Zoom in"
             disabled={!mapAvailable}
             onClick={() => view?.zoomIn()}
           >
-            +
+            <MapControlIcon name="plus" />
           </button>
           <button
             className="quiet-button"
             type="button"
             aria-label="Zoom out"
+            title="Zoom out"
             disabled={!mapAvailable}
             onClick={() => view?.zoomOut()}
           >

@@ -11,6 +11,7 @@ import {
 import { farmingPlaces, places, type MapPlace } from "../data/places";
 import { LocationSearch } from "./LocationSearch";
 import { PlaceOverview } from "./PlaceOverview";
+import { PanelActions } from "./PanelActions";
 import type { MapTool } from "./MapPanel";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import type { FieldSelection } from "./field-terrain";
@@ -37,6 +38,7 @@ export function MapWorkspace({
   onPlanner,
 }: Props) {
   const [explorerPreference, setExplorerOpen] = useState<boolean>();
+  const [explorerExpanded, setExplorerExpanded] = useState(false);
   const [activeTool, setActiveTool] = useState<MapTool | null>(null);
   const [toolMinimized, setToolMinimized] = useState(false);
   const today = todayInBicol();
@@ -122,7 +124,7 @@ export function MapWorkspace({
       </button>
       <aside
         id="place-sidebar"
-        className="control-card place-sidebar"
+        className={`control-card place-sidebar map-sheet${explorerExpanded ? " is-expanded" : ""}`}
         aria-labelledby="places-heading"
         hidden={!explorerOpen}
         onKeyDown={(event) => {
@@ -131,15 +133,13 @@ export function MapWorkspace({
         }}
       >
         <div className="panel-heading">
-          <h1 id="places-heading">Explore a place</h1>
-          <button
-            className="quiet-button close-button"
-            type="button"
-            aria-label="Close places"
-            onClick={closeExplorer}
-          >
-            &times;
-          </button>
+          <h1 id="places-heading">Explore</h1>
+          <PanelActions
+            title="Explore a place"
+            expanded={explorerExpanded}
+            onToggle={() => setExplorerExpanded((expanded) => !expanded)}
+            onClose={closeExplorer}
+          />
         </div>
         <div
           ref={placeScroll}

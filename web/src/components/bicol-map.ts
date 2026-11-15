@@ -115,7 +115,8 @@ export function createBicolMap(
   canvas.tabIndex = 0;
   // Opaque canvas contexts start black. Reveal only after a complete frame.
   canvas.style.visibility = 'hidden';
-  canvas.setAttribute('aria-label', 'Bicol map. Use arrow keys to pan.');
+  canvas.setAttribute('aria-label', 'Bicol map');
+  canvas.setAttribute('aria-describedby', 'map-navigation-help');
   renderer?.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   container.appendChild(canvas);
 
@@ -267,7 +268,7 @@ export function createBicolMap(
         pickStart = null;
         canvas.setAttribute('aria-label', active
           ? 'Field Check map. Tap two land points or press Enter to sample the center.'
-          : 'Bicol map. Use arrow keys to pan.');
+          : 'Bicol map');
         if (field) field.group.visible = active;
         requestRender();
         if (!active) return;
