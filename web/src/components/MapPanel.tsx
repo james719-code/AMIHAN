@@ -1,4 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import geography from '../data/bicol-map.json';
+import { fieldCoordinates } from '../data/field-location';
 import { places, waterLabels, type MapPlace } from '../data/places';
 import { rainBand, rainFrequencyAt, rainPercent } from '../data/expected-rain';
 import { labelMonth } from '../data/historical-climate';
@@ -58,6 +60,28 @@ function focusPlace(view: MapView, id: string, container: HTMLElement | null) {
   view.focusPlace(id, offset);
 }
 
+function focusCoordinates(view: MapView, coords: number[], container: HTMLElement | null) {
+  const panel = container?.closest('.map-card')?.querySelector('.map-tool-popup:not([hidden])');
+  if (!container || !panel) {
+    view.focusCoordinates(coords);
+    return;
+  }
+
+  const map = container.getBoundingClientRect();
+  const tool = panel.getBoundingClientRect();
+  if (tool.left >= map.right || tool.top >= map.bottom) {
+    view.focusCoordinates(coords);
+    return;
+  }
+
+  const leftWidth = Math.max(0, tool.left - map.left);
+  const bottomHeight = Math.max(0, map.bottom - tool.bottom);
+  const offset = leftWidth * map.height >= bottomHeight * map.width
+    ? { x: (leftWidth - map.width) / 2, y: 0 }
+    : { x: 0, y: (map.height - bottomHeight) / 2 };
+  view.focusCoordinates(coords, offset);
+}
+
 export function MapPanel({
   activeTool,
   compactLayout,
@@ -107,6 +131,69 @@ export function MapPanel({
   // The slope overlay expands the terrain into a second mesh, so keep it opt-in.
   const [showSlope, setShowSlope] = useState(false);
   const [fieldMiss, setFieldMiss] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [geoNotice, setGeoNotice] = useState<string | null>(null);
+
+  const sampleCoordinates = async (coords: [number, number]) => {
+    if (!view) return;
+    const success = await view.sampleCoordinates(coords);
+    if (success) {
+      focusCoordinates(view, coords, containerRef.current);
+      setFieldMiss(false);
+    } else {
+      setFieldMiss(true);
+    }
+  };
+
+  const handleLocateUser = () => {
+    if (!navigator.geolocation) {
+      setGeoNotice('Geolocation is not supported by your browser.');
+      return;
+    }
+    setLocating(true);
+    setGeoNotice(null);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        setLocating(false);
+        const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude];
+        const { west, south, east, north } = geography.detailBounds;
+        const inBicol = coords[0] >= west && coords[0] <= east && coords[1] >= south && coords[1] <= north;
+
+        if (inBicol) {
+          if (fieldActive && view) {
+            await sampleCoordinates(coords);
+          } else if (view) {
+            focusCoordinates(view, coords, containerRef.current);
+            let closest = places[0];
+            let minDist = Infinity;
+            for (const p of places) {
+              const d = Math.hypot(p.coordinates[0] - coords[0], p.coordinates[1] - coords[1]);
+              if (d < minDist) { minDist = d; closest = p; }
+            }
+            if (closest) onPlaceSelect(closest.id);
+          }
+        } else {
+          let closest = places[0];
+          let minDist = Infinity;
+          for (const p of places) {
+            const d = Math.hypot(p.coordinates[0] - coords[0], p.coordinates[1] - coords[1]);
+            if (d < minDist) { minDist = d; closest = p; }
+          }
+          if (view) {
+            focusPlace(view, closest.id, containerRef.current);
+            onPlaceSelect(closest.id);
+          }
+          setGeoNotice(`Location is outside Bicol Region. Focused on nearest town: ${closest.name}.`);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        setGeoNotice(err.code === 1 ? 'Location permission was denied.' : 'Unable to determine GPS location.');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   const rainByPlace = useMemo(() => new Map(places
     .filter(({ kind }) => kind !== 'Volcano')
     .map(({ id, coordinates }) => [id, rainFrequencyAt(coordinates, rainMonth)])), [rainMonth]);
@@ -298,6 +385,16 @@ export function MapPanel({
       <div className={`map-viewport${fieldActive ? ' field-picking' : ''}`}>
         <div ref={containerRef} className="map-container" aria-hidden={!mapAvailable} inert={!mapAvailable} />
         <div ref={roadOverlayRef} className="map-route-labels" hidden={!mapAvailable} aria-hidden="true" />
+        {fieldActive && fieldSelection.start && (() => {
+          const coords = fieldCoordinates(fieldSelection.start);
+          return (
+            <div className="field-pin-callout" role="status" aria-live="polite">
+              <span className="field-pin-indicator">● Field selected</span>
+              <span className="field-pin-coords">{coords[1].toFixed(4)}° N, {coords[0].toFixed(4)}° E</span>
+              <button type="button" className="field-pin-action" onClick={onUseField}>Use in Planner →</button>
+            </div>
+          );
+        })()}
         {mapAvailable ? (
           <>
             <div className="map-markers">
@@ -358,10 +455,14 @@ export function MapPanel({
         <div className="map-compass" hidden={!mapAvailable} aria-hidden="true">
           <span ref={compassRef}>↑</span><strong>N</strong>
         </div>
-        <div className="map-zoom" role="group" aria-label="Map zoom">
+        <div className="map-zoom" role="group" aria-label="Map navigation controls">
           <button className="quiet-button" type="button" aria-label="Zoom in" disabled={!mapAvailable} onClick={() => view?.zoomIn()}>+</button>
           <button className="quiet-button" type="button" aria-label="Zoom out" disabled={!mapAvailable} onClick={() => view?.zoomOut()}>−</button>
+          <button className="quiet-button" type="button" aria-label="Locate my position" title="Locate my position" disabled={!mapAvailable || locating} onClick={handleLocateUser}>
+            <MapControlIcon name="location" />
+          </button>
         </div>
+        {geoNotice && <div className="map-geo-notice" role="status">{geoNotice}</div>}
       </div>
       {mapAvailable && fieldActive && (
         <MapToolPanel id="field-tool-panel" title="Field Check" visible={toolPanelVisible}
@@ -369,7 +470,8 @@ export function MapPanel({
           onClose={() => { onToolChange(null); fieldToolButton.current?.focus(); }}>
           <Suspense fallback={<p role="status">Loading Field Check…</p>}>
             <FieldCheck selection={fieldSelection} slopeVisible={showSlope} missed={fieldMiss}
-              onSlopeChange={setShowSlope} onClear={view.clearField} onSampleCenter={view.pickFieldCenter} onUseField={onUseField} />
+              onSlopeChange={setShowSlope} onClear={view.clearField} onSampleCenter={view.pickFieldCenter}
+              onSampleCoordinates={sampleCoordinates} onUseField={onUseField} />
           </Suspense>
         </MapToolPanel>
       )}

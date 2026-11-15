@@ -224,6 +224,37 @@ export function createBicolMap(
       return position;
     };
 
+    function focusTarget(targetPos: Vector3, targetSpan = 38, screenOffset = { x: 0, y: 0 }) {
+      overview = false;
+      const offset = camera.position.clone().sub(controls.target);
+      const from = controls.target.clone();
+      const target = targetPos.clone();
+      const fromZoom = camera.zoom;
+      const toZoom = Math.max(camera.zoom, (camera.top - camera.bottom) / targetSpan);
+      // Move the camera target opposite the desired screen displacement.
+      // Camera axes keep this correct when the terrain is tilted or rotated.
+      const focusOffset = new Vector3(1, 0, 0).applyQuaternion(camera.quaternion)
+        .multiplyScalar(-screenOffset.x * (camera.right - camera.left) / (width * toZoom))
+        .addScaledVector(new Vector3(0, 1, 0).applyQuaternion(camera.quaternion),
+          screenOffset.y * (camera.top - camera.bottom) / (height * toZoom));
+      target.add(focusOffset);
+      const start = performance.now();
+      const duration = flatMap || reducedMotion.matches ? 0 : 440;
+      focusStep = (now: number) => {
+        const progress = duration ? Math.max(0, Math.min(1, (now - start) / duration)) : 1;
+        const eased = 1 - (1 - progress) ** 3;
+        target.y = targetPos.y * relief + focusOffset.y;
+        controls.target.lerpVectors(from, target, eased);
+        camera.position.copy(controls.target).add(offset);
+        camera.zoom = fromZoom + (toZoom - fromZoom) * eased;
+        camera.updateProjectionMatrix();
+        controls.update();
+        layoutDirty = true;
+        if (progress === 1) focusStep = null;
+      };
+      scheduleFrame();
+    }
+
     return {
       supports3D: renderer !== null,
       async setFieldCheck(active: boolean, showSlope: boolean) {
@@ -328,35 +359,36 @@ export function createBicolMap(
       focusPlace(id: string, screenOffset = { x: 0, y: 0 }) {
         const marker = markers.find((entry) => entry.id === id);
         if (!marker) return;
-        overview = false;
-        const offset = camera.position.clone().sub(controls.target);
-        const from = controls.target.clone();
-        const target = marker.position.clone();
-        const fromZoom = camera.zoom;
-        const targetSpan = marker.volcano ? 96 : 38;
-        const toZoom = Math.max(camera.zoom, (camera.top - camera.bottom) / targetSpan);
-        // Move the camera target opposite the desired screen displacement.
-        // Camera axes keep this correct when the terrain is tilted or rotated.
-        const focusOffset = new Vector3(1, 0, 0).applyQuaternion(camera.quaternion)
-          .multiplyScalar(-screenOffset.x * (camera.right - camera.left) / (width * toZoom))
-          .addScaledVector(new Vector3(0, 1, 0).applyQuaternion(camera.quaternion),
-            screenOffset.y * (camera.top - camera.bottom) / (height * toZoom));
-        target.add(focusOffset);
-        const start = performance.now();
-        const duration = flatMap || reducedMotion.matches ? 0 : 440;
-        focusStep = (now: number) => {
-          const progress = duration ? Math.max(0, Math.min(1, (now - start) / duration)) : 1;
-          const eased = 1 - (1 - progress) ** 3;
-          target.y = marker.position.y * relief + focusOffset.y;
-          controls.target.lerpVectors(from, target, eased);
-          camera.position.copy(controls.target).add(offset);
-          camera.zoom = fromZoom + (toZoom - fromZoom) * eased;
-          camera.updateProjectionMatrix();
-          controls.update();
-          layoutDirty = true;
-          if (progress === 1) focusStep = null;
-        };
-        scheduleFrame();
+        focusTarget(marker.position, marker.volcano ? 96 : 38, screenOffset);
+      },
+      focusCoordinates(coordinates: number[], screenOffset = { x: 0, y: 0 }) {
+        const position = terrainPosition(coordinates);
+        focusTarget(position, 38, screenOffset);
+      },
+      async sampleCoordinates(coordinates: number[]) {
+        const x = (coordinates[0] - origin[0]) * metersPerLongitude / 1000;
+        const z = (origin[1] - coordinates[1]) * metersPerDegree / 1000;
+        if (!sampler) {
+          try {
+            const mesh = terrain ?? await loadTerrain();
+            if (abort.signal.aborted) return false;
+            sampler ??= createFieldSampler(getTerrainIndex(mesh));
+          } catch {
+            return false;
+          }
+        }
+        const picked = sampler.sample(x, z);
+        if (!picked) return false;
+        selection = { start: picked, profile: null };
+        if (renderer && terrain && !field) {
+          field = createFieldTerrain(terrain);
+          scene.add(field.group);
+          field.group.visible = true;
+        }
+        field?.setProfile(null);
+        onFieldChange(selection);
+        requestRender();
+        return true;
       },
       reset: fitOverview,
       zoomIn() {

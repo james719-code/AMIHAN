@@ -12,6 +12,7 @@ export function LocationSearch({ onSelect }: { onSelect: (id: string) => void })
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(-1);
+  const [locating, setLocating] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const listId = useId();
@@ -19,6 +20,31 @@ export function LocationSearch({ onSelect }: { onSelect: (id: string) => void })
   const matches = locations.filter(({ name, province }) => terms.every((term) => normalize(`${name} ${province}`).includes(term)))
     .sort((a, b) => Number(normalize(b.name).startsWith(normalize(query))) - Number(normalize(a.name).startsWith(normalize(query))))
     .slice(0, 10);
+
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        const [lon, lat] = [pos.coords.longitude, pos.coords.latitude];
+        let closest = locations[0];
+        let minDist = Infinity;
+        for (const loc of locations) {
+          const d = Math.hypot(loc.coordinates[0] - lon, loc.coordinates[1] - lat);
+          if (d < minDist) {
+            minDist = d;
+            closest = loc;
+          }
+        }
+        if (closest) select(closest.id);
+      },
+      () => {
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -101,6 +127,13 @@ export function LocationSearch({ onSelect }: { onSelect: (id: string) => void })
         <div className="location-search-results" hidden={!open}>
           <p className="location-search-caption" role="status">{query.trim() ? matches.length ? 'Matching locations' : 'No matching towns or cities. Try another name or province.' : 'Find a town or city in Bicol'}</p>
           <ul id={listId} role="listbox" aria-label="Locations">
+            {!query.trim() && typeof navigator !== 'undefined' && 'geolocation' in navigator && (
+              <li role="option" aria-selected={false} className="location-search-gps-item"
+                onPointerDown={(event) => event.preventDefault()} onClick={handleUseMyLocation}>
+                <span>📍 Nearest town to my location</span>
+                <small>{locating ? 'Locating via GPS…' : 'Uses device location'}</small>
+              </li>
+            )}
             {matches.map((place, index) => (
               <li key={place.id} id={`${listId}-${index}`} role="option" aria-selected={active === index}
                 onPointerDown={(event) => event.preventDefault()} onClick={() => select(place.id)}>
