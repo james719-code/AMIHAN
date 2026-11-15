@@ -23,6 +23,7 @@ import { smapMonthAt, smapObservationYear } from '../data/smap-seasonal';
 import { SoilLayers } from './SoilLayers';
 import { TownSelect } from './TownSelect';
 import { MapControlIcon } from './MapControlIcon';
+import { PlannerGuidePreview } from './PlannerGuidePreview';
 import { mapPath } from '../workspace-routes';
 
 type Props = {
@@ -67,10 +68,15 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
   const [search, setSearch] = useState('');
   const [vegetationOpen, setVegetationOpen] = useState(false);
   const [exportState, setExportState] = useState<'ready' | 'loading' | 'error'>('ready');
+  const [guidePreview, setGuidePreview] = useState<{ url: string; filename: string; location: string } | null>(null);
   const [libraryExpanded, setLibraryExpanded] = useState(false);
   const resourceLibrary = useRef<HTMLDivElement>(null);
   const resourceGuides = useRef<HTMLDivElement>(null);
   const browseCrops = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    return () => { if (guidePreview) URL.revokeObjectURL(guidePreview.url); };
+  }, [guidePreview]);
 
   useEffect(() => {
     const hash = window.location.hash.slice(1);
@@ -169,7 +175,7 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
     if (!season || !coordinates || exportState === 'loading') return;
     setExportState('loading');
     try {
-      const { downloadPlannerGuide } = await import('./planner-guide');
+      const { createPlannerGuide } = await import('./planner-guide-v2');
       const fields: [string, string][] = [
         ['Previous crop', previousCrop ? farmerCropName(previousCrop) : previous === 'fallow' ? 'Nothing was planted' : 'Unknown'],
         ['Water source', fieldWaterLabels[water]],
@@ -183,7 +189,7 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
         if (nextRicePlanting) fields.push(['Next palay planting', formatPlantingDate(nextRicePlanting)]);
       }
       const wetDays = localRainfall ? imergRainDaysAt(coordinates, month) : undefined;
-      await downloadPlannerGuide({
+      const { image, filename } = await createPlannerGuide({
         location: pin ? `${location} · ${coordinatesLabel(pin)}` : location,
         date: start,
         fields,
@@ -194,6 +200,7 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
         rotations: suggestions.map((rotation) => ({ rotation, status: rotationStatusLabels[rotation.status] })),
         excluded: unsuitable
       });
+      setGuidePreview({ url: URL.createObjectURL(image), filename, location });
       setExportState('ready');
     } catch {
       setExportState('error');
@@ -209,12 +216,14 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
         </div>
         <div className="planner-export">
           <button type="button" className="planner-download" onClick={exportPlan} disabled={!season || exportState === 'loading'} aria-describedby="planner-export-note">
-            {exportState === 'loading' ? 'Preparing guide…' : 'Download PNG guide'}
+            {exportState === 'loading' ? 'Preparing guide…' : 'Preview PNG guide'}
           </button>
-          <p id="planner-export-note">{season ? 'Save the top crop options and field notes as an image.' : 'Choose a town or select a field to download.'}</p>
-          {exportState === 'error' && <p role="alert">Couldn’t download the guide. Try again.</p>}
+          <p id="planner-export-note">{season ? 'Preview the top crop options and field notes before saving.' : 'Choose a town or select a field to preview.'}</p>
+          {exportState === 'error' && <p role="alert">Couldn’t prepare the guide. Try again.</p>}
         </div>
       </header>
+
+      {guidePreview && <PlannerGuidePreview {...guidePreview} onClose={() => setGuidePreview(null)} />}
 
       <section id="field-setup" className="planner-form" aria-labelledby="field-setup-heading" tabIndex={-1}>
         <div className="planner-section-title">

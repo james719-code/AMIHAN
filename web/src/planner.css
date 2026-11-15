@@ -19,6 +19,23 @@
 .planner-download:disabled { border-color: var(--line); background: var(--soft); color: var(--muted); cursor: not-allowed; }
 .planner-export p { margin-top: 5px; font-size: 13px; }
 .planner-export [role="alert"] { color: #843f28; }
+.planner-preview { width: min(640px, calc(100vw - 24px)); max-width: none; max-height: min(84dvh, 820px); margin: auto; padding: 0; overflow: hidden; border: 1px solid var(--control-line); border-radius: 12px; background: var(--surface); color: var(--ink); box-shadow: var(--control-shadow); }
+.planner-preview[open] { display: flex; flex-direction: column; }
+.planner-preview::backdrop { background: rgb(16 46 36 / 65%); }
+.planner-preview-header { display: flex; flex: none; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 12px; border-bottom: 1px solid var(--line); }
+.planner-preview-header h2 { margin: 0; color: var(--forest); font-size: 18px; font-weight: 750; }
+.planner-preview-header p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+.planner-preview-actions { display: flex; align-items: center; gap: 8px; }
+.planner-preview-actions :is(a, button) { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; text-decoration: none; }
+.planner-preview-toolbar { display: flex; flex: none; align-items: center; gap: 4px; padding: 4px 12px; border-bottom: 1px solid var(--line); }
+.planner-preview-toolbar .quiet-button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+.planner-preview-toolbar output { min-width: 52px; color: var(--forest); text-align: center; font-size: 13px; font-variant-numeric: tabular-nums; }
+.planner-preview-toolbar .planner-preview-fit { margin-left: auto; }
+.planner-preview-body { min-height: 0; padding: 16px; overflow: auto; overflow-anchor: none; overscroll-behavior: contain; touch-action: none; user-select: none; cursor: grab; background: #000; }
+.planner-preview-body.is-dragging { cursor: grabbing; }
+.planner-preview-image { display: block; width: 100%; padding: 0; border: 0; background: none; }
+.planner-preview-image img { display: block; width: 100%; height: auto; pointer-events: none; }
+.planner-preview-body:focus-visible { outline: 3px solid var(--leaf); outline-offset: -3px; }
 .planner-field-actions { display: flex; justify-content: flex-end; margin-top: 14px; }
 .planner-field-actions button { min-height: 44px; }
 .section-nav { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-bottom: 20px; }
