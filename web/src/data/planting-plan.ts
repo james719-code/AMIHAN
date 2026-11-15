@@ -1,5 +1,6 @@
 import { bicolRainfedCalendar, bicolRiceCalendar, bicolVegetableGuide, crops, type ClimateType, type Crop, type Days } from './crops';
-import { daysInMonth, labelMonth, rainfallPattern, type seasonalClimate } from './historical-climate';
+import { daysInMonth, labelMonth, nearestClimateSite, rainfallPattern, seasonalClimate } from './historical-climate';
+import { imergSeasonalAt, imergSeasonalYears } from './imerg-seasonal';
 import { findRotationGuide, type RotationGuide } from './rotation';
 
 export type Water = '' | 'rainfed' | 'irrigated' | 'paddy';
@@ -15,7 +16,7 @@ export type GrowingStep = {
 export type RotationStatus = 'suitable' | 'conditional' | 'insufficient' | 'unsuitable';
 export type FieldInput = 'previous-crop' | 'previous-harvest' | 'water-source' | 'field-drainage' |
   'establishment-moisture' | 'next-rice-planting';
-type RuleFinding = { status: RotationStatus; message: string; fieldInput?: FieldInput; riceWindowFits?: true };
+type RuleFinding = { status: RotationStatus; message: string; fieldInput?: FieldInput; riceWindowFits?: true; seasonalRain?: true };
 export type Rotation = {
   first: GrowingStep;
   next: GrowingStep | null;
@@ -88,6 +89,17 @@ export function growingStep(crop: Crop, start: string): GrowingStep {
   };
 }
 
+export function plantingSeasonAt(coordinates: number[]) {
+  const reference = nearestClimateSite(coordinates);
+  const rainfall = imergSeasonalAt(coordinates);
+  const localRainfall = rainfall !== undefined && rainfall.every((value) => Number.isFinite(value));
+  const baseline = seasonalClimate(reference);
+  const season = localRainfall ? baseline.map((reading, month) => ({
+    ...reading, rainfallMm: rainfall[month], yearsWithRainfall: imergSeasonalYears
+  })) : baseline;
+  return { reference, localRainfall, season };
+}
+
 const isRice = (crop?: Crop) => crop?.name === 'Rice (Palay)';
 const isMungbean = (crop: Crop) => crop.name === 'Mungbean (Monggo)';
 const shortName = (crop: Crop) => crop.name.split(' (')[0];
@@ -143,7 +155,7 @@ function checkField(crop: Crop, { water, drainage }: PlanSettings): RuleFinding[
   return findings;
 }
 
-function checkClimate({ crop, start }: GrowingStep, { season, water }: PlanSettings): RuleFinding[] {
+function checkClimate({ crop, start }: GrowingStep, { season, water }: Pick<PlanSettings, 'season' | 'water'>): RuleFinding[] {
   const month = plantingMonth(start);
   const { rainfallMm, meanTemperatureC } = season[month];
   const monthName = labelMonth(month);
@@ -153,16 +165,40 @@ function checkClimate({ crop, start }: GrowingStep, { season, water }: PlanSetti
   else if (!isRice(crop)) {
     const pattern = rainfallPattern(season, month);
     if (pattern === 'wetter') findings.push({
-      status: 'conditional', message: `${monthName} is usually one of the wetter months. Check drainage and the local forecast before sowing ${name}.`
+      status: 'conditional', seasonalRain: true, message: `${monthName} is usually one of the wetter months. Check drainage and the local forecast before sowing ${name}.`
     });
     else if (water === 'rainfed' && pattern === 'drier') findings.push({
-      status: 'conditional', message: `${monthName} is usually one of the drier months. Check that there is enough water for ${name} to get started.`
+      status: 'conditional', seasonalRain: true, message: `${monthName} is usually one of the drier months. Check that there is enough water for ${name} to get started.`
     });
   }
   if (crop.name === 'Cabbage' && (meanTemperatureC === null || meanTemperatureC > 20)) findings.push({
     status: 'conditional', message: 'Cabbage grows best in cooler conditions. Confirm the field temperature and variety.'
   });
   return findings;
+}
+
+export function seasonalCropOptions(start: string, season: Season, climateTypes: readonly ClimateType[]) {
+  if (!climateTypes.length) return [];
+
+  return rotationCrops.flatMap((crop) => {
+    const step = growingStep(crop, start);
+    const calendar = checkCalendar(step, climateTypes);
+    if (calendar.status !== 'suitable' && calendar.status !== 'conditional') return [];
+
+    const conditions = checkClimate(step, { season, water: '' });
+    if (isRice(crop)) conditions.push({ status: 'conditional', message: 'For irrigated rice paddies.' });
+    const status = statusOf([calendar, ...conditions]);
+    if (status === 'insufficient' || status === 'unsuitable') return [];
+
+    const notes = [
+      calendar.status === 'conditional' ? 'Check the climate type for your field.' : undefined,
+      ...conditions.filter(({ status, seasonalRain }) => status === 'conditional' && !seasonalRain).map(({ message }) => message)
+    ].filter((note): note is string => note !== undefined);
+    return [{ crop, status, calendarStatus: calendar.status, notes }];
+  }).sort((a, b) => statusOrder[a.status] - statusOrder[b.status]
+    || statusOrder[a.calendarStatus] - statusOrder[b.calendarStatus]
+    || a.notes.length - b.notes.length
+    || a.crop.days[1] - b.crop.days[1]);
 }
 
 const clearingDate = (step: GrowingStep, pickingDays: number) =>

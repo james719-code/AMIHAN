@@ -3,16 +3,18 @@ import geography from '../data/bicol-map.json';
 import { rainBands } from '../data/expected-rain';
 import { imergWetDayThresholdMm } from '../data/imerg-seasonal';
 import { RELIEF_SCALE, type MapMode } from './bicol-map';
+import { MapControlIcon } from './MapControlIcon';
 
 type Props = {
   footerRef: RefObject<HTMLDivElement | null>;
   rainMonth: string | null;
+  cropMonth?: string;
   showRoads: boolean;
   mode: MapMode;
   limitedTo2D: boolean;
 };
 
-export function MapLegend({ footerRef, rainMonth, showRoads, mode, limitedTo2D }: Props) {
+export function MapLegend({ footerRef, rainMonth, cropMonth, showRoads, mode, limitedTo2D }: Props) {
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
 
@@ -57,6 +59,7 @@ export function MapLegend({ footerRef, rainMonth, showRoads, mode, limitedTo2D }
         <strong className="map-legend-heading">Map legend</strong>
         <ul className="map-legend-items" aria-label="Places and landmarks">
           {!rainMonth && <li><i className="legend-dot" aria-hidden="true" /> City or town</li>}
+          {cropMonth && <li><MapControlIcon name="planner" /> {cropMonth} crop options</li>}
           <li><i className="legend-volcano" aria-hidden="true" /> Volcano</li>
         </ul>
         {showRoads && (

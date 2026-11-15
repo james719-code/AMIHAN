@@ -508,6 +508,27 @@ input[type="checkbox"], input[type="range"] { accent-color: var(--forest); }
   background: var(--forest);
   box-shadow: 0 0 0 1px #37594d, 0 2px 4px rgb(24 58 45 / 32%);
 }
+.has-crop-pin {
+  --crop-pin-size: 30px;
+  --marker-label-gap: calc(var(--crop-pin-size) / 2 + 4px);
+  width: max(26px, var(--crop-pin-size));
+  height: max(26px, var(--crop-pin-size));
+  border-radius: 6px;
+}
+.has-crop-pin.crop-pin-compact { --crop-pin-size: 22px; }
+.has-crop-pin.crop-pin-tiny { --crop-pin-size: 14px; }
+.marker-picture {
+  display: grid;
+  width: var(--crop-pin-size);
+  height: var(--crop-pin-size);
+  padding: 1px;
+  border: 1px solid #657963;
+  border-radius: 5px;
+  background: #fffdf8;
+  box-shadow: 0 1px 3px rgb(24 58 45 / 38%);
+}
+.marker-picture .crop-art { width: 100%; height: 100%; border-radius: 3px; }
+.is-selected .marker-picture { border-color: var(--forest); box-shadow: 0 0 0 2px var(--rice-gold); }
 .is-volcano .marker-symbol {
   width: 15px;
   height: 14px;
@@ -526,7 +547,7 @@ input[type="checkbox"], input[type="range"] { accent-color: var(--forest); }
 .marker-label {
   position: absolute;
   top: 50%;
-  left: 23px;
+  left: calc(50% + var(--marker-label-gap, 10px));
   display: none;
   transform: translateY(-50%);
   white-space: nowrap;
@@ -539,14 +560,22 @@ input[type="checkbox"], input[type="range"] { accent-color: var(--forest); }
 }
 .is-volcano .marker-label { color: #6a331e; }
 .has-label .marker-label, .site-marker:hover .marker-label, .site-marker:focus-visible .marker-label { display: block; }
-.label-left .marker-label { left: auto; right: 23px; }
-.is-selected .marker-label {
+.label-left .marker-label { left: auto; right: calc(50% + var(--marker-label-gap, 10px)); }
+.is-selected .marker-label, .has-crop-label .marker-label {
   padding: 4px 7px;
   border: 1px solid #a1ad91;
   border-radius: 5px;
   background: var(--surface);
   text-shadow: none;
 }
+.has-crop-label .marker-label {
+  padding: 4px 6px;
+  background: #fffdf8;
+  box-shadow: 0 1px 5px rgb(24 58 45 / 16%);
+  pointer-events: auto;
+}
+.marker-crop { display: none; }
+.has-crop-label .marker-crop { display: block; margin-top: 2px; color: var(--leaf); font-size: 11px; }
 .water-label {
   position: absolute;
   visibility: hidden;
@@ -945,6 +974,24 @@ tbody tr:hover { background: var(--soft); }
 .brochure-symbol { display: grid; place-items: center; flex: none; width: 42px; height: 42px; border-radius: 8px; background: var(--soft); color: var(--forest); }
 .brochure-kicker { color: var(--muted); font-size: 12px; font-weight: 650; }
 .place-overview h2 { overflow-wrap: anywhere; }
+.place-crop-picks { margin-block: 14px; padding-block: 12px; border-block: 1px solid var(--line); }
+.place-crop-picks h3 { color: var(--forest); font-size: 15px; font-weight: 750; }
+.place-crop-picks p { margin-top: 9px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.place-crop-list { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+.place-crop-list li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fffdf8;
+}
+.place-crop-list .crop-art { width: 36px; height: 36px; flex-basis: 36px; border-radius: 5px; }
+.place-crop-list li > div { display: grid; gap: 2px; min-width: 0; }
+.place-crop-list strong { color: var(--forest); font-size: 14px; line-height: 1.2; }
+.place-crop-list span, .place-crop-list small { color: var(--muted); font-size: 12px; line-height: 1.35; }
+.place-crop-list small { color: var(--gold-ink); }
 .location-datasets small { display: block; font-size: 11px; font-weight: 400; }
 .location-readings-link { width: 100%; min-height: 44px; margin: 8px 0; }
 .location-readings-link svg:last-child { margin-left: auto; }

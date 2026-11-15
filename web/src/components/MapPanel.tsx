@@ -4,7 +4,9 @@ import { fieldCoordinates } from '../data/field-location';
 import { places, waterLabels, type MapPlace } from '../data/places';
 import { rainBand, rainFrequencyAt, rainPercent } from '../data/expected-rain';
 import { labelMonth } from '../data/historical-climate';
+import { farmerCropName, type seasonalCropOptions } from '../data/planting-plan';
 import { createBicolMap, type MapMode } from './bicol-map';
+import { CropArt } from './CropArt';
 import { ExpectedRain } from './ExpectedRain';
 import { MapControlIcon } from './MapControlIcon';
 import { MapLegend } from './MapLegend';
@@ -23,6 +25,8 @@ type MapPanelProps = {
   onToolChange: (tool: MapTool | null) => void;
   onToolMinimize: () => void;
   selectedPlace: MapPlace;
+  cropOptions: ReadonlyMap<string, { picks: ReturnType<typeof seasonalCropOptions> }>;
+  cropMonth: string;
   focusRequest: number;
   rainMonth: number;
   onRainMonthChange: (month: number) => void;
@@ -90,6 +94,8 @@ export function MapPanel({
   onToolChange,
   onToolMinimize,
   selectedPlace,
+  cropOptions,
+  cropMonth,
   focusRequest,
   rainMonth,
   onRainMonthChange,
@@ -127,6 +133,7 @@ export function MapPanel({
   const [roadAttempt, setRoadAttempt] = useState(0);
   const rainActive = activeTool === 'rain';
   const fieldActive = activeTool === 'field';
+  const showCropLabels = !rainActive && !fieldActive;
   const [settingsOpen, setSettingsOpen] = useState(false);
   // The slope overlay expands the terrain into a second mesh, so keep it opt-in.
   const [showSlope, setShowSlope] = useState(false);
@@ -284,7 +291,7 @@ export function MapPanel({
     if (lastSelection.current.id === selectedPlaceId && lastSelection.current.request === focusRequest) return;
     focusPlace(view, selectedPlaceId, containerRef.current);
     lastSelection.current = { id: selectedPlaceId, request: focusRequest };
-  }, [contextLost, focusRequest, selectedPlaceId, view]);
+  }, [contextLost, cropOptions, focusRequest, rainMonth, selectedPlaceId, showCropLabels, view]);
 
   const mapAvailable = view !== null && !contextLost;
   const displayedMode = view?.supports3D ? mapMode : '2d';
@@ -405,10 +412,16 @@ export function MapPanel({
                 }}>{name}</span>
               ))}
               {places.map((place) => {
+                const selected = place.id === selectedPlaceId;
                 const frequency = rainActive ? rainByPlace.get(place.id) : null;
                 const hasRain = typeof frequency === 'number';
-                const markerLabel = hasRain && place.id === selectedPlaceId ? `${place.name} · ${rainPercent.format(frequency)}` : place.name;
+                const markerLabel = hasRain && selected ? `${place.name} · ${rainPercent.format(frequency)}` : place.name;
                 const weather = hasRain ? `${rainPercent.format(frequency)} estimated daily rain chance in ${labelMonth(rainMonth)}` : '';
+                const crop = showCropLabels ? cropOptions.get(place.id)?.picks[0]?.crop : undefined;
+                const cropName = crop ? farmerCropName(crop) : undefined;
+                const detail = cropName ? `${cropMonth} crop option: ${cropName}` : weather;
+                const markerClass = ['site-marker', place.kind === 'Volcano' && 'is-volcano', selected && 'is-selected',
+                  hasRain && 'has-rain', crop && 'has-crop-pin'].filter(Boolean).join(' ');
                 return (
                 <button
                   key={place.id}
@@ -417,19 +430,24 @@ export function MapPanel({
                     else markers.current.delete(place.id);
                   }}
                   type="button"
-                  className={`site-marker${place.kind === 'Volcano' ? ' is-volcano' : ''}${place.id === selectedPlaceId ? ' is-selected' : ''}${hasRain ? ' has-rain' : ''}`}
+                  className={markerClass}
                   data-label={markerLabel}
-                  aria-pressed={place.id === selectedPlaceId}
-                  aria-label={`Explore ${place.name}${weather ? `, ${weather}` : place.kind === 'Municipality' && !place.climateSite ? ', municipality' : ''}`}
-                  title={`${place.name} · ${weather || place.kind}`}
+                  data-crop-label={cropName}
+                  aria-pressed={selected}
+                  aria-label={`Explore ${place.name}${detail ? `, ${detail}` : place.kind === 'Municipality' && !place.climateSite ? ', municipality' : ''}`}
+                  title={`${place.name} · ${detail || place.kind}`}
                   onClick={() => {
-                    if (place.id === selectedPlaceId) focusPlace(view, place.id, containerRef.current);
+                    if (selected) focusPlace(view, place.id, containerRef.current);
                     if (rainActive) onRainPlaceSelect(place.id);
                     else onPlaceSelect(place.id);
                   }}
                 >
-                  <span aria-hidden="true" className="marker-symbol" style={hasRain ? { backgroundColor: rainBand(frequency).color } : undefined} />
-                  <span aria-hidden="true" className="marker-label">{markerLabel}</span>
+                  {crop ? <span className="marker-picture" aria-hidden="true"><CropArt crop={crop} /></span>
+                    : <span aria-hidden="true" className="marker-symbol" style={hasRain ? { backgroundColor: rainBand(frequency).color } : undefined} />}
+                  <span aria-hidden="true" className="marker-label">
+                    {markerLabel}
+                    {cropName && <span className="marker-crop">{cropName}</span>}
+                  </span>
                 </button>
                 );
               })}
@@ -483,6 +501,7 @@ export function MapPanel({
         </MapToolPanel>
       )}
       <MapLegend footerRef={legendRef}
+        cropMonth={showCropLabels ? cropMonth : undefined}
         rainMonth={rainActive && mapAvailable ? labelMonth(rainMonth) : null}
         showRoads={roadsVisible && roadsState === 'ready'}
         mode={displayedMode} limitedTo2D={mapAvailable && !view.supports3D}

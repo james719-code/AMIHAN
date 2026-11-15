@@ -1,7 +1,9 @@
-import { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useMemo, useRef, useState } from 'react';
+import { climateTypeAt } from '../data/climate-types';
+import { labelMonth, rainfallPattern } from '../data/historical-climate';
 import { provinces } from '../data/sites';
-import { plantingMonth, todayInBicol } from '../data/planting-plan';
-import { places, type MapPlace } from '../data/places';
+import { plantingMonth, plantingSeasonAt, seasonalCropOptions, todayInBicol } from '../data/planting-plan';
+import { farmingPlaces, places, type MapPlace } from '../data/places';
 import { LocationSearch } from './LocationSearch';
 import { PlaceOverview } from './PlaceOverview';
 import type { MapTool } from './MapPanel';
@@ -24,9 +26,21 @@ export function MapWorkspace({ selectedPlaceId, onPlaceSelect, fieldSelection, o
   const [explorerPreference, setExplorerOpen] = useState<boolean>();
   const [activeTool, setActiveTool] = useState<MapTool | null>(null);
   const [toolMinimized, setToolMinimized] = useState(false);
-  const [rainMonth, setRainMonth] = useState(() => plantingMonth(todayInBicol()));
+  const today = todayInBicol();
+  const plantingMonthIndex = plantingMonth(today);
+  const cropMonth = labelMonth(plantingMonthIndex);
+  const [rainMonth, setRainMonth] = useState(plantingMonthIndex);
+  const cropOptions = useMemo(() => new Map(farmingPlaces.map((place) => {
+    const { season } = plantingSeasonAt(place.coordinates);
+    const { types } = climateTypeAt(place.coordinates, place);
+    return [place.id, {
+      picks: seasonalCropOptions(today, season, types).slice(0, 3),
+      rain: rainfallPattern(season, plantingMonthIndex)
+    }] as const;
+  })), [today, plantingMonthIndex]);
   const [focusRequest, setFocusRequest] = useState(0);
   const placesButton = useRef<HTMLButtonElement>(null);
+  const placeScroll = useRef<HTMLDivElement>(null);
   const isCompactMap = useMediaQuery('(max-width: 650px), (max-width: 950px) and (max-height: 500px)');
   const compactToolOpen = isCompactMap && activeTool !== null && !toolMinimized;
   const explorerOpen = (explorerPreference ?? !isCompactMap) && !compactToolOpen;
@@ -55,6 +69,7 @@ export function MapWorkspace({ selectedPlaceId, onPlaceSelect, fieldSelection, o
     onPlaceSelect(id);
     setExplorerOpen(true);
     if (isCompactMap) setToolMinimized(true);
+    if (placeScroll.current) placeScroll.current.scrollTop = 0;
   };
 
   return (
@@ -72,7 +87,7 @@ export function MapWorkspace({ selectedPlaceId, onPlaceSelect, fieldSelection, o
           <h1 id="places-heading">Explore a place</h1>
           <button className="quiet-button close-button" type="button" aria-label="Close places" onClick={closeExplorer}>&times;</button>
         </div>
-        <div className="sidebar-scroll" tabIndex={0} role="region" aria-label="Place explorer content">
+        <div ref={placeScroll} className="sidebar-scroll" tabIndex={0} role="region" aria-label="Place explorer content">
           <LocationSearch onSelect={(id) => {
             onPlaceSelect(id);
             setFocusRequest((request) => request + 1);
@@ -100,7 +115,8 @@ export function MapWorkspace({ selectedPlaceId, onPlaceSelect, fieldSelection, o
             </div>
           </div>
           <div aria-live="polite">
-            <PlaceOverview key={selectedPlace.id} place={selectedPlace} province={selectedProvince?.name} />
+            <PlaceOverview key={selectedPlace.id} place={selectedPlace} province={selectedProvince?.name}
+              cropMonth={cropMonth} seasonalCrops={cropOptions.get(selectedPlace.id)} />
           </div>
         </div>
         {selectedPlace.kind !== 'Volcano' && <div className="sidebar-footer">
@@ -111,6 +127,8 @@ export function MapWorkspace({ selectedPlaceId, onPlaceSelect, fieldSelection, o
         <Suspense fallback={<section className="map-card map-status" role="status"><p>Loading Bicol terrain…</p></section>}>
           <MapPanel
             selectedPlace={selectedPlace}
+            cropOptions={cropOptions}
+            cropMonth={cropMonth}
             focusRequest={focusRequest}
             rainMonth={rainMonth}
             onRainMonthChange={setRainMonth}

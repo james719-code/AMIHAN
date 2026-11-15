@@ -7,14 +7,13 @@ import cropWorkbook from '../data/crop-workbook.json';
 import { cropArtworkCredit } from '../data/crop-artwork';
 import { climateTypeAt } from '../data/climate-types';
 import { planningDate, plotName, plotNameLimit, wateringSoils, wateringStages, type FieldPlot } from '../data/field-plots';
-import { imergRainDaysAt, imergSeasonalAt, imergSeasonalPeriod, imergSeasonalYears, imergWetDayThresholdMm } from '../data/imerg-seasonal';
+import { imergRainDaysAt, imergSeasonalPeriod, imergWetDayThresholdMm } from '../data/imerg-seasonal';
 import {
-  climatePeriod, coordinatesLabel, formatReading, labelMonth, nearestClimateSite, powerUrl,
-  rainfallPattern, seasonalClimate, soilUrl
+  climatePeriod, coordinatesLabel, formatReading, labelMonth, powerUrl, rainfallPattern, soilUrl
 } from '../data/historical-climate';
 import {
   calendarMonths, compactDateRange, dateRangeLabel, daysLabel, farmerCropName, formatPlantingDate, growingStep,
-  nextPlantingMonth, plantingCalendarSource, plantingMonth, rotationRulesVersion, suggestRotations, todayInBicol, turnaroundDays,
+  nextPlantingMonth, plantingCalendarSource, plantingMonth, plantingSeasonAt, rotationRulesVersion, suggestRotations, todayInBicol, turnaroundDays,
   type Drainage, type EstablishmentMoisture, type GrowingStep, type Rotation, type RotationStatus, type Water
 } from '../data/planting-plan';
 import type { MapPlace } from '../data/places';
@@ -115,7 +114,7 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
   const start = date || todayInBicol();
   const month = plantingMonth(start);
   const coordinates = pin ?? town?.coordinates;
-  const reference = coordinates ? nearestClimateSite(coordinates) : null;
+  const { reference, localRainfall = false, season = null } = coordinates ? plantingSeasonAt(coordinates) : {};
   const province = provinces.find(({ code }) => code === town?.provinceCode);
   const location = pin ? 'Field Map pin' : town ? `${town.name}, ${province?.name}` : '';
   const { types: availableTypes, source: climateTypeSource } = coordinates
@@ -128,11 +127,6 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
   const climateTypeDetail = climateTypeSource === 'map'
     ? availableTypes.length > 1 ? 'Near a boundary on the PAGASA map' : `PAGASA map · ${pin ? 'field pin' : 'town or city marker'}`
     : climateTypeSource === 'province' ? 'PAGASA province summary' : 'No match on the PAGASA map';
-  const rainfall = coordinates && imergSeasonalAt(coordinates);
-  const localRainfall = rainfall !== undefined && rainfall.every((value) => Number.isFinite(value));
-  const season = reference ? seasonalClimate(reference).map((reading, index) => localRainfall ? {
-    ...reading, rainfallMm: rainfall[index], yearsWithRainfall: imergSeasonalYears
-  } : reading) : null;
   const soilMoisture = season ? smapMonthAt(town?.id, pin, month) : undefined;
   const previousCrop = crops.find(({ name }) => name === previous);
   const afterRice = previousCrop?.name === 'Rice (Palay)';
@@ -149,7 +143,7 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
   const suggestedWateringCrop = suggestions[0]?.first.crop;
   const wateringCrop = crops.find(({ name }) => name === plot.wateringCrop) ?? suggestedWateringCrop;
   const advice = wateringCrop && wateringAdvice(wateringCrop, plot);
-  const rainPattern = season && rainfallPattern(season, month);
+  const rainPattern = season ? rainfallPattern(season, month) : null;
   const monthlyRain = season?.[month].rainfallMm;
 
   const noRice = { previousHarvest: '', moisture: '', nextRicePlanting: '' } as const;
