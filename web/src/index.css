@@ -37,7 +37,23 @@
   text-rendering: optimizeLegibility;
 }
 html * {scrollbar-width: thin; scrollbar-color: var(--line) transparent;}
-body { margin: 0; }
+html {
+  background: var(--forest);
+  overscroll-behavior-y: none;
+  overflow-x: hidden;
+  max-width: 100%;
+}
+body {
+  min-width: 320px;
+  margin: 0;
+  background: var(--forest);
+  overflow-x: hidden;
+  max-width: 100%;
+}
+#root { min-height: 100dvh; }
+/* The overview remains scrollable; its browser chrome stays out of the way. */
+html:has(.overview-page) { scrollbar-width: none; }
+html:has(.overview-page)::-webkit-scrollbar { display: none; }
 h1, h2, h3 { text-wrap: balance; }
 p { text-wrap: pretty; }
 :where([tabindex="-1"], input, select) { scroll-margin-top: var(--anchor-offset, 90px); }
@@ -53,14 +69,23 @@ button { cursor: pointer; }
   border-bottom: 1px solid #426051;
   background: var(--forest);
   color: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+.app-layout:not(.map-layout) {
+  min-height: 100dvh;
+  background: var(--paper);
+  overflow-x: hidden;
+  max-width: 100%;
 }
 .app-header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: min(100% - 48px, 1296px);
+  width: 100%;
+  box-sizing: border-box;
+  padding-inline: clamp(16px, 2.5vw, 36px);
   min-height: 64px;
-  margin-inline: auto;
   gap: 24px;
 }
 .app-brand { display: inline-flex; align-items: center; }
@@ -103,7 +128,7 @@ button { cursor: pointer; }
 
 @media (max-width: 650px) {
   :root { --anchor-offset: 104px; }
-  .app-header-inner { display: grid; grid-template-columns: minmax(0, 1fr); width: calc(100% - 24px); gap: 0; padding: 4px 0 5px; }
+  .app-header-inner { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; gap: 0; padding: 4px 12px 5px; }
   .app-brand { min-height: 40px; width: fit-content; }
   .app-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
   .app-nav a { padding-inline: 4px; font-size: 14px; }
