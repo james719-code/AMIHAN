@@ -244,7 +244,8 @@ button { cursor: pointer; }
   pointer-events: none;
 }
 .map-compass[hidden] { display: none; }
-.map-compass span { font-size: 19px; font-weight: 750; }
+.map-compass span { display: block; width: 24px; height: 24px; }
+.map-compass svg { display: block; }
 .map-zoom { display: flex; flex-direction: column; gap: 3px; }
 .map-zoom button { width: 44px; min-height: 44px; padding: 0; font-size: 20px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
 .map-tool-toggle[aria-pressed="true"] { background: var(--forest); color: var(--surface); }
@@ -416,6 +417,61 @@ button { cursor: pointer; }
 .quiet-button:disabled { opacity: 1; color: var(--muted); background: var(--soft); border-color: var(--line); cursor: not-allowed; }
 input::placeholder { color: var(--muted); opacity: 1; }
 input, select { color: var(--ink); }
+/* Keep the chevron clear of long labels in every single-value select. */
+select:not([multiple]):not([size]) {
+  appearance: none;
+  padding-inline-end: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23183a2d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  text-overflow: ellipsis;
+}
+
+@supports (appearance: base-select) {
+  select:not([multiple]):not([size]),
+  select:not([multiple]):not([size])::picker(select) {
+    appearance: base-select;
+  }
+  select:not([multiple]):not([size])::picker-icon { display: none; }
+  select:not([multiple]):not([size])::picker(select) {
+    max-block-size: min(180px, 40dvh);
+    margin-block: 6px;
+    min-inline-size: anchor-size(width);
+    max-inline-size: calc(100dvw - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px;
+    border: 1px solid var(--control-line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--control-shadow);
+  }
+  select:not([multiple]):not([size]) option {
+    min-block-size: 32px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  select:not([multiple]):not([size]) option:checked,
+  select:not([multiple]):not([size]) option:hover,
+  select:not([multiple]):not([size]) option:focus-visible {
+    background: var(--soft);
+    color: var(--forest);
+  }
+}
+/* Fade category text without fading the options contained in each group. */
+select optgroup {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--ink) 50%, transparent);
+}
+select optgroup option { font-size: 14px; font-weight: 400; text-transform: none; color: var(--ink); }
 input[type="checkbox"], input[type="range"] { accent-color: var(--forest); }
 .map-toolbar > *, .map-zoom button { box-shadow: var(--control-shadow); }
 
