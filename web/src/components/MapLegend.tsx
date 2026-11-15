@@ -42,13 +42,9 @@ export function MapLegend({ footerRef, rainMonth, cropMonth, showRoads, mode, li
       <div className="map-legend-bar">
         <button ref={toggle} type="button" className="map-legend-toggle" aria-expanded={open}
           aria-controls="map-legend-symbols" onClick={() => setOpen(!open)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-            <path d="M10 6h10m-10 6h10m-10 6h10M4 6h1m-1 6h1m-1 6h1" />
-          </svg>
+          <MapControlIcon name="legend" />
           <span>Legend</span>
-          <svg className="map-legend-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          <span className="map-legend-chevron"><MapControlIcon name="chevron" /></span>
         </button>
         <div className="map-source">
           <a href={geography.attributionUrl}>Elevation · Mapzen, USGS, NOAA</a>
@@ -70,7 +66,7 @@ export function MapLegend({ footerRef, rainMonth, cropMonth, showRoads, mode, li
           </ul>
         )}
         {(mode === '3d' || limitedTo2D) && (
-          <span className="map-relief-note">{mode === '3d' ? `3D · ${RELIEF_SCALE}× vertical scale` : '2D mode'}</span>
+          <span className="map-relief-note">{mode === '3d' ? `3D · ${RELIEF_SCALE}×` : '2D mode'}</span>
         )}
       </div>
     </div>

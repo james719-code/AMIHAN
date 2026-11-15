@@ -126,12 +126,19 @@ button { cursor: pointer; }
 .skip-link:focus { transform: none; }
 #main-content:focus { outline: none; }
 
-@media (max-width: 650px) {
-  :root { --anchor-offset: 104px; }
-  .app-header-inner { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; gap: 0; padding: 4px 12px 5px; }
-  .app-brand { min-height: 40px; width: fit-content; }
-  .app-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
-  .app-nav a { padding-inline: 4px; font-size: 14px; }
+@media (max-width: 650px), (max-width: 950px) and (max-height: 500px) {
+  :root { --anchor-offset: 76px; }
+  .app-header-inner {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    min-height: 60px;
+    gap: 8px;
+    padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+  }
+  .app-brand { min-width: 0; min-height: 44px; width: 36px; justify-content: center; }
+  .app-brand picture, .app-brand img { display: block; width: 36px; height: 36px; object-fit: contain; }
+  .app-nav { display: grid; min-width: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+  .app-nav a { box-sizing: border-box; min-width: 0; min-height: 44px; padding: 6px 3px; font-size: clamp(12px, 3vw, 14px); white-space: nowrap; }
 }
 
 .page-width {
@@ -244,7 +251,8 @@ button { cursor: pointer; }
   pointer-events: none;
 }
 .map-compass[hidden] { display: none; }
-.map-compass span { font-size: 19px; font-weight: 750; }
+.map-compass span { display: block; width: 24px; height: 24px; }
+.map-compass svg { display: block; }
 .map-zoom { display: flex; flex-direction: column; gap: 3px; }
 .map-zoom button { width: 44px; min-height: 44px; padding: 0; font-size: 20px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
 .map-tool-toggle[aria-pressed="true"] { background: var(--forest); color: var(--surface); }
@@ -425,6 +433,61 @@ button { cursor: pointer; }
 .quiet-button:disabled { opacity: 1; color: var(--muted); background: var(--soft); border-color: var(--line); cursor: not-allowed; }
 input::placeholder { color: var(--muted); opacity: 1; }
 input, select { color: var(--ink); }
+/* Keep the chevron clear of long labels in every single-value select. */
+select:not([multiple]):not([size]) {
+  appearance: none;
+  padding-inline-end: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23183a2d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  text-overflow: ellipsis;
+}
+
+@supports (appearance: base-select) {
+  select:not([multiple]):not([size]),
+  select:not([multiple]):not([size])::picker(select) {
+    appearance: base-select;
+  }
+  select:not([multiple]):not([size])::picker-icon { display: none; }
+  select:not([multiple]):not([size])::picker(select) {
+    max-block-size: min(180px, 40dvh);
+    margin-block: 6px;
+    min-inline-size: anchor-size(width);
+    max-inline-size: calc(100dvw - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px;
+    border: 1px solid var(--control-line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--control-shadow);
+  }
+  select:not([multiple]):not([size]) option {
+    min-block-size: 32px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  select:not([multiple]):not([size]) option:checked,
+  select:not([multiple]):not([size]) option:hover,
+  select:not([multiple]):not([size]) option:focus-visible {
+    background: var(--soft);
+    color: var(--forest);
+  }
+}
+/* Fade category text without fading the options contained in each group. */
+select optgroup {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--ink) 50%, transparent);
+}
+select optgroup option { font-size: 14px; font-weight: 400; text-transform: none; color: var(--ink); }
 input[type="checkbox"], input[type="range"] { accent-color: var(--forest); }
 .map-toolbar > *, .map-zoom button { box-shadow: var(--control-shadow); }
 
@@ -1360,15 +1423,6 @@ tbody tr:hover { background: var(--soft); }
 .field-planner-button { margin-top: 8px; white-space: normal; }
 .field-check p { line-height: 1.6; }
 @media (max-width: 650px), (max-width: 950px) and (max-height: 500px) {
-  .map-layout .app-header-inner {
-    display: flex;
-    width: calc(100% - 16px);
-    min-height: 52px;
-    gap: 8px;
-    padding-block: 4px;
-  }
-  .map-layout .app-brand { flex: none; min-height: 44px; min-width: 44px; justify-content: center; }
-  .map-layout .app-nav a { padding-inline: 7px; font-size: 14px; }
   .app-shell {
     --map-controls-top: 8px;
     --map-panel-reserve: max(224px, calc(var(--map-footer-height) + 160px));
@@ -1496,14 +1550,6 @@ tbody tr:hover { background: var(--soft); }
   .explore-intro { display: none; }
   .explore-location-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
 }
-@media (max-width: 445px) {
-  .app-brand img { width: 32px; }
-  .map-layout .app-nav { flex: 1; grid-template-columns: minmax(0, 1fr) minmax(0, 1.18fr) minmax(0, 1fr); }
-  .map-layout .app-nav a { padding-inline: 3px; }
-}
-@media (max-width: 360px) {
-  .map-layout .app-nav a { font-size: 13px; }
-}
 @media (min-width: 560px) and (max-width: 950px) and (max-height: 500px) {
   .app-shell { grid-template-rows: minmax(0, 1fr); }
   .app-shell:has(.place-sidebar:not([hidden])) { grid-template-columns: minmax(225px, 31%) minmax(0, 1fr); }
@@ -1525,3 +1571,190 @@ tbody tr:hover { background: var(--soft); }
   }
   .map-tool-popup .panel-size-button { display: none; }
 }
+
+/* Separate map settings from the field and rain tools. */
+.map-header { padding: 0; border: 0; background: transparent; box-shadow: none; gap: 10px; pointer-events: none; }
+.map-quick-tools, .map-settings { padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--control-shadow); pointer-events: auto; }
+.map-settings { width: 54px; justify-self: end; box-sizing: border-box; }
+.map-settings.is-expanded { width: var(--map-controls-width); }
+.map-header .map-tools-collapse { display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; }
+.map-settings.is-expanded .map-tools-collapse { justify-content: space-between; }
+.map-settings-chevron { display: block; flex: none; }
+.map-header #map-tools-content { position: static; width: auto; max-height: none; overflow: visible; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.map-settings .map-mode-controls { flex-direction: column; }
+.map-settings .map-toolbar > .quiet-button, .map-settings .switch-label { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0; }
+.map-settings .switch-label { position: relative; cursor: pointer; }
+.map-settings .switch-label input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.map-settings .switch-label:has(input:checked) { background: var(--forest); color: white; }
+.map-settings .switch-label:has(input:focus-visible) { outline: 2px solid var(--rice-gold); outline-offset: -4px; }
+.map-settings:not(.is-expanded) .map-setting-label, .map-settings:not(.is-expanded) .map-gesture { display: none; }
+.map-settings.is-expanded .switch-label, .map-settings.is-expanded .map-toolbar > .quiet-button { justify-content: flex-start; padding-inline: 10px; }
+@media (max-width: 650px), (max-width: 950px) and (max-height: 500px) {
+  .map-header { max-height: calc(100% - 16px); overflow: visible; }
+  .map-settings { max-height: 100%; overflow-y: auto; }
+  .map-settings.is-expanded { width: min(168px, calc(100cqw - 80px)); }
+}
+
+.map-orientation { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.map-orientation[hidden] { display: none; }
+.map-reset { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; box-shadow: var(--control-shadow); }
+@media (max-width: 650px), (max-width: 950px) and (max-height: 500px) {
+  .map-navigation .map-compass { display: grid; }
+  .map-navigation { flex-direction: row; align-items: end; }
+}
+
+/* Navigation follows the map tools' outline icons and compact cards. */
+.map-navigation .quiet-button, .map-navigation .map-compass {
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--forest);
+  box-shadow: var(--control-shadow);
+}
+.map-navigation .quiet-button { padding: 0; touch-action: manipulation; }
+.map-navigation .quiet-button:hover:not(:disabled) { background: var(--soft); }
+.map-navigation .quiet-button:focus-visible { outline-offset: 2px; }
+.map-navigation .map-control-icon { width: 18px; height: 18px; }
+.map-navigation .map-compass { align-content: center; gap: 2px; padding: 3px 0; }
+.map-navigation .map-compass span { width: 18px; height: 18px; }
+.map-navigation .map-compass strong { font-size: 9px; line-height: 1; }
+
+/* Keep view controls distinct and navigation guidance over the map. */
+.map-header .map-toolbar { gap: 6px; padding-top: 6px; }
+.map-settings .map-mode-controls { gap: 6px; }
+.map-header .map-toolbar > * { border-bottom: 0; }
+.map-settings .map-mode-controls .quiet-button { flex: auto; }
+.map-navigation-help {
+  position: absolute;
+  z-index: 2;
+  bottom: 12px;
+  left: max(12px, env(safe-area-inset-left));
+  max-width: calc(100% - 90px);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--forest);
+  font-size: 11px;
+  line-height: 1.5;
+  text-shadow: 0 1px 3px var(--surface), 0 0 5px var(--surface);
+  pointer-events: none;
+}
+.map-navigation-help[hidden] { display: none; }
+@media (max-width: 650px), (max-width: 950px) and (max-height: 500px) {
+  .map-navigation-help {
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: 8px;
+    max-width: calc(100% - 208px);
+    text-align: right;
+    font-size: 10px;
+  }
+}
+@media (pointer: coarse) { .map-keyboard-help { display: none; } }
+
+/* Keep the footer legend collapsed until requested on every screen size. */
+.map-legend-toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  padding-inline: 4px;
+  border-radius: 6px;
+  color: var(--forest);
+  font-size: 13px;
+  font-weight: 750;
+  touch-action: manipulation;
+}
+.map-legend-toggle:hover, .map-legend-toggle[aria-expanded="true"] { background: var(--soft); }
+.map-legend-toggle[aria-expanded="false"] .map-legend-chevron { rotate: 180deg; }
+.map-legend:not(.is-open) .map-legend-symbols { display: none; }
+.map-legend .map-relief-note { background: transparent; }
+
+.map-legend-chevron { display: inline-flex; }
+.map-legend-chevron .map-control-icon { width: 14px; height: 14px; }
+.map-quick-tools .map-control-icon { width: 20px; height: 20px; }
+.map-control-icon { flex-shrink: 0; }
+
+/* Compact legend footer. */
+.map-legend .map-legend-bar { padding-block: 2px; gap: 6px; }
+.map-legend .map-legend-toggle { min-height: 28px; gap: 4px; font-size: 12px; }
+.map-legend .map-source { gap: 2px 10px; font-size: 10px; line-height: 1.3; }
+.map-legend .map-legend-symbols { padding-block: 6px; }
+.map-legend .map-legend-rain { padding-block: 4px; }
+
+/* Bottom sheets overlay the map while its footer keeps its own fixed row. */
+@media (max-width: 650px), (max-width: 950px) and (max-height: 500px) {
+  .app-shell, .app-shell:has(.place-sidebar:not([hidden])) {
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  }
+  .map-stage { grid-area: 1 / 1; }
+  .map-card:not(.map-status), .map-card:has(.map-tool-popup:not([hidden])) {
+    grid-template: minmax(0, 1fr) auto / minmax(0, 1fr);
+  }
+  .map-card > .map-legend { grid-area: 2 / 1 / 3 / -1; }
+  .app-shell .map-sheet {
+    position: absolute;
+    z-index: 20;
+    inset: auto 0 0 0;
+    box-sizing: border-box;
+    width: auto;
+    max-width: none;
+    height: clamp(250px, 44cqh, 320px);
+    max-height: calc(100cqh - 60px);
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 12px 12px 0 0;
+    border-width: 1px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--surface);
+    box-shadow: 0 -4px 24px rgb(24 58 45 / 18%);
+    overflow: hidden;
+  }
+  .app-shell .map-sheet.is-expanded { height: min(450px, 68cqh); }
+  .app-shell .map-sheet > .panel-heading,
+  .app-shell .map-sheet > .tool-popup-heading {
+    position: relative;
+    flex: none;
+    min-height: 48px;
+    box-sizing: border-box;
+    padding: 4px 8px 4px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .map-sheet .panel-heading h1 { font-size: inherit; font-weight: inherit; }
+  .map-sheet .sidebar-scroll, .map-sheet .map-tool-body { padding: 12px 14px; }
+  .map-sheet .map-tool-body > .field-check, .map-sheet .map-tool-body > .expected-rain { padding: 0; }
+  .map-sheet .map-tool-body .field-check-header { margin: 0; padding: 0 0 12px; }
+  .map-tool-popup .panel-size-button { display: inline-grid; }
+}
+
+/* All map panels use the same expand and restore action. */
+.map-sheet .panel-size-button { display: inline-grid; }
+@media (min-width: 651px) and (min-height: 501px), (min-width: 951px) {
+  .app-shell:has(.place-sidebar.is-expanded:not([hidden])) {
+    grid-template-columns: minmax(340px, min(540px, 45%)) minmax(0, 1fr);
+  }
+  .map-tool-popup.is-expanded {
+    width: min(600px, calc(100% - var(--map-controls-width) - 32px));
+    height: min(640px, calc(100% - var(--map-footer-height) - 24px));
+  }
+}
+
+/* Mobile tools keep their names; Settings hides its entire panel when closed. */
+@media (max-width: 650px), (max-width: 950px) and (max-height: 500px) {
+  .map-header { width: 168px; }
+  .map-quick-tools .map-tool-label { display: inline; }
+  .map-quick-tools .quiet-button { justify-content: flex-start; padding-inline: 8px; }
+  .map-settings.is-expanded { width: 168px; }
+}
+
+.map-settings.is-expanded .map-tools-collapse > .map-control-icon,
+.map-settings.is-expanded .map-tools-collapse > .map-settings-chevron { margin-right: 3.8px; }

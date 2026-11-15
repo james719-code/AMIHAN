@@ -170,7 +170,7 @@ function App() {
         <div className="app-header-inner">
           <a className="app-brand" href={overviewPath} aria-label="AMIHAN" data-app-link>
             <picture>
-              <source media="(max-width: 445px)" srcSet={`${home}amihan-logo-light.svg`} width={444} height={443} />
+              <source media="(max-width: 650px), (max-width: 950px) and (max-height: 500px)" srcSet={`${home}amihan-logo-light.svg`} width={444} height={443} />
               <img src={`${home}amihan-full-light.svg`} alt="" width={1670} height={443} />
             </picture>
           </a>

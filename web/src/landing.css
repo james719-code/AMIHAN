@@ -867,8 +867,8 @@
 .landing-footer-main { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 18px; align-items: center; padding-bottom: 23px; }
 .landing-footer-main p { margin-top: 10px; color: #e1e8df; font-size: 13px; }
 .space-apps-credit { display: grid; gap: 6px; font-size: 13px; }
-.space-apps-credit a { display: block; padding: 12px 14px; border-radius: 5px; background: #fff; }
-.space-apps-credit img { width: 176px; height: auto; }
+.space-apps-credit a { display: block; padding: 12px 14px; border-radius: 5px; background: #fff; color: var(--forest); }
+.space-apps-credit img { display: block; width: 176px; max-width: 100%; height: auto; }
 .photo-credit { padding-top: 17px; border-top: 1px solid #496257; color: #d3ded5; font-size: 12px; line-height: 1.7; }
 
 @media (max-width: 960px) {

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import spaceAppsLogo from '../assets/nasa-space-apps.svg';
 import { CropArt } from './CropArt';
 import { RainfallSummary, pagasaOutlook } from './RainfallSummary';
 import { TownSelect } from './TownSelect';
@@ -446,7 +447,7 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
             <div className="space-apps-credit">
               <span>Built for the challenge</span>
               <a href="https://www.spaceappschallenge.org/">
-                <img src={`${assets}credits/nasa-space-apps.svg`} alt="NASA International Space Apps Challenge" width={592} height={221} loading="lazy" />
+                <img src={spaceAppsLogo} alt="NASA International Space Apps Challenge" width={592} height={221} loading="lazy" />
               </a>
             </div>
             <a className="landing-button landing-button-gold" href={plannerPath} data-app-link>Open Crop Planner</a>

@@ -113,7 +113,10 @@ export function createBicolMap(
   const canvas = renderer?.domElement ?? document.createElement('canvas');
   const flatMap = renderer ? null : createFlatMap(canvas);
   canvas.tabIndex = 0;
-  canvas.setAttribute('aria-label', 'Bicol map. Use arrow keys to pan.');
+  // Opaque canvas contexts start black. Reveal only after a complete frame.
+  canvas.style.visibility = 'hidden';
+  canvas.setAttribute('aria-label', 'Bicol map');
+  canvas.setAttribute('aria-describedby', 'map-navigation-help');
   renderer?.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   container.appendChild(canvas);
 
@@ -265,7 +268,7 @@ export function createBicolMap(
         pickStart = null;
         canvas.setAttribute('aria-label', active
           ? 'Field Check map. Tap two land points or press Enter to sample the center.'
-          : 'Bicol map. Use arrow keys to pan.');
+          : 'Bicol map');
         if (field) field.group.visible = active;
         requestRender();
         if (!active) return;
@@ -535,6 +538,8 @@ export function createBicolMap(
   }
 
   function drawFrame(now: number) {
+    // Rendering can trigger control changes; keep them in this frame.
+    frameId = -1;
     // Resize clears either canvas backing store. Repaint it in this same frame,
     // so the browser never presents an empty canvas between resize and render.
     if (sizeDirty) {
@@ -551,6 +556,7 @@ export function createBicolMap(
         flatMap?.draw(camera, fieldActive && slopeVisible, fieldActive ? selection : null,
           roadsVisible ? roads?.drawFlat : undefined, roadTilesDirty, requestSceneRender);
       }
+      canvas.style.visibility = 'visible';
     }
     if (layoutDirty) positionOverlays(verticalSpan);
     layoutDirty = false;
@@ -723,8 +729,13 @@ export function createBicolMap(
     pendingWidth = nextWidth;
     pendingHeight = nextHeight;
     sizeDirty = true;
-    // Coalesce resize events into one live redraw per animation frame.
-    requestRender();
+    layoutDirty = true;
+    // ResizeObserver runs before paint. Drawing here keeps the canvas and
+    // marker positions in step with sidebar layout, without a stale frame.
+    if (loaded && !lost && !abort.signal.aborted) {
+      cancelAnimationFrame(frameId);
+      drawFrame(performance.now());
+    }
   }
 
   function applySize() {
@@ -747,7 +758,9 @@ export function createBicolMap(
     camera.updateProjectionMatrix();
     if (renderer) renderer.setSize(width, height, false);
     else flatMap?.resize(width, height);
-    if (overview) fitOverview();
+    // Fit once. Opening a sidebar must preserve a manually positioned view
+    // and its pixel scale, including when the user is still at overview zoom.
+    if (!hasSize) fitOverview();
     hasSize = true;
   }
 
@@ -763,6 +776,7 @@ export function createBicolMap(
   function contextLost(event: Event) {
     event.preventDefault();
     lost = true;
+    canvas.style.visibility = 'hidden';
     focusStep = null;
     cancelAnimationFrame(frameId);
     frameId = 0;
@@ -775,6 +789,14 @@ export function createBicolMap(
     requestRender();
   }
 
+  function releasePageZoom(event: WheelEvent) {
+    // Ctrl+wheel also represents trackpad pinch in browsers. At the map's
+    // outer limit, leave the default action intact so browser zoom can resume.
+    if (event.ctrlKey && event.deltaY > 0 && camera.zoom <= controls.minZoom + 1e-6) {
+      event.stopImmediatePropagation();
+    }
+  }
+
   const observer = new ResizeObserver(resize);
   observer.observe(container);
   resize();
@@ -783,6 +805,7 @@ export function createBicolMap(
   reducedMotion.addEventListener('change', requestRender);
   canvas.addEventListener('webglcontextlost', contextLost);
   canvas.addEventListener('webglcontextrestored', contextRestored);
+  canvas.addEventListener('wheel', releasePageZoom, { capture: true, passive: true });
   canvas.addEventListener('pointerdown', fieldPointerDown);
   canvas.addEventListener('pointerup', fieldPointerUp);
   canvas.addEventListener('pointercancel', cancelFieldPick);
@@ -797,6 +820,7 @@ export function createBicolMap(
       reducedMotion.removeEventListener('change', requestRender);
       canvas.removeEventListener('webglcontextlost', contextLost);
       canvas.removeEventListener('webglcontextrestored', contextRestored);
+      canvas.removeEventListener('wheel', releasePageZoom, true);
       canvas.removeEventListener('pointerdown', fieldPointerDown);
       canvas.removeEventListener('pointerup', fieldPointerUp);
       canvas.removeEventListener('pointercancel', cancelFieldPick);
