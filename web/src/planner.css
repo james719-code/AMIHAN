@@ -243,9 +243,18 @@
 }
 .planner-sidebar {
   min-width: 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
+.planner-sidebar::-webkit-scrollbar { display: none; }
+html:has(.planner-page),
+body:has(.planner-page) {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+html:has(.planner-page)::-webkit-scrollbar,
+body:has(.planner-page)::-webkit-scrollbar { display: none; }
 @media (min-width: 881px) {
-  body:has(.planner-page),
   .app-layout:has(> .planner-page) { overflow-x: clip; }
   .planner-sidebar {
     --sidebar-top: calc(var(--anchor-offset) + env(safe-area-inset-top));
