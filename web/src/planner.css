@@ -267,48 +267,61 @@
 .planner-main-content {
   min-width: 0;
 }
-.planner-main-content .planner-tab-bar {
-  margin-top: 0;
-}
 @media (max-width: 880px) {
   .planner-workspace-split {
     grid-template-columns: 1fr;
   }
 }
 .planner-tab-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 24px 0 20px;
+  container-type: inline-size;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 3px;
+  margin: 0 0 20px;
   padding: 4px;
-  background: var(--surface);
+  background: var(--soft);
   border: 1px solid var(--line);
   border-radius: 10px;
 }
 .planner-tab-btn {
-  flex: 1 1 auto;
-  min-height: 44px;
-  padding: 8px 16px;
-  border: 1px solid transparent;
+  display: grid;
+  grid-template-rows: 18px minmax(2.3em, auto);
+  justify-items: center;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 54px;
+  padding: 7px 2px 4px;
+  border: 0;
   border-radius: 7px;
   background: transparent;
   color: var(--muted);
-  font-size: 14px;
+  font-size: clamp(11px, 2.8cqw, 13px);
   font-weight: 700;
+  line-height: 1.15;
   cursor: pointer;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s;
   text-align: center;
-  white-space: nowrap;
 }
+.planner-tab-btn > span { text-wrap: balance; }
 .planner-tab-btn:hover {
-  background: var(--soft);
+  background: var(--surface);
   color: var(--forest);
 }
-.planner-tab-btn[data-active="true"] {
-  background: #fff;
-  border-color: var(--line);
-  color: var(--forest);
-  box-shadow: 0 1px 3px rgb(24 58 45 / 8%);
+.planner-tab-btn[aria-selected="true"] {
+  background: var(--forest);
+  color: #fff;
+}
+.planner-tab-btn:focus-visible { outline: 2px solid var(--coastal-blue); outline-offset: 1px; }
+@container (min-width: 585px) {
+  .planner-tab-btn {
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    min-height: 44px;
+    padding: 8px 4px;
+  }
 }
 .planner-tab-panel {
   min-width: 0;

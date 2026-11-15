@@ -56,8 +56,14 @@ const fieldDrainageLabels: Record<Drainage, string> = {
 };
 const availableCrops = [...crops].sort((a, b) => farmerCropName(a).localeCompare(farmerCropName(b), 'en-PH'));
 
-const plannerTabs = ['recommendations', 'soil', 'watering', 'library', 'studies'] as const;
-type PlannerTab = typeof plannerTabs[number];
+const plannerTabs = [
+  { id: 'recommendations', label: 'Crop options', icon: 'planner' },
+  { id: 'soil', label: 'Rain & soil', icon: 'climate' },
+  { id: 'watering', label: 'Watering', icon: 'rain' },
+  { id: 'library', label: 'Crop library', icon: 'book' },
+  { id: 'studies', label: 'Field studies', icon: 'field' }
+] as const;
+type PlannerTab = typeof plannerTabs[number]['id'];
 type RecFilter = 'suitable' | 'other' | 'unsuitable';
 const plannerAnchors: Record<string, { tab: PlannerTab; target: string }> = {
   'crop-options': { tab: 'recommendations', target: 'crop-options' },
@@ -158,14 +164,6 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
   ] as const;
   const activeFilter = (recFilter === 'other' && !otherOptions.length || recFilter === 'unsuitable' && !unsuitable.length)
     ? 'suitable' : recFilter;
-
-  const tabLabels: Record<PlannerTab, string> = {
-    recommendations: `Crop Recommendations (${suggestions.length})`,
-    soil: 'Rain & Soil Analysis',
-    watering: 'Watering Guide',
-    library: `Crop Library (${crops.length})`,
-    studies: `Field Studies (${rotationGuides.length})`
-  };
 
   function resetFieldConditions() {
     onUpdatePlot({ previous: '', previousHarvest: '', water: '', drainage: '', moisture: '',
@@ -359,11 +357,11 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
 
         <div className="planner-main-content">
           <div className="planner-tab-bar" role="tablist" aria-label="Crop planner sections">
-            {plannerTabs.map((tab, index) => {
+            {plannerTabs.map(({ id: tab, label, icon }, index) => {
               const selected = activeTab === tab;
               return (
                 <button key={tab} type="button" role="tab" id={`tab-${tab}`} aria-selected={selected}
-                  aria-controls={`panel-${tab}`} className="planner-tab-btn" data-active={selected}
+                  aria-controls={`panel-${tab}`} className="planner-tab-btn"
                   tabIndex={selected ? 0 : -1} onClick={() => setActiveTab(tab)} onKeyDown={(event) => {
                     const last = plannerTabs.length - 1;
                     const destination = event.key === 'Home' ? 0 : event.key === 'End' ? last
@@ -371,11 +369,12 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
                       : event.key === 'ArrowRight' ? (index + 1) % plannerTabs.length : null;
                     if (destination === null) return;
                     event.preventDefault();
-                    const next = plannerTabs[destination];
+                    const next = plannerTabs[destination].id;
                     setActiveTab(next);
                     document.getElementById(`tab-${next}`)?.focus();
                   }}>
-                  {tabLabels[tab]}
+                  <MapControlIcon name={icon} />
+                  <span>{label}</span>
                 </button>
               );
             })}
