@@ -216,363 +216,369 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
         </div>
       </header>
 
-      <section id="field-setup" className="planner-form" aria-labelledby="field-setup-heading" tabIndex={-1}>
-        <div className="planner-section-title">
-          <h2 id="field-setup-heading">Field setup</h2>
-          <a className="planner-inline-link" href={mapPath} data-app-link>Choose a field on the map</a>
-        </div>
-        <div className="field-inputs planner-inputs">
-          <div><label htmlFor="planner-location">Town or city</label>
-            <TownSelect id="planner-location" value={town?.id ?? ''} onChange={onSelectTown} />
-          </div>
-          <div><label htmlFor="planting-date">Planting date</label>
-            <input id="planting-date" type="date" min="1900-01-01" max="9990-12-31" value={start} onChange={(event) => {
-              const value = event.target.value;
-              if (value === '' || planningDate(value)) setDate(value);
-            }} />
-          </div>
-        </div>
-        {pin && <div className="planner-pin">
-          <span><strong>{location}</strong> · {coordinatesLabel(pin)}</span>
-          <button className="planner-inline-link" type="button" onClick={onUseTown}>Use town estimate</button>
-        </div>}
-        <div className="planner-presets" role="group" aria-label="Field condition quick presets">
-          <span className="planner-presets-label">Field presets:</span>
-          <div className="planner-preset-pills">
-            <button type="button" className="preset-pill" data-active={selectedPreset === 'rice-break'} onClick={() => applyPreset('rice-break')}>
-              Rice paddy break
-            </button>
-            <button type="button" className="preset-pill" data-active={selectedPreset === 'upland-rainfed'} onClick={() => applyPreset('upland-rainfed')}>
-              Upland rainfed
-            </button>
-            <button type="button" className="preset-pill" data-active={selectedPreset === 'irrigated-plot'} onClick={() => applyPreset('irrigated-plot')}>
-              Irrigated field
-            </button>
-            <button type="button" className="preset-pill" data-active={selectedPreset === 'flood-prone'} onClick={() => applyPreset('flood-prone')}>
-              Flood-prone area
-            </button>
-          </div>
-        </div>
-        <details className="planner-details planner-conditions-toggle">
-          <summary>
-            <span>Custom field conditions</span>
-            <span className="summary-status-hint">
-              {previousCrop ? farmerCropName(previousCrop) : previous === 'fallow' ? 'Fallow' : 'Unspecified'} · {water ? fieldWaterLabels[water] : 'Water unknown'} · {drainage ? fieldDrainageLabels[drainage] : 'Drainage unknown'}
-            </span>
-          </summary>
-          <div className="planner-detail-content">
-            <div className="field-inputs">
-              <div><label htmlFor="previous-crop">Previous crop</label>
-                <select id="previous-crop" value={previous} onChange={(event) => {
-                  setSelectedPreset('');
-                  setPrevious(event.target.value);
-                  setPreviousHarvest('');
-                  setMoisture('');
-                  setNextRicePlanting('');
-                }}>
-                  <option value="">I’m not sure</option><option value="fallow">Nothing was planted</option>
-                  {availableCrops.map((crop) => <option key={crop.name} value={crop.name}>{farmerCropName(crop)}</option>)}
-                </select>
+      <div className="planner-workspace-split">
+        <aside className="planner-sidebar">
+          <section id="field-setup" className="planner-form" aria-labelledby="field-setup-heading" tabIndex={-1}>
+            <div className="planner-section-title">
+              <h2 id="field-setup-heading">Field setup</h2>
+              <a className="planner-inline-link" href={mapPath} data-app-link>Choose on map</a>
+            </div>
+            <div className="field-inputs planner-inputs">
+              <div><label htmlFor="planner-location">Town or city</label>
+                <TownSelect id="planner-location" value={town?.id ?? ''} onChange={onSelectTown} />
               </div>
-              {previousCrop && <div><label htmlFor="previous-harvest">Previous harvest date</label>
-                <input id="previous-harvest" type="date" min="1900-01-01" max="9990-12-31" value={previousHarvest}
-                  onChange={({ target: { value } }) => { setSelectedPreset(''); if (!value || planningDate(value)) setPreviousHarvest(value); }} />
-              </div>}
-              <div><label htmlFor="water-source">Water source</label>
-                <select id="water-source" value={water} onChange={(event) => { setSelectedPreset(''); setWater(event.target.value as Water); }}>
-                  <option value="">I’m not sure</option><option value="rainfed">Rain only</option>
-                  <option value="irrigated">I can water the field</option><option value="paddy">Irrigated rice paddy</option>
-                </select>
+              <div><label htmlFor="planting-date">Planting date</label>
+                <input id="planting-date" type="date" min="1900-01-01" max="9990-12-31" value={start} onChange={(event) => {
+                  const value = event.target.value;
+                  if (value === '' || planningDate(value)) setDate(value);
+                }} />
               </div>
-              <div><label htmlFor="field-drainage">Drainage after rain</label>
-                <select id="field-drainage" value={drainage} onChange={(event) => { setSelectedPreset(''); setDrainage(event.target.value as Drainage); }}>
-                  <option value="">I’m not sure</option><option value="well">It drains quickly</option>
-                  <option value="slow">It takes a while to drain</option><option value="waterlogged">Water often stays</option>
-                </select>
+            </div>
+            {pin && <div className="planner-pin">
+              <span><strong>{location}</strong> · {coordinatesLabel(pin)}</span>
+              <button className="planner-inline-link" type="button" onClick={onUseTown}>Use town estimate</button>
+            </div>}
+            <div className="planner-presets" role="group" aria-label="Field condition quick presets">
+              <span className="planner-presets-label">Field presets:</span>
+              <div className="planner-preset-pills">
+                <button type="button" className="preset-pill" data-active={selectedPreset === 'rice-break'} onClick={() => applyPreset('rice-break')}>
+                  Rice paddy break
+                </button>
+                <button type="button" className="preset-pill" data-active={selectedPreset === 'upland-rainfed'} onClick={() => applyPreset('upland-rainfed')}>
+                  Upland rainfed
+                </button>
+                <button type="button" className="preset-pill" data-active={selectedPreset === 'irrigated-plot'} onClick={() => applyPreset('irrigated-plot')}>
+                  Irrigated field
+                </button>
+                <button type="button" className="preset-pill" data-active={selectedPreset === 'flood-prone'} onClick={() => applyPreset('flood-prone')}>
+                  Flood-prone area
+                </button>
               </div>
-              {afterRice && <>
-                <div><label htmlFor="establishment-moisture">Is the soil moist, or can you water the monggo?</label>
-                  <select id="establishment-moisture" value={moisture} onChange={(event) => { setSelectedPreset(''); setMoisture(event.target.value as EstablishmentMoisture); }}>
-                    <option value="">I’m not sure</option><option value="adequate">The soil is moist or I have water</option>
-                    <option value="dry">The soil is dry and I have no water</option>
-                  </select>
-                </div>
-                <div><label htmlFor="next-rice-planting">When will you plant palay again?</label>
-                  <input id="next-rice-planting" type="date" min="1900-01-01" max="9990-12-31" value={nextRicePlanting}
-                    onChange={({ target: { value } }) => { setSelectedPreset(''); if (!value || planningDate(value)) setNextRicePlanting(value); }} />
-                </div>
-              </>}
             </div>
-            <div className="planner-field-actions">
-              <button className="quiet-button icon-text-button" type="button" onClick={resetFieldConditions}
-                disabled={!previous && !water && !drainage && !typeOverride}>
-                <MapControlIcon name="reset" />Reset field conditions
-              </button>
-            </div>
-          </div>
-        </details>
-        {season && <details className="planner-details planner-calendar">
-          <summary>Planting calendar settings</summary>
-          <div className="planner-detail-content">
-            <label htmlFor="planner-climate-type">Local climate type</label>
-            <select id="planner-climate-type" value={chosenType} aria-describedby="planner-climate-hint" onChange={(event) => {
-              if (locationId) setTypeOverride({ location: locationId, type: event.target.value as ClimateType | '' });
-            }}>
-              <option value="">{availableTypes.length ? `Auto · ${climateTypeLabel}` : 'Auto · Climate type unavailable'}</option>
-              {(['I', 'II', 'III', 'IV'] as const).map((type) => <option key={type} value={type}>Type {type}</option>)}
-            </select>
-            <span id="planner-climate-hint" className="planner-input-hint">{chosenType ? 'Manual selection' : climateTypeDetail}</span>
-          </div>
-        </details>}
-      </section>
-
-      <div className="planner-tab-bar" role="tablist" aria-label="Crop planner sections">
-        <button
-          type="button"
-          role="tab"
-          id="tab-recommendations"
-          aria-selected={activeTab === 'recommendations'}
-          aria-controls="panel-recommendations"
-          className="planner-tab-btn"
-          data-active={activeTab === 'recommendations'}
-          onClick={() => setActiveTab('recommendations')}
-        >
-          Crop Recommendations ({suggestions.length})
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="tab-soil"
-          aria-selected={activeTab === 'soil'}
-          aria-controls="panel-soil"
-          className="planner-tab-btn"
-          data-active={activeTab === 'soil'}
-          onClick={() => setActiveTab('soil')}
-        >
-          Rain & Soil Analysis
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="tab-library"
-          aria-selected={activeTab === 'library'}
-          aria-controls="panel-library"
-          className="planner-tab-btn"
-          data-active={activeTab === 'library'}
-          onClick={() => setActiveTab('library')}
-        >
-          Crop Library ({crops.length})
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="tab-studies"
-          aria-selected={activeTab === 'studies'}
-          aria-controls="panel-studies"
-          className="planner-tab-btn"
-          data-active={activeTab === 'studies'}
-          onClick={() => setActiveTab('studies')}
-        >
-          Field Studies ({rotationGuides.length})
-        </button>
-      </div>
-
-      {activeTab === 'recommendations' && (
-        <section id="panel-recommendations" role="tabpanel" aria-labelledby="tab-recommendations" className="planner-results">
-          <div className="planner-results-header">
-            <div>
-              <h2 id="planner-results-heading">Recommended Crops</h2>
-              <p className="planner-note" aria-live="polite">
-                {season ? `${location} · Planting ${formatPlantingDate(start)}` : <>Select a <a className="planner-inline-link" href="#planner-location">town or city</a> to see crops for your planting date.</>}
-              </p>
-            </div>
-            {suggestions.length > 0 && <p className="crop-options-artwork-note">{cropArtworkCredit}</p>}
-          </div>
-
-          <div className="planner-sub-filter-bar" role="group" aria-label="Recommendation filters">
-            <button
-              type="button"
-              className="planner-filter-pill"
-              data-active={recFilter === 'suitable'}
-              onClick={() => setRecFilter('suitable')}
-            >
-              Best fit ({suggestions.length})
-            </button>
-            {otherOptions.length > 0 && (
-              <button
-                type="button"
-                className="planner-filter-pill"
-                data-active={recFilter === 'other'}
-                onClick={() => setRecFilter('other')}
-              >
-                Other options ({otherOptions.length})
-              </button>
-            )}
-            {unsuitable.length > 0 && (
-              <button
-                type="button"
-                className="planner-filter-pill"
-                data-active={recFilter === 'unsuitable'}
-                onClick={() => setRecFilter('unsuitable')}
-              >
-                Ruled out ({unsuitable.length})
-              </button>
-            )}
-          </div>
-
-          {recFilter === 'suitable' && (
-            <>
-              {season && !suggestions.length && (
-                <p className="planner-note" role="status">No crops fit this date and the field answers provided. Check "Other options" or adjust your field setup.</p>
-              )}
-              <div className="rotation-results">
-                {suggestions.map((rotation) => (
-                  <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />
-                ))}
-              </div>
-            </>
-          )}
-
-          {recFilter === 'other' && (
-            <div className="rotation-results">
-              {otherOptions.map((rotation) => (
-                <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />
-              ))}
-            </div>
-          )}
-
-          {recFilter === 'unsuitable' && (
-            <div className="rotation-exclusions-panel">
-              <p className="rotation-exclusions-intro">
-                These crops do not fit the chosen planting date ({formatPlantingDate(start)}) or your reported field conditions:
-              </p>
-              <ul className="rotation-exclusions">
-                {unsuitable.map(({ first, findings }) => (
-                  <li key={first.crop.name}>
-                    <div className="exclusion-crop-heading">
-                      <CropArt crop={first.crop} />
-                      <strong>{farmerCropName(first.crop)}</strong>
-                    </div>
-                    <div className="exclusion-reasons">
-                      {findings.filter(({ status }) => status === 'unsuitable').map(({ message }) => (
-                        <span key={message}>{message}</span>
-                      ))}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {season && (
-            <details className="planner-details planner-timing-adjustment" name="planner-reference">
-              <summary>Adjust time between crops</summary>
+            <details className="planner-details planner-conditions-toggle">
+              <summary>
+                <span>Custom field conditions</span>
+                <span className="summary-status-hint">
+                  {previousCrop ? farmerCropName(previousCrop) : previous === 'fallow' ? 'Fallow' : 'Unspecified'} · {water ? fieldWaterLabels[water] : 'Water unknown'} · {drainage ? fieldDrainageLabels[drainage] : 'Drainage unknown'}
+                </span>
+              </summary>
               <div className="planner-detail-content">
-                <label className="picking-input" htmlFor="picking-days">Days to keep picking after the first harvest
-                  <input id="picking-days" type="number" min="0" max="365" step="1" value={pickingDays}
-                    onChange={(event) => setPickingDays(event.target.value)} onBlur={() => setPickingDays(String(extraDays))} />
-                </label>
-                <p>Repeat-pick crops get this many extra days. The Planner also allows {turnaroundDays} days to clear and prepare the field before a follow-up crop or the next rice planting.</p>
+                <div className="field-inputs">
+                  <div><label htmlFor="previous-crop">Previous crop</label>
+                    <select id="previous-crop" value={previous} onChange={(event) => {
+                      setSelectedPreset('');
+                      setPrevious(event.target.value);
+                      setPreviousHarvest('');
+                      setMoisture('');
+                      setNextRicePlanting('');
+                    }}>
+                      <option value="">I’m not sure</option><option value="fallow">Nothing was planted</option>
+                      {availableCrops.map((crop) => <option key={crop.name} value={crop.name}>{farmerCropName(crop)}</option>)}
+                    </select>
+                  </div>
+                  {previousCrop && <div><label htmlFor="previous-harvest">Previous harvest date</label>
+                    <input id="previous-harvest" type="date" min="1900-01-01" max="9990-12-31" value={previousHarvest}
+                      onChange={({ target: { value } }) => { setSelectedPreset(''); if (!value || planningDate(value)) setPreviousHarvest(value); }} />
+                  </div>}
+                  <div><label htmlFor="water-source">Water source</label>
+                    <select id="water-source" value={water} onChange={(event) => { setSelectedPreset(''); setWater(event.target.value as Water); }}>
+                      <option value="">I’m not sure</option><option value="rainfed">Rain only</option>
+                      <option value="irrigated">I can water the field</option><option value="paddy">Irrigated rice paddy</option>
+                    </select>
+                  </div>
+                  <div><label htmlFor="field-drainage">Drainage after rain</label>
+                    <select id="field-drainage" value={drainage} onChange={(event) => { setSelectedPreset(''); setDrainage(event.target.value as Drainage); }}>
+                      <option value="">I’m not sure</option><option value="well">It drains quickly</option>
+                      <option value="slow">It takes a while to drain</option><option value="waterlogged">Water often stays</option>
+                    </select>
+                  </div>
+                  {afterRice && <>
+                    <div><label htmlFor="establishment-moisture">Is the soil moist, or can you water the monggo?</label>
+                      <select id="establishment-moisture" value={moisture} onChange={(event) => { setSelectedPreset(''); setMoisture(event.target.value as EstablishmentMoisture); }}>
+                        <option value="">I’m not sure</option><option value="adequate">The soil is moist or I have water</option>
+                        <option value="dry">The soil is dry and I have no water</option>
+                      </select>
+                    </div>
+                    <div><label htmlFor="next-rice-planting">When will you plant palay again?</label>
+                      <input id="next-rice-planting" type="date" min="1900-01-01" max="9990-12-31" value={nextRicePlanting}
+                        onChange={({ target: { value } }) => { setSelectedPreset(''); if (!value || planningDate(value)) setNextRicePlanting(value); }} />
+                    </div>
+                  </>}
+                </div>
+                <div className="planner-field-actions">
+                  <button className="quiet-button icon-text-button" type="button" onClick={resetFieldConditions}
+                    disabled={!previous && !water && !drainage && !typeOverride}>
+                    <MapControlIcon name="reset" />Reset field conditions
+                  </button>
+                </div>
               </div>
             </details>
-          )}
-        </section>
-      )}
-
-      {activeTab === 'soil' && (
-        <section id="panel-soil" role="tabpanel" aria-labelledby="tab-soil" className="planner-tab-panel">
-          <SoilLayers
-            month={month}
-            season={season}
-            coordinates={coordinates}
-            rainfallReference={reference?.name ?? ''}
-            localRainfall={localRainfall}
-            drainage={drainage}
-            moisture={soilMoisture}
-            onSelectMonth={(index) => {
-              const next = nextPlantingMonth(start, index);
-              if (planningDate(next)) setDate(next);
-            }}
-          />
-        </section>
-      )}
-
-      {activeTab === 'library' && (
-        <section id="panel-library" role="tabpanel" aria-labelledby="tab-library" className="planner-tab-panel">
-          <div className="resource-library">
-            <div ref={resourceLibrary} className="resource-card-content">
-              <div className="resource-heading">
-                <h3 id="crop-library-heading">Crop Library</h3>
-                <span role="status">{query ? `${visibleCrops.length} of ${crops.length} crops` : `${crops.length} crops`}</span>
+            {season && <details className="planner-details planner-calendar">
+              <summary>Planting calendar settings</summary>
+              <div className="planner-detail-content">
+                <label htmlFor="planner-climate-type">Local climate type</label>
+                <select id="planner-climate-type" value={chosenType} aria-describedby="planner-climate-hint" onChange={(event) => {
+                  if (locationId) setTypeOverride({ location: locationId, type: event.target.value as ClimateType | '' });
+                }}>
+                  <option value="">{availableTypes.length ? `Auto · ${climateTypeLabel}` : 'Auto · Climate type unavailable'}</option>
+                  {(['I', 'II', 'III', 'IV'] as const).map((type) => <option key={type} value={type}>Type {type}</option>)}
+                </select>
+                <span id="planner-climate-hint" className="planner-input-hint">{chosenType ? 'Manual selection' : climateTypeDetail}</span>
               </div>
-              <p className="crop-options-artwork-note">{cropArtworkCredit}</p>
-              <label className="crop-search" htmlFor="crop-search">Search by crop name
-                <input id="crop-search" type="search" placeholder="Try monggo or mungbean" value={search} onChange={(event) => setSearch(event.target.value)} />
-              </label>
-              <div id="crop-library-list" className="crop-library crop-library-grid">
-                {(showAllCrops ? visibleCrops : visibleCrops.slice(0, 8)).map((crop) => (
-                  <CropProfile key={crop.name} crop={crop} types={climateTypes} start={start} />
-                ))}
+            </details>}
+          </section>
+        </aside>
+
+        <main className="planner-main-content">
+          <div className="planner-tab-bar" role="tablist" aria-label="Crop planner sections">
+            <button
+              type="button"
+              role="tab"
+              id="tab-recommendations"
+              aria-selected={activeTab === 'recommendations'}
+              aria-controls="panel-recommendations"
+              className="planner-tab-btn"
+              data-active={activeTab === 'recommendations'}
+              onClick={() => setActiveTab('recommendations')}
+            >
+              Crop Recommendations ({suggestions.length})
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="tab-soil"
+              aria-selected={activeTab === 'soil'}
+              aria-controls="panel-soil"
+              className="planner-tab-btn"
+              data-active={activeTab === 'soil'}
+              onClick={() => setActiveTab('soil')}
+            >
+              Rain & Soil Analysis
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="tab-library"
+              aria-selected={activeTab === 'library'}
+              aria-controls="panel-library"
+              className="planner-tab-btn"
+              data-active={activeTab === 'library'}
+              onClick={() => setActiveTab('library')}
+            >
+              Crop Library ({crops.length})
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="tab-studies"
+              aria-selected={activeTab === 'studies'}
+              aria-controls="panel-studies"
+              className="planner-tab-btn"
+              data-active={activeTab === 'studies'}
+              onClick={() => setActiveTab('studies')}
+            >
+              Field Studies ({rotationGuides.length})
+            </button>
+          </div>
+
+          {activeTab === 'recommendations' && (
+            <section id="panel-recommendations" role="tabpanel" aria-labelledby="tab-recommendations" className="planner-results">
+              <div className="planner-results-header">
+                <div>
+                  <h2 id="planner-results-heading">Recommended Crops</h2>
+                  <p className="planner-note" aria-live="polite">
+                    {season ? `${location} · Planting ${formatPlantingDate(start)}` : <>Select a <a className="planner-inline-link" href="#planner-location">town or city</a> to see crops for your planting date.</>}
+                  </p>
+                </div>
+                {suggestions.length > 0 && <p className="crop-options-artwork-note">{cropArtworkCredit}</p>}
               </div>
-              {!visibleCrops.length && <p className="crop-library-empty" role="status">No crops match your search.</p>}
-              {!query && (
-                <button ref={browseCrops} className="quiet-button crop-library-toggle" type="button" aria-expanded={libraryExpanded}
-                  aria-controls="crop-library-list" onClick={() => {
-                    if (libraryExpanded) document.getElementById('crop-search')?.focus();
-                    setLibraryExpanded(!libraryExpanded);
-                  }}>
-                  {libraryExpanded ? 'Show fewer crops' : `Browse all ${crops.length} crops`}
+
+              <div className="planner-sub-filter-bar" role="group" aria-label="Recommendation filters">
+                <button
+                  type="button"
+                  className="planner-filter-pill"
+                  data-active={recFilter === 'suitable'}
+                  onClick={() => setRecFilter('suitable')}
+                >
+                  Best fit ({suggestions.length})
                 </button>
+                {otherOptions.length > 0 && (
+                  <button
+                    type="button"
+                    className="planner-filter-pill"
+                    data-active={recFilter === 'other'}
+                    onClick={() => setRecFilter('other')}
+                  >
+                    Other options ({otherOptions.length})
+                  </button>
+                )}
+                {unsuitable.length > 0 && (
+                  <button
+                    type="button"
+                    className="planner-filter-pill"
+                    data-active={recFilter === 'unsuitable'}
+                    onClick={() => setRecFilter('unsuitable')}
+                  >
+                    Ruled out ({unsuitable.length})
+                  </button>
+                )}
+              </div>
+
+              {recFilter === 'suitable' && (
+                <>
+                  {season && !suggestions.length && (
+                    <p className="planner-note" role="status">No crops fit this date and the field answers provided. Check "Other options" or adjust your field setup.</p>
+                  )}
+                  <div className="rotation-results">
+                    {suggestions.map((rotation) => (
+                      <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />
+                    ))}
+                  </div>
+                </>
               )}
-            </div>
-          </div>
-        </section>
-      )}
 
-      {activeTab === 'studies' && (
-        <section id="panel-studies" role="tabpanel" aria-labelledby="tab-studies" className="planner-tab-panel">
-          <div className="resource-guides">
-            <div ref={resourceGuides} className="resource-card-content">
-              <div className="resource-heading">
-                <h3 id="rotation-guides-heading">Rotations Studied in Bicol</h3>
-              </div>
-              <div className="field-study-list field-study-grid">
-                {rotationGuides.map(({ id, crops: sequence, location, detail, fieldCheck, sources }) => (
-                  <article className="field-study" key={id}>
-                    <h4>{location}</h4>
-                    <ol className="study-sequence" aria-label="Crop order" role="list">
-                      {sequence.map((name, index) => {
-                        const crop = availableCrops.find((entry) => shortName(entry) === name);
-                        return <li key={index}>
-                          {index > 0 && <span className="study-arrow" aria-hidden="true">→</span>}
-                          {crop && <CropArt crop={crop} />}
-                          <span>{crop ? farmerCropName(crop) : name}</span>
-                        </li>;
-                      })}
-                    </ol>
-                    <p className="study-field-check">{fieldCheck}</p>
-                    <details className="study-details">
-                      <summary>Study notes and sources</summary>
-                      <p>{detail}</p>
-                      <p className="guide-sources">{sources.map(({ label, url }) => <a href={url} key={url} target="_blank" rel="noreferrer">{label}</a>)}</p>
-                    </details>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </div>
+              {recFilter === 'other' && (
+                <div className="rotation-results">
+                  {otherOptions.map((rotation) => (
+                    <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />
+                  ))}
+                </div>
+              )}
 
-          <details className="planner-details resource-vegetation" onToggle={(event) => setVegetationOpen(event.currentTarget.open)}>
-            <summary>Satellite vegetation timeline (NASA HLS)</summary>
-            {!pin && <div className="planner-detail-content"><p>Choose a field pin in <a className="planner-inline-link" href={mapPath} data-app-link>Field Map</a> to see NASA satellite observations for that spot.</p></div>}
-            {pin && vegetationOpen && (
-              <Suspense fallback={<p className="planner-detail-content" role="status">Loading NASA HLS timeline…</p>}>
-                <VegetationTimeline key={locationId} longitude={pin[0]} latitude={pin[1]} />
-              </Suspense>
-            )}
-          </details>
-        </section>
-      )}
+              {recFilter === 'unsuitable' && (
+                <div className="rotation-exclusions-panel">
+                  <p className="rotation-exclusions-intro">
+                    These crops do not fit the chosen planting date ({formatPlantingDate(start)}) or your reported field conditions:
+                  </p>
+                  <ul className="rotation-exclusions">
+                    {unsuitable.map(({ first, findings }) => (
+                      <li key={first.crop.name}>
+                        <div className="exclusion-crop-heading">
+                          <CropArt crop={first.crop} />
+                          <strong>{farmerCropName(first.crop)}</strong>
+                        </div>
+                        <div className="exclusion-reasons">
+                          {findings.filter(({ status }) => status === 'unsuitable').map(({ message }) => (
+                            <span key={message}>{message}</span>
+                          ))}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {season && (
+                <details className="planner-details planner-timing-adjustment" name="planner-reference">
+                  <summary>Adjust time between crops</summary>
+                  <div className="planner-detail-content">
+                    <label className="picking-input" htmlFor="picking-days">Days to keep picking after the first harvest
+                      <input id="picking-days" type="number" min="0" max="365" step="1" value={pickingDays}
+                        onChange={(event) => setPickingDays(event.target.value)} onBlur={() => setPickingDays(String(extraDays))} />
+                    </label>
+                    <p>Repeat-pick crops get this many extra days. The Planner also allows {turnaroundDays} days to clear and prepare the field before a follow-up crop or the next rice planting.</p>
+                  </div>
+                </details>
+              )}
+            </section>
+          )}
+
+          {activeTab === 'soil' && (
+            <section id="panel-soil" role="tabpanel" aria-labelledby="tab-soil" className="planner-tab-panel">
+              <SoilLayers
+                month={month}
+                season={season}
+                coordinates={coordinates}
+                rainfallReference={reference?.name ?? ''}
+                localRainfall={localRainfall}
+                drainage={drainage}
+                moisture={soilMoisture}
+                onSelectMonth={(index) => {
+                  const next = nextPlantingMonth(start, index);
+                  if (planningDate(next)) setDate(next);
+                }}
+              />
+            </section>
+          )}
+
+          {activeTab === 'library' && (
+            <section id="panel-library" role="tabpanel" aria-labelledby="tab-library" className="planner-tab-panel">
+              <div className="resource-library">
+                <div ref={resourceLibrary} className="resource-card-content">
+                  <div className="resource-heading">
+                    <h3 id="crop-library-heading">Crop Library</h3>
+                    <span role="status">{query ? `${visibleCrops.length} of ${crops.length} crops` : `${crops.length} crops`}</span>
+                  </div>
+                  <p className="crop-options-artwork-note">{cropArtworkCredit}</p>
+                  <label className="crop-search" htmlFor="crop-search">Search by crop name
+                    <input id="crop-search" type="search" placeholder="Try monggo or mungbean" value={search} onChange={(event) => setSearch(event.target.value)} />
+                  </label>
+                  <div id="crop-library-list" className="crop-library crop-library-grid">
+                    {(showAllCrops ? visibleCrops : visibleCrops.slice(0, 8)).map((crop) => (
+                      <CropProfile key={crop.name} crop={crop} types={climateTypes} start={start} />
+                    ))}
+                  </div>
+                  {!visibleCrops.length && <p className="crop-library-empty" role="status">No crops match your search.</p>}
+                  {!query && (
+                    <button ref={browseCrops} className="quiet-button crop-library-toggle" type="button" aria-expanded={libraryExpanded}
+                      aria-controls="crop-library-list" onClick={() => {
+                        if (libraryExpanded) document.getElementById('crop-search')?.focus();
+                        setLibraryExpanded(!libraryExpanded);
+                      }}>
+                      {libraryExpanded ? 'Show fewer crops' : `Browse all ${crops.length} crops`}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeTab === 'studies' && (
+            <section id="panel-studies" role="tabpanel" aria-labelledby="tab-studies" className="planner-tab-panel">
+              <div className="resource-guides">
+                <div ref={resourceGuides} className="resource-card-content">
+                  <div className="resource-heading">
+                    <h3 id="rotation-guides-heading">Rotations Studied in Bicol</h3>
+                  </div>
+                  <div className="field-study-list field-study-grid">
+                    {rotationGuides.map(({ id, crops: sequence, location, detail, fieldCheck, sources }) => (
+                      <article className="field-study" key={id}>
+                        <h4>{location}</h4>
+                        <ol className="study-sequence" aria-label="Crop order" role="list">
+                          {sequence.map((name, index) => {
+                            const crop = availableCrops.find((entry) => shortName(entry) === name);
+                            return <li key={index}>
+                              {index > 0 && <span className="study-arrow" aria-hidden="true">→</span>}
+                              {crop && <CropArt crop={crop} />}
+                              <span>{crop ? farmerCropName(crop) : name}</span>
+                            </li>;
+                          })}
+                        </ol>
+                        <p className="study-field-check">{fieldCheck}</p>
+                        <details className="study-details">
+                          <summary>Study notes and sources</summary>
+                          <p>{detail}</p>
+                          <p className="guide-sources">{sources.map(({ label, url }) => <a href={url} key={url} target="_blank" rel="noreferrer">{label}</a>)}</p>
+                        </details>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <details className="planner-details resource-vegetation" onToggle={(event) => setVegetationOpen(event.currentTarget.open)}>
+                <summary>Satellite vegetation timeline (NASA HLS)</summary>
+                {!pin && <div className="planner-detail-content"><p>Choose a field pin in <a className="planner-inline-link" href={mapPath} data-app-link>Field Map</a> to see NASA satellite observations for that spot.</p></div>}
+                {pin && vegetationOpen && (
+                  <Suspense fallback={<p className="planner-detail-content" role="status">Loading NASA HLS timeline…</p>}>
+                    <VegetationTimeline key={locationId} longitude={pin[0]} latitude={pin[1]} />
+                  </Suspense>
+                )}
+              </details>
+            </section>
+          )}
+        </main>
+      </div>
 
       <footer className="data-footer planner-footer">
         <p>Planning pilot v{rotationRulesVersion}. Auto reads the selected location from the PAGASA climate map. Near a boundary, an option that depends on one climate type is shown as conditional. Confirm the plan and variety with your municipal agriculture office before planting.</p>

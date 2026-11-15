@@ -134,6 +134,56 @@
   font-size: 13px;
   font-weight: 400;
 }
+.planner-workspace-split {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: clamp(16px, 2.5vw, 28px);
+  align-items: start;
+  margin-top: 14px;
+}
+.planner-sidebar {
+  position: sticky;
+  top: calc(var(--anchor-offset) + 12px);
+  min-width: 0;
+}
+.planner-sidebar .planner-form {
+  padding: 16px;
+}
+.planner-sidebar .planner-inputs {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.planner-sidebar .planner-preset-pills {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+}
+.planner-sidebar .preset-pill {
+  width: 100%;
+  padding-inline: 6px;
+  text-align: center;
+  font-size: 12px;
+}
+.planner-sidebar .planner-field-details .field-inputs,
+.planner-sidebar .planner-detail-content .field-inputs {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.planner-main-content {
+  min-width: 0;
+}
+.planner-main-content .planner-tab-bar {
+  margin-top: 0;
+}
+@media (max-width: 880px) {
+  .planner-workspace-split {
+    grid-template-columns: 1fr;
+  }
+  .planner-sidebar {
+    position: static;
+  }
+}
 .planner-tab-bar {
   display: flex;
   flex-wrap: wrap;
