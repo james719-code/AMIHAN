@@ -1,8 +1,9 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type MouseEvent } from 'react';
 import { TownSelect } from './components/TownSelect';
 import { WorkspaceMenu, type WorkspaceView } from './components/WorkspaceMenu';
-import type { FieldPoint, FieldSelection } from './components/field-terrain';
+import type { FieldSelection } from './components/field-terrain';
 import { fieldCoordinates } from './data/field-location';
+import { loadPlots, newPlot, savePlots, type FieldPlot } from './data/field-plots';
 import { climateSiteFor } from './data/historical-climate';
 import { farmingPlaces, places, type MapPlace } from './data/places';
 import { mapPath, overviewPath, plannerPath } from './workspace-routes';
@@ -29,7 +30,7 @@ function getRoute(url: URL) {
   const panel = url.searchParams.get('panel');
   const place = url.searchParams.get('place');
   const path = url.pathname.replace(/\/index\.html$/, '/').replace(/\/$/, '');
-  const plannerAnchors = /^#(?:field-setup|crop-options|soil-conditions|crop-resources|planner-location|previous-crop|previous-harvest|water-source|field-drainage|establishment-moisture|next-rice-planting|planting-date)$/;
+  const plannerAnchors = /^#(?:field-setup|crop-options|soil-conditions|watering|crop-resources|planner-location|previous-crop|previous-harvest|water-source|field-drainage|establishment-moisture|next-rice-planting|planting-date)$/;
   const legacyPlanner = (Boolean(place) && url.hash !== '#sources') || plannerAnchors.test(url.hash);
   const view: WorkspaceView = path === `${home}overview`
     ? 'overview'
@@ -43,28 +44,73 @@ function getRoute(url: URL) {
 function App() {
   const [route, setRoute] = useState(() => getRoute(new URL(window.location.href)));
   const [plannerOpened, setPlannerOpened] = useState(route.view === 'planner');
-  const [townId, setTownId] = useState(() => farmingPlaces.find(({ id }) => id === route.placeId)?.id ?? '');
+  const [fieldPlots, setFieldPlots] = useState(() => loadPlots(route.view === 'planner'
+    ? farmingPlaces.find(({ id }) => id === route.placeId)?.id ?? '' : ''));
+  const [plotsSaved, setPlotsSaved] = useState(true);
   const [overviewTownId, setOverviewTownId] = useState<string>();
   const [readingTownId, setReadingTownId] = useState<string | undefined>(() => route.view === 'readings'
     ? farmingPlaces.find(({ id }) => id === route.placeId)?.id
     : undefined);
   const [mapPlaceId, setMapPlaceId] = useState('');
   const [fieldSelection, setFieldSelection] = useState<FieldSelection>(emptyField);
-  const [appliedField, setAppliedField] = useState<FieldPoint | null>(null);
+  const plot = fieldPlots.plots.find(({ id }) => id === fieldPlots.activeId) ?? fieldPlots.plots[0];
+  const townId = plot.townId;
   const town = farmingPlaces.find(({ id }) => id === townId);
   const readingTown = farmingPlaces.find(({ id }) => id === (readingTownId ?? townId));
   const { view } = route;
   const pageTitle = view === 'readings' ? 'Climate archive' : workspaceLinks.find((link) => link.view === view)?.label;
 
-  const selectTown = (id: string) => {
-    setTownId(id);
+  function updatePlot(changes: Partial<Omit<FieldPlot, 'id'>>) {
+    setFieldPlots((current) => ({
+      ...current, plots: current.plots.map((plot) => plot.id === current.activeId ? { ...plot, ...changes } : plot)
+    }));
+  }
+
+  function clearPlannerPlace() {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('place') && getRoute(url).view === 'planner') {
+      url.searchParams.set('panel', 'planner');
+      url.searchParams.delete('place');
+      window.history.replaceState(null, '', url);
+    }
+  }
+
+  function selectTown(id: string) {
+    updatePlot({ townId: id, pin: null, wateringSoil: '' });
     setReadingTownId(undefined);
-    setAppliedField(null);
-  };
+  }
+
+  function selectPlot(id: number) {
+    clearPlannerPlace();
+    setReadingTownId(undefined);
+    setFieldPlots((current) => current.plots.some((plot) => plot.id === id) ? { ...current, activeId: id } : current);
+  }
+
+  function addPlot() {
+    clearPlannerPlace();
+    setReadingTownId(undefined);
+    setFieldPlots((current) => {
+      const id = Math.max(...current.plots.map((plot) => plot.id)) + 1;
+      const active = current.plots.find((plot) => plot.id === current.activeId);
+      return { activeId: id, plots: [...current.plots, newPlot(id, active?.townId)] };
+    });
+  }
+
+  function removePlot() {
+    clearPlannerPlace();
+    setReadingTownId(undefined);
+    setFieldPlots((current) => {
+      if (current.plots.length === 1) return current;
+      const index = current.plots.findIndex((plot) => plot.id === current.activeId);
+      const plots = current.plots.filter((plot) => plot.id !== current.activeId);
+      return { plots, activeId: plots[Math.min(index, plots.length - 1)].id };
+    });
+  }
+
+  useEffect(() => { setPlotsSaved(savePlots(fieldPlots)); }, [fieldPlots]);
 
   const updateFieldSelection = useCallback((selection: FieldSelection) => {
     setFieldSelection(selection);
-    if (!selection.start) setAppliedField(null);
   }, []);
 
   const changeRoute = (url: URL) => {
@@ -134,8 +180,10 @@ function App() {
       <main id="main-content" className={`app-main ${view}-page`} tabIndex={-1} aria-label={pageTitle}>
         {plannerOpened && <div className="planner-width planner-content" hidden={view !== 'planner'}>
           <Suspense fallback={<p role="status">Loading crop planner…</p>}>
-            <RotationPlanner town={town} fieldPin={appliedField ? fieldCoordinates(appliedField) : null}
-              onSelectTown={selectTown} onUseTown={() => setAppliedField(null)} />
+            <RotationPlanner town={town} plot={plot} plots={fieldPlots.plots} plotsSaved={plotsSaved}
+              onUpdatePlot={updatePlot} onSelectPlot={selectPlot} onAddPlot={addPlot} onRemovePlot={removePlot}
+              onSelectTown={(id) => { clearPlannerPlace(); selectTown(id); }}
+              onUseTown={() => updatePlot({ pin: null, wateringSoil: '' })} />
           </Suspense>
         </div>}
 
@@ -161,7 +209,7 @@ function App() {
           <MapWorkspace selectedPlaceId={mapPlaceId || route.placeId || townId} onPlaceSelect={setMapPlaceId} fieldSelection={fieldSelection}
             onFieldSelection={updateFieldSelection} onUseField={() => {
               if (!fieldSelection.start) return;
-              setAppliedField(fieldSelection.start);
+              updatePlot({ pin: fieldCoordinates(fieldSelection.start), wateringSoil: '' });
               navigate(plannerPath);
             }} onPlanner={openPlanner} />
         </Suspense>}

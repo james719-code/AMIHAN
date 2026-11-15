@@ -10,6 +10,7 @@ type Guide = {
   rainSource: string;
   rainDays?: { wetDays: number; totalDays: number; thresholdMm: number };
   moisture?: { value: number; year: number };
+  watering?: { heading: string; action: string; detail: string; cropNote?: string; source: string };
   rotations: { rotation: Rotation; status: string }[];
   excluded: Rotation[];
 };
@@ -186,6 +187,16 @@ function drawGuide(ctx: CanvasRenderingContext2D, guide: Guide, art: Map<string,
       const labelBottom = text(label, x, y, 14, 650, colors.muted, fieldWidth);
       return text(value, x, labelBottom, 17, 700, colors.ink, fieldWidth);
     })) + 7;
+  }
+
+  if (guide.watering) {
+    const { heading, action, detail, cropNote, source } = guide.watering;
+    section('Watering guide');
+    y = text(heading, margin, y, 14, 650, colors.muted) + 5;
+    y = text(action, margin, y, 18, 700, colors.forest) + 3;
+    y = text(detail, margin, y, 16, 500, colors.ink) + 5;
+    if (cropNote) y = text(cropNote, margin, y, 16, 500, colors.ink) + 5;
+    y = text(source, margin, y, 14, 500, colors.muted);
   }
 
   y += 11;

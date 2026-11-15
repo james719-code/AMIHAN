@@ -59,6 +59,20 @@
 .planner-form :is(input, select), .readings-location select { min-height: 44px; }
 .planner-form .planner-inputs { margin: 0; }
 .planner-form .field-inputs > div { grid-template-rows: auto min-content; align-content: end; }
+.planner-form .planner-plot-controls { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; margin-bottom: 0; }
+.planner-form .planner-plot-actions { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; }
+.planner-plot-actions button { min-height: 44px; }
+.planner-plot-note { margin: 8px 0 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.planner-watering { margin-top: clamp(22px, 3vw, 36px); }
+.planner-watering .field-inputs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.planner-watering .planner-plot-note:last-child { margin-bottom: 0; }
+.planner-watering-advice { padding: 12px 14px; border-left: 3px solid var(--coastal-blue); border-radius: 7px; background: var(--soft); }
+.planner-watering-advice h3 { color: var(--forest); font-size: 17px; font-weight: 750; }
+.planner-watering-advice p { margin-top: 4px; font-size: 14px; line-height: 1.5; }
+@media (max-width: 760px) {
+  .planner-form .planner-plot-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .planner-form .planner-plot-actions { grid-column: 1 / -1; }
+}
 .planner-form .planner-field-details { min-width: 0; margin: 18px 0 0; padding: 0; }
 .planner-field-details legend { width: 100%; padding-top: 14px; border-top: 1px solid var(--line); color: var(--forest); font-size: 15px; font-weight: 750; }
 .planner-field-details .field-inputs { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; }
