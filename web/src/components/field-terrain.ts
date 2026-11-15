@@ -51,6 +51,7 @@ export function createFieldSampler(index: MeshBVH) {
   }
 
   return {
+    sample,
     pick(screen: Vector3, direction: Vector3, relief: number) {
       const origin = screen.clone().addScaledVector(direction, -1200);
       ray.origin.set(origin.x * 1000, origin.y * 1000 / relief, origin.z * 1000);
