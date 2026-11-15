@@ -1,38 +1,40 @@
 import { useEffect } from 'react';
+import { CropArt } from './CropArt';
 import { RainfallSummary, pagasaOutlook } from './RainfallSummary';
 import { TownSelect } from './TownSelect';
+import { cropArtworkCredit } from '../data/crop-artwork';
+import { crops } from '../data/crops';
 import { labelMonth } from '../data/historical-climate';
-import { sourceGroups } from '../data/landing-sources';
+import { nasaDatasets, sourceGroups, sourceLogos } from '../data/landing-sources';
 import { farmingPlaces } from '../data/places';
 import { plantingMonth, todayInBicol } from '../data/planting-plan';
 import { provinces } from '../data/sites';
-import { imergRainDaysAt } from '../data/imerg-seasonal';
+import { describeRainDays, imergRainDaysAt } from '../data/imerg-seasonal';
+import geography from '../data/bicol-map.json';
 import { mapPath, overviewPath, plannerPath, readingsPath } from '../workspace-routes';
 
 const wordmark = `${overviewPath}amihan-full-light.svg`;
 const assets = `${overviewPath}landing/`;
 const heroCredit = 'https://commons.wikimedia.org/wiki/File:Farmers_of_Mt._Mayon.jpg';
+const rice = crops.find(({ name }) => name === 'Rice (Palay)');
+const mungbean = crops.find(({ name }) => name === 'Mungbean (Monggo)');
 
 const coverage = [
   {
-    value: '6',
-    label: 'Bicol provinces',
+    label: 'Across Bicol',
     detail: 'Albay, Cam Norte, Cam Sur, Catanduanes, Masbate, Sorsogon'
   },
   {
-    value: '114',
-    label: 'Cities & municipalities',
-    detail: 'Grid-level NASA IMERG rainfall & Mapzen elevation'
+    label: 'Town-level conditions',
+    detail: 'Rainfall and elevation estimates for cities and towns'
   },
   {
-    value: '48',
-    label: 'Crops in the library',
-    detail: 'Calibrated with DA Region V & PhilRice crop calendars'
+    label: 'Crop calendars',
+    detail: 'Local planting and harvest windows from DA Region V and PhilRice'
   },
   {
-    value: '10 yrs',
-    label: 'Climate baseline',
-    detail: '2015–2024 NASA POWER, IMERG & SMAP observations'
+    label: 'Past seasons',
+    detail: 'Weather and soil moisture records for comparing growing seasons'
   }
 ];
 
@@ -51,19 +53,12 @@ const decisions = [
   ['Is my field ready?', 'Review slope, elevation, drainage, and seasonal moisture before sowing.']
 ];
 
-const percent = new Intl.NumberFormat('en-PH', { style: 'percent', maximumFractionDigits: 1 });
-const millimeters = new Intl.NumberFormat('en-PH', { maximumFractionDigits: 0 });
-
 export function LandingPage({ hash, townId, onSelectTown }: { hash: string; townId: string; onSelectTown: (id: string) => void }) {
   const town = farmingPlaces.find(({ id }) => id === townId);
   const month = plantingMonth(todayInBicol());
+  const monthName = labelMonth(month);
   const rainHistory = town ? imergRainDaysAt(town.coordinates, month) : undefined;
-  const rainFrequency = rainHistory ? rainHistory.wetDays / rainHistory.totalDays : undefined;
-  const rainNote = rainFrequency !== undefined
-    ? rainFrequency >= .65 ? 'Rain is common in a typical month. Check drainage before sowing.'
-      : rainFrequency < .35 ? 'Rain is less common in a typical month. Check that crops can establish with available water.'
-      : 'Rainfall is mixed in a typical month. Check the local outlook before sowing.'
-    : 'Choose a town to see its seasonal rainfall context.';
+  const rainDescription = rainHistory?.totalDays ? describeRainDays(rainHistory.wetDays / rainHistory.totalDays) : null;
 
   useEffect(() => {
     if (hash === '#sources' || hash === '#seasonal-rainfall') document.getElementById(hash.slice(1))?.scrollIntoView();
@@ -94,19 +89,17 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
         <section className="coverage-band" aria-label="Regional data coverage">
           <div className="landing-width">
             <div className="coverage-header">
-              <span className="coverage-kicker">Regional Evidence Base</span>
+              <span className="coverage-kicker">About the data</span>
+              <a href="#sources">View data sources</a>
             </div>
-            <dl className="coverage-list">
-              {coverage.map(({ value, label, detail }) => (
-                <div key={label}>
-                  <dt>
-                    <span className="coverage-label">{label}</span>
-                    <span className="coverage-detail">{detail}</span>
-                  </dt>
-                  <dd>{value}</dd>
-                </div>
+            <ul className="coverage-list" role="list">
+              {coverage.map(({ label, detail }) => (
+                <li key={label}>
+                  <strong className="coverage-label">{label}</strong>
+                  <span className="coverage-detail">{detail}</span>
+                </li>
               ))}
-            </dl>
+            </ul>
           </div>
         </section>
 
@@ -121,12 +114,13 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
               <label htmlFor="now-town">Town or city</label>
               <TownSelect id="now-town" value={townId} onChange={onSelectTown} />
             </div>
-            <div className="now-stats" aria-live="polite">
-              <div><span>Month</span><strong>{labelMonth(month)}</strong></div>
-              <div><span>Typical rain days</span><strong>{rainFrequency !== undefined ? percent.format(rainFrequency) : '—'}</strong></div>
-              <div><span>Typical rainfall</span><strong>{rainHistory?.averageMm !== null && rainHistory?.averageMm !== undefined ? `${millimeters.format(rainHistory.averageMm)} mm` : '—'}</strong></div>
+            <div className="now-rain" aria-live="polite">
+              {rainDescription ? <>
+                <span>Typical {monthName} rainfall</span>
+                <strong>{rainDescription}</strong>
+                <a className="landing-text-link" href="#seasonal-rainfall">See the rainfall pattern</a>
+              </> : <p>{town ? `Past rainfall records are unavailable for ${monthName}.` : 'Choose your town to see how often it usually rains this month.'}</p>}
             </div>
-            <p className="now-note">{rainNote}</p>
           </div>
         </section>
 
@@ -138,33 +132,30 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
               <ol className="workflow-flow-steps">
                 <li className="flow-step">
                   <div className="flow-step-header">
-                    <span className="flow-step-number">1</span>
-                    <span className="flow-step-kicker">Baseline</span>
+                    <span className="flow-step-kicker">Rainfall</span>
                   </div>
                   <strong>Choose your town</strong>
-                  <p>Check PAGASA climate type &amp; NASA IMERG seasonal rainfall pattern.</p>
+                  <p>See how often it usually rains in your town.</p>
                 </li>
                 <li className="flow-connector" aria-hidden="true">
                   <span className="flow-arrow">→</span>
                 </li>
                 <li className="flow-step">
                   <div className="flow-step-header">
-                    <span className="flow-step-number">2</span>
                     <span className="flow-step-kicker">Terrain &amp; Soil</span>
                   </div>
                   <strong>Check field conditions</strong>
-                  <p>Assess slope percent, elevation, post-harvest drainage, and soil moisture.</p>
+                  <p>Check how steep the field is, how well it drains, and whether the soil is still moist.</p>
                 </li>
                 <li className="flow-connector" aria-hidden="true">
                   <span className="flow-arrow">→</span>
                 </li>
                 <li className="flow-step">
                   <div className="flow-step-header">
-                    <span className="flow-step-number">3</span>
                     <span className="flow-step-kicker">Crop Calendar</span>
                   </div>
-                  <strong>Compare crop windows</strong>
-                  <p>Calculate days to harvest, picking period, and 7-day turnaround prep.</p>
+                  <strong>Compare planting times</strong>
+                  <p>Leave time to finish picking and prepare the field for the next crop.</p>
                 </li>
                 <li className="flow-connector" aria-hidden="true">
                   <span className="flow-arrow">→</span>
@@ -173,11 +164,11 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
                   <div className="flow-step-header">
                     <span className="flow-outcome-badge">Guidance</span>
                   </div>
-                  <strong>Field evaluation</strong>
+                  <strong>See what fits</strong>
                   <div className="outcome-tags">
-                    <span className="outcome-tag tag-suitable">Suitable</span>
-                    <span className="outcome-tag tag-conditional">Conditional</span>
-                    <span className="outcome-tag tag-unsuitable">Unsuitable</span>
+                    <span className="outcome-tag tag-suitable">Fits your plan</span>
+                    <span className="outcome-tag tag-conditional">Check before planting</span>
+                    <span className="outcome-tag tag-unsuitable">Doesn’t fit your plan</span>
                   </div>
                 </li>
               </ol>
@@ -187,35 +178,37 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
 
         <section className="landing-width rainfall-section" id="seasonal-rainfall" aria-labelledby="seasonal-rainfall-title" tabIndex={-1}>
           <div className="rainfall-section-intro">
-            <h2 id="seasonal-rainfall-title">Typical {labelMonth(month)} rainfall</h2>
-            <p>Choose a town or city to see how often it rained in past years during this month.</p>
+            <h2 id="seasonal-rainfall-title">How often does it rain in {monthName}?</h2>
+            <p>Compare past seasons in your town to see when rain is more common.</p>
+            <div className="rainfall-controls">
+              <div className="field-group">
+                <label htmlFor="overview-town">Town or city</label>
+                <TownSelect id="overview-town" value={townId} onChange={onSelectTown} />
+              </div>
+              <div className="town-chips" role="group" aria-label="Quick-select town">
+                <span className="town-chips-label">Quick select</span>
+                {quickTowns.map(({ id, name }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className="town-chip"
+                    aria-pressed={townId === id}
+                    onClick={() => onSelectTown(id)}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </div>
             <a className="landing-text-link" href={pagasaOutlook}>Current PAGASA outlook</a>
           </div>
           <div className="rainfall-card">
-            <div className="field-group">
-              <label htmlFor="overview-town">Town or city</label>
-              <TownSelect id="overview-town" value={townId} onChange={onSelectTown} />
-            </div>
-            <div className="town-chips" role="group" aria-label="Quick-select town">
-              <span className="town-chips-label">Quick select</span>
-              {quickTowns.map(({ id, name }) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={`town-chip${townId === id ? ' active' : ''}`}
-                  aria-pressed={townId === id}
-                  onClick={() => onSelectTown(id)}
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
-            {town && <>
-              <RainfallSummary coordinates={town.coordinates} month={month} place={town} />
+            {town ? <>
+              <RainfallSummary coordinates={town.coordinates} month={month} />
               <a className="landing-text-link" href={`${plannerPath}&place=${encodeURIComponent(town.id)}`} data-app-link>
                 Plan crops in {town.name}
               </a>
-            </>}
+            </> : <p className="rainfall-note">Your town’s rainfall pattern will appear here.</p>}
           </div>
         </section>
 
@@ -245,10 +238,10 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
                       <span>Drain</span>
                     </div>
                     <div className="gantt-segment segment-mungbean" style={{ flex: '32' }}>
-                      <span>Mungbean (65–72d)</span>
+                      <span>Mungbean</span>
                     </div>
                     <div className="gantt-segment segment-prep" style={{ flex: '10' }}>
-                      <span>7d Prep</span>
+                      <span>Prep</span>
                     </div>
                     <div className="gantt-segment segment-next-rice" style={{ flex: '35' }}>
                       <span>Next Rice</span>
@@ -256,30 +249,31 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
                   </div>
                   <ol className="preview-steps" role="list">
                     <li className="preview-step">
-                      <span className="preview-step-num">1</span>
                       <div className="preview-step-info">
                         <span className="preview-step-tag">First crop · Palay</span>
                         <strong>Wet-season Rice</strong>
-                        <span className="preview-step-timing">Harvest &amp; paddy drain</span>
+                        <span className="preview-step-timing">Harvest the rice and let the paddy drain</span>
                       </div>
+                      {rice && <CropArt crop={rice} />}
                     </li>
                     <li className="preview-step">
-                      <span className="preview-step-num">2</span>
                       <div className="preview-step-info">
                         <span className="preview-step-tag">Break crop · Monggo</span>
-                        <strong>Mungbean (65–72 days)</strong>
-                        <span className="preview-step-timing">Sown on residual moisture</span>
+                        <strong>Mungbean</strong>
+                        <span className="preview-step-timing">Plant while the soil is still moist. First picking in about 65–72 days.</span>
                       </div>
+                      {mungbean && <CropArt crop={mungbean} />}
                     </li>
                     <li className="preview-step">
-                      <span className="preview-step-num">3</span>
                       <div className="preview-step-info">
                         <span className="preview-step-tag">Next crop · Palay</span>
                         <strong>Second Rice Crop</strong>
-                        <span className="preview-step-timing">7-day turnaround prep</span>
+                        <span className="preview-step-timing">Allow a week to prepare the field after the last mungbean picking.</span>
                       </div>
+                      {rice && <CropArt crop={rice} />}
                     </li>
                   </ol>
+                  <small className="preview-artwork-note">{cropArtworkCredit}</small>
                 </div>
               </div>
               <div className="tool-card-action">
@@ -294,41 +288,42 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
                 <p>Find your town, check slope and elevation, and bring a field pin into the Crop Planner.</p>
                 <div className="tool-preview-map">
                   <figure className="preview-map-figure">
-                    <img src={`${assets}bicol-terrain.webp`} width={880} height={834} loading="lazy"
-                      alt="Shaded relief map of Bicol Peninsula and islands showing regional elevation and terrain" />
+                    <img src={`${assets}bicol-terrain.png`} width={geography.overviewPreview.width} height={geography.overviewPreview.height} loading="lazy"
+                      alt="Shaded relief map of Bicol with higher terrain around Mount Isarog, Mayon, and Bulusan highlighted in red" />
                     <figcaption>
-                      <span>Mapzen / SRTM terrain</span>
-                      <span>Bicol Region V</span>
+                      <span>Terrain height</span>
+                      <ul className="preview-elevation-legend" aria-label="Elevation bands">
+                        {geography.overviewPreview.bands.map(({ label, color }) => (
+                          <li key={label}><span style={{ backgroundColor: color }} aria-hidden="true" />{label}</li>
+                        ))}
+                      </ul>
+                      <small>Mapzen / SRTM</small>
                     </figcaption>
                   </figure>
                   <dl className="preview-terrain-facts">
                     <div>
                       <dt>Regional elevation</dt>
-                      <dd>0 m <small>(coastal floodplains)</small> to 2,463 m <small>(Mt. Mayon summit)</small></dd>
+                      <dd>From coastal floodplains to the top of Mount Mayon</dd>
                     </div>
                     <div>
                       <dt>Pamplona terrain</dt>
-                      <dd>≈ 7–10 m elevation <small>(floodplain paddies; check drainage)</small></dd>
-                    </div>
-                    <div>
-                      <dt>Slope classifications</dt>
-                      <dd>&lt;3% level <small>(paddies)</small> · 3–&lt;8% gentle · 8–&lt;15% rolling · 15%+ steep</dd>
+                      <dd>Low-lying rice paddies. Check how well the field drains.</dd>
                     </div>
                   </dl>
-                  <div className="slope-spectrum-container" aria-label="Slope band classifications">
-                    <span className="slope-spectrum-title">Bicol Slope Bands</span>
-                    <div className="slope-spectrum-bar" role="img" aria-label="Slope bands from level to steep">
-                      <div className="slope-band-segment band-level" style={{ flex: 1, backgroundColor: '#8fb28c' }}>
-                        <span>&lt;3% Level</span>
+                  <div className="slope-spectrum-container" role="group" aria-label="Slope band classifications">
+                    <span className="slope-spectrum-title">How steep is the land?</span>
+                    <div className="slope-spectrum-bar">
+                      <div className="slope-band-segment band-level" style={{ backgroundColor: '#8fb28c' }}>
+                        <span>Level</span>
                       </div>
-                      <div className="slope-band-segment band-gentle" style={{ flex: 1, backgroundColor: '#e8cc79' }}>
-                        <span>3–&lt;8%</span>
+                      <div className="slope-band-segment band-gentle" style={{ backgroundColor: '#e8cc79' }}>
+                        <span>Gentle</span>
                       </div>
-                      <div className="slope-band-segment band-rolling" style={{ flex: 1, backgroundColor: '#d98a53' }}>
-                        <span>8–&lt;15%</span>
+                      <div className="slope-band-segment band-rolling" style={{ backgroundColor: '#d98a53' }}>
+                        <span>Rolling</span>
                       </div>
-                      <div className="slope-band-segment band-steep" style={{ flex: 1, backgroundColor: '#984858' }}>
-                        <span>15%+</span>
+                      <div className="slope-band-segment band-steep" style={{ backgroundColor: '#984858' }}>
+                        <span>Steep</span>
                       </div>
                     </div>
                   </div>
@@ -400,6 +395,30 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
               <a className="landing-text-link" href={town ? `${readingsPath}&place=${encodeURIComponent(town.id)}` : readingsPath} data-app-link>Browse the climate archive</a>
             </div>
           </div>
+          <section className="nasa-datasets" aria-labelledby="nasa-datasets-title">
+            <h3 id="nasa-datasets-title">NASA datasets</h3>
+            <ul role="list">
+              {nasaDatasets.map(({ name, use, detail, url }) => (
+                <li key={name}>
+                  <strong>{use}</strong>
+                  <p>{detail}</p>
+                  <a href={url}>{name}</a>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <h3 className="other-sources-title" id="other-sources-title">Other datasets and references</h3>
+          <ul className="source-logos" aria-labelledby="other-sources-title" role="list">
+            {sourceLogos.map(({ name, detail, logo, url }) => (
+              <li key={name}>
+                <a href={url}>
+                  <img src={`${assets}credits/${logo}`} alt="" loading="lazy" />
+                  <strong>{name}</strong>
+                  <span>{detail}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
           <div className="source-list">
             {sourceGroups.map(({ title, detail, method, links }) => (
               <article key={title} className="source-row">
@@ -423,6 +442,12 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
             <div>
               <a className="landing-brand" href={overviewPath} data-app-link><img src={wordmark} alt="AMIHAN" width={1670} height={443} /></a>
               <p>Adaptive Multi-season Insights for Harvest and Agricultural Needs</p>
+            </div>
+            <div className="space-apps-credit">
+              <span>Built for the challenge</span>
+              <a href="https://www.spaceappschallenge.org/">
+                <img src={`${assets}credits/nasa-space-apps.svg`} alt="NASA International Space Apps Challenge" width={592} height={221} loading="lazy" />
+              </a>
             </div>
             <a className="landing-button landing-button-gold" href={plannerPath} data-app-link>Open Crop Planner</a>
           </div>

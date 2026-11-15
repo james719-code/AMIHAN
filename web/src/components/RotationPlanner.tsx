@@ -4,7 +4,7 @@ import {
   pagasaFarmWeather, type ClimateType, type Crop
 } from '../data/crops';
 import cropWorkbook from '../data/crop-workbook.json';
-import { cropArtwork, cropArtworkCredit } from '../data/crop-artwork';
+import { cropArtworkCredit } from '../data/crop-artwork';
 import { climateTypeAt } from '../data/climate-types';
 import { planningDate, plotName, plotNameLimit, wateringSoils, wateringStages, type FieldPlot } from '../data/field-plots';
 import { imergRainDaysAt, imergSeasonalAt, imergSeasonalPeriod, imergSeasonalYears, imergWetDayThresholdMm } from '../data/imerg-seasonal';
@@ -22,6 +22,7 @@ import { rotationGuides } from '../data/rotation';
 import { provinces } from '../data/sites';
 import { smapMonthAt, smapObservationYear } from '../data/smap-seasonal';
 import { wateringAdvice } from '../data/watering';
+import { CropArt } from './CropArt';
 import { SoilLayers } from './SoilLayers';
 import { TownSelect } from './TownSelect';
 import { MapControlIcon } from './MapControlIcon';
@@ -473,14 +474,6 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
       </footer>
     </section>
   );
-}
-
-function CropArt({ crop }: { crop: Crop }) {
-  const { url, column, row } = cropArtwork(crop.artwork);
-  return <span className="crop-art" aria-hidden="true" style={{
-    backgroundImage: `url(${url})`,
-    backgroundPosition: `${column / 3 * 100}% ${row / 3 * 100}%`
-  }} />;
 }
 
 function RotationStep({ step, phase }: { step: GrowingStep; phase: string }) {

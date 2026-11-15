@@ -1,3 +1,63 @@
+export const nasaDatasets = [
+  {
+    name: 'GPM IMERG',
+    use: 'Rainfall',
+    detail: 'How often it rained and how much rain fell in past seasons.',
+    url: 'https://gpm.nasa.gov/data/imerg'
+  },
+  {
+    name: 'NASA POWER',
+    use: 'Weather history',
+    detail: 'Past temperature, rainfall, and sunlight for the climate archive.',
+    url: 'https://power.larc.nasa.gov/docs/methodology/'
+  },
+  {
+    name: 'SMAP',
+    use: 'Soil moisture',
+    detail: 'How wet the soil around crop roots was compared with past seasons.',
+    url: 'https://power.larc.nasa.gov/docs/methodology/data/sources_hydrology/#smap'
+  },
+  {
+    name: 'Harmonized Landsat and Sentinel-2 (HLS)',
+    use: 'Vegetation',
+    detail: 'How green the land around a field pin has been over time.',
+    url: 'https://hls.gsfc.nasa.gov/data-products/'
+  }
+] as const;
+
+export const sourceLogos = [
+  {
+    name: 'DOST–PAGASA',
+    detail: 'Climate types, station records, and farm weather outlooks',
+    logo: 'pagasa.png',
+    url: 'https://www.pagasa.dost.gov.ph/climate/climate-data'
+  },
+  {
+    name: 'Department of Agriculture',
+    detail: 'Planting and harvest guides for Bicol crops',
+    logo: 'department-of-agriculture.png',
+    url: 'https://hvcdp.da.gov.ph/wp-content/uploads/2022/05/Guiya-sa-Gulay-2021.pdf'
+  },
+  {
+    name: 'PhilRice',
+    detail: 'Rice and crop rotation research',
+    logo: 'philrice.png',
+    url: 'https://www.philrice.gov.ph/wp-content/uploads/2016/04/Bicol.pdf'
+  },
+  {
+    name: 'DA–BSWM',
+    detail: 'Philippine Soil Series and local drainage surveys',
+    logo: 'bswm.png',
+    url: 'https://www.bswm.da.gov.ph/download/philippine-soil-series/'
+  },
+  {
+    name: 'ISRIC',
+    detail: 'SoilGrids estimates of soil properties',
+    logo: 'isric.png',
+    url: 'https://isric.org/explore/soilgrids'
+  }
+] as const;
+
 export const sourceGroups = [
   {
     title: 'Weather & rainfall',

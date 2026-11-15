@@ -27,3 +27,9 @@ export function imergRainDaysAt(coordinates: readonly number[], month: number) {
   const [wetDays, totalDays, years] = counts;
   return { wetDays, totalDays, years, averageMm: data.cells[index][month] };
 }
+
+export function describeRainDays(frequency: number) {
+  if (frequency < 0.35) return 'Rain is less common';
+  if (frequency >= 0.65) return 'Rain on most days';
+  return 'Rain on about half the days';
+}

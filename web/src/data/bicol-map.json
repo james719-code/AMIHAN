@@ -2,6 +2,16 @@
   "bounds": { "west": 117.2, "south": 8.2, "east": 129.4, "north": 18.4 },
   "detailBounds": { "west": 122.05, "south": 11.55, "east": 124.65, "north": 14.65 },
   "overview": [[122.25, 14.35], [123.0, 14.58], [124.48, 14.18], [124.32, 12.45], [124.06, 11.68], [122.85, 11.9]],
+  "overviewPreview": {
+    "center": [123.3, 13.13],
+    "width": 1040,
+    "height": 730,
+    "bands": [
+      { "min": 0, "label": "Lower ground", "color": "#9db77d" },
+      { "min": 500, "label": "Uplands", "color": "#c89760" },
+      { "min": 1000, "label": "High terrain", "color": "#aa4645" }
+    ]
+  },
   "origin": [123.35, 13.13],
   "metersPerDegree": 111319.49079327358,
   "metersPerLongitude": 108333.77656831744,

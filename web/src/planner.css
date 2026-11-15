@@ -209,12 +209,6 @@
 .study-details p:last-child { padding-block: 5px 12px; }
 .field-study .guide-sources { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .resource-vegetation { margin: 0; }
-.rainfall-stats { display: flex; flex-wrap: wrap; gap: 10px 22px; }
-.rainfall-stats > div { display: grid; gap: 2px; min-width: 0; }
-.rainfall-stats dt { color: var(--muted); font-size: 13px; font-weight: 650; }
-.rainfall-stats dd { color: var(--forest); font-size: clamp(25px, 3vw, 36px); font-weight: 750; line-height: 1.12; font-variant-numeric: tabular-nums; }
-.rainfall-stats dd small { font-size: 15px; }
-.rainfall-summary .rainfall-note, .rainfall-note { margin-top: 10px; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .soil-outlook-link { display: inline-flex; min-height: 44px; align-items: center; font-size: 14px; }
 .planner-footer { padding-top: 10px; border-top: 1px solid var(--line); }
 .readings-location { grid-template-columns: minmax(0, 400px); padding: 16px; margin: 0 0 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
