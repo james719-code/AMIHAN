@@ -4,30 +4,40 @@ import {
   pagasaFarmWeather, type ClimateType, type Crop
 } from '../data/crops';
 import cropWorkbook from '../data/crop-workbook.json';
-import { cropArtwork, cropArtworkCredit } from '../data/crop-artwork';
+import { cropArtworkCredit } from '../data/crop-artwork';
 import { climateTypeAt } from '../data/climate-types';
-import { imergRainDaysAt, imergSeasonalAt, imergSeasonalPeriod, imergSeasonalYears, imergWetDayThresholdMm } from '../data/imerg-seasonal';
+import { planningDate, plotName, plotNameLimit, wateringStages, type FieldPlot } from '../data/field-plots';
+import { imergRainDaysAt, imergSeasonalPeriod, imergWetDayThresholdMm } from '../data/imerg-seasonal';
 import {
-  climatePeriod, coordinatesLabel, labelMonth, nearestClimateSite, powerUrl,
-  seasonalClimate, soilUrl
+  climatePeriod, coordinatesLabel, labelMonth, powerUrl, rainfallPattern, soilUrl
 } from '../data/historical-climate';
 import {
   calendarMonths, compactDateRange, dateRangeLabel, daysLabel, farmerCropName, formatPlantingDate, growingStep,
-  nextPlantingMonth, plantingCalendarSource, plantingMonth, rotationRulesVersion, suggestRotations, todayInBicol, turnaroundDays,
+  nextPlantingMonth, plantingCalendarSource, plantingMonth, plantingSeasonAt, rotationRulesVersion, suggestRotations, todayInBicol, turnaroundDays,
   type Drainage, type EstablishmentMoisture, type GrowingStep, type Rotation, type RotationStatus, type Water
 } from '../data/planting-plan';
 import type { MapPlace } from '../data/places';
 import { rotationGuides } from '../data/rotation';
 import { provinces } from '../data/sites';
 import { smapMonthAt, smapObservationYear } from '../data/smap-seasonal';
+import { wateringAdvice } from '../data/watering';
+import { CropArt } from './CropArt';
 import { SoilLayers } from './SoilLayers';
 import { TownSelect } from './TownSelect';
+import { WateringGuide } from './WateringGuide';
 import { MapControlIcon } from './MapControlIcon';
+import { PlannerGuidePreview } from './PlannerGuidePreview';
 import { mapPath } from '../workspace-routes';
 
 type Props = {
   town?: MapPlace;
-  fieldPin: number[] | null;
+  plot: FieldPlot;
+  plots: FieldPlot[];
+  plotsSaved: boolean;
+  onUpdatePlot: (changes: Partial<Omit<FieldPlot, 'id'>>) => void;
+  onSelectPlot: (id: number) => void;
+  onAddPlot: () => void;
+  onRemovePlot: () => void;
   onSelectTown: (id: string) => void;
   onUseTown: () => void;
 };
@@ -39,7 +49,6 @@ const rotationStatusLabels: Record<RotationStatus, string> = {
   insufficient: 'Field details needed',
   unsuitable: 'Doesn’t fit your plan'
 };
-const planningDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= '1900-01-01' && value <= '9990-12-31';
 const fieldWaterLabels: Record<Water, string> = {
   '': 'Unknown', rainfed: 'Rain only', irrigated: 'I can water the field', paddy: 'Irrigated rice paddy'
 };
@@ -48,49 +57,79 @@ const fieldDrainageLabels: Record<Drainage, string> = {
 };
 const availableCrops = [...crops].sort((a, b) => farmerCropName(a).localeCompare(farmerCropName(b), 'en-PH'));
 
-type PlannerTab = 'recommendations' | 'soil' | 'library' | 'studies';
+const plannerTabs = [
+  { id: 'recommendations', label: 'Crop options', icon: 'planner' },
+  { id: 'soil', label: 'Rain & soil', icon: 'climate' },
+  { id: 'watering', label: 'Watering', icon: 'rain' },
+  { id: 'library', label: 'Crop library', icon: 'book' },
+  { id: 'studies', label: 'Field studies', icon: 'field' }
+] as const;
+type PlannerTab = typeof plannerTabs[number]['id'];
 type RecFilter = 'suitable' | 'other' | 'unsuitable';
+const plannerAnchors: Record<string, { tab: PlannerTab; target: string }> = {
+  'crop-options': { tab: 'recommendations', target: 'crop-options' },
+  'field-setup': { tab: 'recommendations', target: 'field-setup' },
+  'soil-conditions': { tab: 'soil', target: 'soil-conditions' },
+  soil: { tab: 'soil', target: 'soil-conditions' },
+  watering: { tab: 'watering', target: 'watering' },
+  'crop-resources': { tab: 'library', target: 'crop-resources' },
+  'crop-library': { tab: 'library', target: 'crop-resources' },
+  library: { tab: 'library', target: 'crop-resources' },
+  'field-studies': { tab: 'studies', target: 'field-studies' },
+  studies: { tab: 'studies', target: 'field-studies' }
+};
 
-export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }: Props) {
+export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, onSelectPlot, onAddPlot, onRemovePlot, onSelectTown, onUseTown }: Props) {
+  const { pin, date, water, drainage, previous, previousHarvest, moisture, nextRicePlanting, typeOverride, pickingDays } = plot;
   const [activeTab, setActiveTab] = useState<PlannerTab>('recommendations');
   const [recFilter, setRecFilter] = useState<RecFilter>('suitable');
-  const [selectedPreset, setSelectedPreset] = useState<string>('');
-  const [date, setDate] = useState('');
-  const [water, setWater] = useState<Water>('');
-  const [drainage, setDrainage] = useState<Drainage>('');
-  const [previous, setPrevious] = useState('');
-  const [previousHarvest, setPreviousHarvest] = useState('');
-  const [moisture, setMoisture] = useState<EstablishmentMoisture>('');
-  const [nextRicePlanting, setNextRicePlanting] = useState('');
-  const [typeOverride, setTypeOverride] = useState<{ location: string; type: ClimateType | '' }>();
-  const [pickingDays, setPickingDays] = useState('21');
+  const [anchorTarget, setAnchorTarget] = useState('');
   const [search, setSearch] = useState('');
   const [vegetationOpen, setVegetationOpen] = useState(false);
   const [exportState, setExportState] = useState<'ready' | 'loading' | 'error'>('ready');
+  const [guidePreview, setGuidePreview] = useState<{ url: string; filename: string; location: string } | null>(null);
   const [libraryExpanded, setLibraryExpanded] = useState(false);
   const resourceLibrary = useRef<HTMLDivElement>(null);
-  const resourceGuides = useRef<HTMLDivElement>(null);
   const browseCrops = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const hash = window.location.hash.slice(1);
-    if (hash === 'soil-conditions' || hash === 'soil') setActiveTab('soil');
-    else if (hash === 'crop-resources' || hash === 'crop-library' || hash === 'library') setActiveTab('library');
-    else if (hash === 'studies' || hash === 'field-studies') setActiveTab('studies');
-    else if (hash === 'crop-options' || hash === 'field-setup') setActiveTab('recommendations');
-    const target = hash && document.getElementById(hash);
-    if (target && target.closest('.rotation-card')) target.scrollIntoView();
+    return () => { if (guidePreview) URL.revokeObjectURL(guidePreview.url); };
+  }, [guidePreview]);
+
+  useEffect(() => {
+    function followAnchor() {
+      const id = window.location.hash.slice(1);
+      if (!id) return;
+      const anchor = Object.hasOwn(plannerAnchors, id) ? plannerAnchors[id] : undefined;
+      if (anchor) setActiveTab(anchor.tab);
+      setAnchorTarget(anchor?.target ?? id);
+    }
+
+    followAnchor();
+    window.addEventListener('hashchange', followAnchor);
+    return () => window.removeEventListener('hashchange', followAnchor);
   }, []);
 
   useEffect(() => {
+    if (!anchorTarget) return;
+    const target = document.getElementById(anchorTarget);
+    if (target?.closest('.rotation-card') && !target.closest('[hidden]')) {
+      const details = target.closest('details');
+      if (details) details.open = true;
+      target.scrollIntoView();
+    }
+    setAnchorTarget('');
+  }, [anchorTarget]);
+
+  useEffect(() => {
     if (!libraryExpanded || document.activeElement !== browseCrops.current) return;
-    resourceLibrary.current?.querySelector<HTMLElement>('.crop-profile:nth-child(7) summary')?.focus();
+    resourceLibrary.current?.querySelector<HTMLElement>('.crop-profile:nth-child(9) summary')?.focus();
   }, [libraryExpanded]);
 
   const start = date || todayInBicol();
   const month = plantingMonth(start);
   const coordinates = pin ?? town?.coordinates;
-  const reference = coordinates ? nearestClimateSite(coordinates) : null;
+  const { reference, localRainfall = false, season = null } = coordinates ? plantingSeasonAt(coordinates) : {};
   const province = provinces.find(({ code }) => code === town?.provinceCode);
   const location = pin ? 'Field Map pin' : town ? `${town.name}, ${province?.name}` : '';
   const { types: availableTypes, source: climateTypeSource } = coordinates
@@ -103,11 +142,6 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
   const climateTypeDetail = climateTypeSource === 'map'
     ? availableTypes.length > 1 ? 'Near a boundary on the PAGASA map' : `PAGASA map · ${pin ? 'field pin' : 'town or city marker'}`
     : climateTypeSource === 'province' ? 'PAGASA province summary' : 'No match on the PAGASA map';
-  const rainfall = coordinates && imergSeasonalAt(coordinates);
-  const localRainfall = rainfall !== undefined && rainfall.every((value) => Number.isFinite(value));
-  const season = reference ? seasonalClimate(reference).map((reading, index) => localRainfall ? {
-    ...reading, rainfallMm: rainfall[index], yearsWithRainfall: imergSeasonalYears
-  } : reading) : null;
   const soilMoisture = season ? smapMonthAt(town?.id, pin, month) : undefined;
   const previousCrop = crops.find(({ name }) => name === previous);
   const afterRice = previousCrop?.name === 'Rice (Palay)';
@@ -121,56 +155,36 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
   const visibleCrops = availableCrops.filter((crop) =>
     `${crop.name} ${cropWorkbook[crop.artwork].crop} ${farmerCropName(crop)}`.toLowerCase().includes(query));
   const showAllCrops = libraryExpanded || Boolean(query);
+  const suggestedWateringCrop = suggestions[0]?.first.crop;
+  const wateringCrop = crops.find(({ name }) => name === plot.wateringCrop) ?? suggestedWateringCrop;
+  const advice = wateringCrop && wateringAdvice(wateringCrop, plot);
+  const rainPattern = season ? rainfallPattern(season, month) : null;
+  const monthlyRain = season?.[month].rainfallMm;
+
+  const noRice = { previousHarvest: '', moisture: '', nextRicePlanting: '' } as const;
+  const nextDate = new Date(Date.parse(start) + 85 * 86_400_000).toISOString().slice(0, 10);
+  const presets = [
+    { label: 'Rice paddy break', previous: 'Rice (Palay)', water: 'paddy', drainage: 'slow',
+      previousHarvest: start, moisture: 'adequate', nextRicePlanting: planningDate(nextDate) ? nextDate : '' },
+    { label: 'Upland rainfed', previous: 'fallow', water: 'rainfed', drainage: 'well', ...noRice },
+    { label: 'Irrigated field', previous: 'fallow', water: 'irrigated', drainage: 'well', ...noRice },
+    { label: 'Flood-prone area', previous: '', water: 'rainfed', drainage: 'waterlogged', ...noRice }
+  ] as const;
+  const activeFilter = (recFilter === 'other' && !otherOptions.length || recFilter === 'unsuitable' && !unsuitable.length)
+    ? 'suitable' : recFilter;
 
   function resetFieldConditions() {
-    setPrevious('');
-    setPreviousHarvest('');
-    setWater('');
-    setDrainage('');
-    setMoisture('');
-    setNextRicePlanting('');
-    setTypeOverride(undefined);
-  }
-
-  function applyPreset(preset: 'rice-break' | 'upland-rainfed' | 'irrigated-plot' | 'flood-prone') {
-    if (preset === 'rice-break') {
-      setPrevious('Rice (Palay)');
-      setPreviousHarvest(start);
-      setWater('paddy');
-      setDrainage('slow');
-      setMoisture('adequate');
-      const nextDate = new Date(Date.parse(start) + 85 * 86_400_000).toISOString().slice(0, 10);
-      setNextRicePlanting(nextDate);
-    } else if (preset === 'upland-rainfed') {
-      setPrevious('fallow');
-      setPreviousHarvest('');
-      setWater('rainfed');
-      setDrainage('well');
-      setMoisture('');
-      setNextRicePlanting('');
-    } else if (preset === 'irrigated-plot') {
-      setPrevious('fallow');
-      setPreviousHarvest('');
-      setWater('irrigated');
-      setDrainage('well');
-      setMoisture('');
-      setNextRicePlanting('');
-    } else if (preset === 'flood-prone') {
-      setPrevious('');
-      setPreviousHarvest('');
-      setWater('rainfed');
-      setDrainage('waterlogged');
-      setMoisture('');
-      setNextRicePlanting('');
-    }
+    onUpdatePlot({ previous: '', previousHarvest: '', water: '', drainage: '', moisture: '',
+      nextRicePlanting: '', typeOverride: undefined, wateringSoil: '' });
   }
 
   async function exportPlan() {
     if (!season || !coordinates || exportState === 'loading') return;
     setExportState('loading');
     try {
-      const { downloadPlannerGuide } = await import('./planner-guide');
+      const { createPlannerGuide } = await import('./planner-guide');
       const fields: [string, string][] = [
+        ['Plot', plotName(plot)],
         ['Previous crop', previousCrop ? farmerCropName(previousCrop) : previous === 'fallow' ? 'Nothing was planted' : 'Unknown'],
         ['Water source', fieldWaterLabels[water]],
         ['Drainage after rain', fieldDrainageLabels[drainage]],
@@ -183,7 +197,7 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
         if (nextRicePlanting) fields.push(['Next palay planting', formatPlantingDate(nextRicePlanting)]);
       }
       const wetDays = localRainfall ? imergRainDaysAt(coordinates, month) : undefined;
-      await downloadPlannerGuide({
+      const { image, filename } = await createPlannerGuide({
         location: pin ? `${location} · ${coordinatesLabel(pin)}` : location,
         date: start,
         fields,
@@ -191,9 +205,14 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
         rainSource: localRainfall ? `NASA IMERG · ${imergSeasonalPeriod}` : `NASA POWER · ${reference?.name} · ${climatePeriod}`,
         rainDays: wetDays ? { ...wetDays, thresholdMm: imergWetDayThresholdMm } : undefined,
         moisture: soilMoisture?.observed == null ? undefined : { value: soilMoisture.observed, year: smapObservationYear },
+        watering: advice && wateringCrop ? {
+          heading: `${farmerCropName(wateringCrop)} · ${wateringStages[plot.wateringStage]}`,
+          action: advice.action, detail: advice.detail, cropNote: advice.cropNote, source: advice.source.label
+        } : undefined,
         rotations: suggestions.map((rotation) => ({ rotation, status: rotationStatusLabels[rotation.status] })),
         excluded: unsuitable
       });
+      setGuidePreview({ url: URL.createObjectURL(image), filename, location });
       setExportState('ready');
     } catch {
       setExportState('error');
@@ -209,12 +228,14 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
         </div>
         <div className="planner-export">
           <button type="button" className="planner-download" onClick={exportPlan} disabled={!season || exportState === 'loading'} aria-describedby="planner-export-note">
-            {exportState === 'loading' ? 'Preparing guide…' : 'Download PNG guide'}
+            {exportState === 'loading' ? 'Preparing guide…' : 'Preview PNG guide'}
           </button>
-          <p id="planner-export-note">{season ? 'Save the top crop options and field notes as an image.' : 'Choose a town or select a field to download.'}</p>
-          {exportState === 'error' && <p role="alert">Couldn’t download the guide. Try again.</p>}
+          <p id="planner-export-note">{season ? 'Preview the top crop options and field notes before saving.' : 'Choose a town or select a field to preview.'}</p>
+          {exportState === 'error' && <p role="alert">Couldn’t prepare the guide. Try again.</p>}
         </div>
       </header>
+
+      {guidePreview && <PlannerGuidePreview {...guidePreview} onClose={() => setGuidePreview(null)} />}
 
       <div className="planner-workspace-split">
         <aside className="planner-sidebar">
@@ -223,6 +244,29 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
               <h2 id="field-setup-heading">Field setup</h2>
               <a className="planner-inline-link" href={mapPath} data-app-link>Choose on map</a>
             </div>
+            <div className="planner-plot-controls field-inputs">
+              <div>
+                <label htmlFor="active-plot">Plot</label>
+                <select id="active-plot" value={plot.id} onChange={(event) => onSelectPlot(Number(event.target.value))}>
+                  {plots.map((item) => <option key={item.id} value={item.id}>{plotName(item)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="plot-name">Plot name</label>
+                <input id="plot-name" value={plot.name} maxLength={plotNameLimit} placeholder={`Plot ${plot.id}`}
+                  onChange={(event) => onUpdatePlot({ name: event.target.value })} />
+              </div>
+              <div className="planner-plot-actions">
+                <button type="button" className="quiet-button" onClick={onAddPlot}>Add plot</button>
+                {plots.length > 1 && <button type="button" className="quiet-button" onClick={() => {
+                  document.getElementById('active-plot')?.focus();
+                  onRemovePlot();
+                }}>Remove plot</button>}
+              </div>
+            </div>
+            <p className="planner-plot-note" role={plotsSaved ? undefined : 'status'}>
+              {plotsSaved ? 'Plots save in this browser.' : 'Browser storage is unavailable. Keep this tab open to keep your plots.'}
+            </p>
             <div className="field-inputs planner-inputs">
               <div><label htmlFor="planner-location">Town or city</label>
                 <TownSelect id="planner-location" value={town?.id ?? ''} onChange={onSelectTown} />
@@ -230,7 +274,7 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
               <div><label htmlFor="planting-date">Planting date</label>
                 <input id="planting-date" type="date" min="1900-01-01" max="9990-12-31" value={start} onChange={(event) => {
                   const value = event.target.value;
-                  if (value === '' || planningDate(value)) setDate(value);
+                  if (value === '' || planningDate(value)) onUpdatePlot({ date: value });
                 }} />
               </div>
             </div>
@@ -241,18 +285,16 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
             <div className="planner-presets" role="group" aria-label="Field condition quick presets">
               <span className="planner-presets-label">Field presets:</span>
               <div className="planner-preset-pills">
-                <button type="button" className="preset-pill" data-active={selectedPreset === 'rice-break'} onClick={() => applyPreset('rice-break')}>
-                  Rice paddy break
-                </button>
-                <button type="button" className="preset-pill" data-active={selectedPreset === 'upland-rainfed'} onClick={() => applyPreset('upland-rainfed')}>
-                  Upland rainfed
-                </button>
-                <button type="button" className="preset-pill" data-active={selectedPreset === 'irrigated-plot'} onClick={() => applyPreset('irrigated-plot')}>
-                  Irrigated field
-                </button>
-                <button type="button" className="preset-pill" data-active={selectedPreset === 'flood-prone'} onClick={() => applyPreset('flood-prone')}>
-                  Flood-prone area
-                </button>
+                {presets.map(({ label, ...conditions }) => {
+                  const matches = (Object.keys(conditions) as (keyof typeof conditions)[])
+                    .every((key) => plot[key] === conditions[key]);
+                  return (
+                    <button key={label} type="button" className="preset-pill" data-active={matches}
+                      aria-pressed={matches} onClick={() => onUpdatePlot(conditions)}>
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <details className="planner-details planner-conditions-toggle">
@@ -265,43 +307,38 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
               <div className="planner-detail-content">
                 <div className="field-inputs">
                   <div><label htmlFor="previous-crop">Previous crop</label>
-                    <select id="previous-crop" value={previous} onChange={(event) => {
-                      setSelectedPreset('');
-                      setPrevious(event.target.value);
-                      setPreviousHarvest('');
-                      setMoisture('');
-                      setNextRicePlanting('');
-                    }}>
+                    <select id="previous-crop" value={previous} onChange={(event) =>
+                      onUpdatePlot({ previous: event.target.value, previousHarvest: '', moisture: '', nextRicePlanting: '' })}>
                       <option value="">I’m not sure</option><option value="fallow">Nothing was planted</option>
                       {availableCrops.map((crop) => <option key={crop.name} value={crop.name}>{farmerCropName(crop)}</option>)}
                     </select>
                   </div>
                   {previousCrop && <div><label htmlFor="previous-harvest">Previous harvest date</label>
                     <input id="previous-harvest" type="date" min="1900-01-01" max="9990-12-31" value={previousHarvest}
-                      onChange={({ target: { value } }) => { setSelectedPreset(''); if (!value || planningDate(value)) setPreviousHarvest(value); }} />
+                      onChange={({ target: { value } }) => { if (!value || planningDate(value)) onUpdatePlot({ previousHarvest: value }); }} />
                   </div>}
                   <div><label htmlFor="water-source">Water source</label>
-                    <select id="water-source" value={water} onChange={(event) => { setSelectedPreset(''); setWater(event.target.value as Water); }}>
+                    <select id="water-source" value={water} onChange={(event) => { onUpdatePlot({ water: event.target.value as Water }); }}>
                       <option value="">I’m not sure</option><option value="rainfed">Rain only</option>
                       <option value="irrigated">I can water the field</option><option value="paddy">Irrigated rice paddy</option>
                     </select>
                   </div>
                   <div><label htmlFor="field-drainage">Drainage after rain</label>
-                    <select id="field-drainage" value={drainage} onChange={(event) => { setSelectedPreset(''); setDrainage(event.target.value as Drainage); }}>
+                    <select id="field-drainage" value={drainage} onChange={(event) => { onUpdatePlot({ drainage: event.target.value as Drainage }); }}>
                       <option value="">I’m not sure</option><option value="well">It drains quickly</option>
                       <option value="slow">It takes a while to drain</option><option value="waterlogged">Water often stays</option>
                     </select>
                   </div>
                   {afterRice && <>
                     <div><label htmlFor="establishment-moisture">Is the soil moist, or can you water the monggo?</label>
-                      <select id="establishment-moisture" value={moisture} onChange={(event) => { setSelectedPreset(''); setMoisture(event.target.value as EstablishmentMoisture); }}>
+                      <select id="establishment-moisture" value={moisture} onChange={(event) => { onUpdatePlot({ moisture: event.target.value as EstablishmentMoisture }); }}>
                         <option value="">I’m not sure</option><option value="adequate">The soil is moist or I have water</option>
                         <option value="dry">The soil is dry and I have no water</option>
                       </select>
                     </div>
                     <div><label htmlFor="next-rice-planting">When will you plant palay again?</label>
                       <input id="next-rice-planting" type="date" min="1900-01-01" max="9990-12-31" value={nextRicePlanting}
-                        onChange={({ target: { value } }) => { setSelectedPreset(''); if (!value || planningDate(value)) setNextRicePlanting(value); }} />
+                        onChange={({ target: { value } }) => { if (!value || planningDate(value)) onUpdatePlot({ nextRicePlanting: value }); }} />
                     </div>
                   </>}
                 </div>
@@ -318,7 +355,7 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
               <div className="planner-detail-content">
                 <label htmlFor="planner-climate-type">Local climate type</label>
                 <select id="planner-climate-type" value={chosenType} aria-describedby="planner-climate-hint" onChange={(event) => {
-                  if (locationId) setTypeOverride({ location: locationId, type: event.target.value as ClimateType | '' });
+                  if (locationId) onUpdatePlot({ typeOverride: { location: locationId, type: event.target.value as ClimateType | '' } });
                 }}>
                   <option value="">{availableTypes.length ? `Auto · ${climateTypeLabel}` : 'Auto · Climate type unavailable'}</option>
                   {(['I', 'II', 'III', 'IV'] as const).map((type) => <option key={type} value={type}>Type {type}</option>)}
@@ -329,255 +366,232 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
           </section>
         </aside>
 
-        <main className="planner-main-content">
+        <div className="planner-main-content">
           <div className="planner-tab-bar" role="tablist" aria-label="Crop planner sections">
-            <button
-              type="button"
-              role="tab"
-              id="tab-recommendations"
-              aria-selected={activeTab === 'recommendations'}
-              aria-controls="panel-recommendations"
-              className="planner-tab-btn"
-              data-active={activeTab === 'recommendations'}
-              onClick={() => setActiveTab('recommendations')}
-            >
-              Crop Recommendations ({suggestions.length})
-            </button>
-            <button
-              type="button"
-              role="tab"
-              id="tab-soil"
-              aria-selected={activeTab === 'soil'}
-              aria-controls="panel-soil"
-              className="planner-tab-btn"
-              data-active={activeTab === 'soil'}
-              onClick={() => setActiveTab('soil')}
-            >
-              Rain & Soil Analysis
-            </button>
-            <button
-              type="button"
-              role="tab"
-              id="tab-library"
-              aria-selected={activeTab === 'library'}
-              aria-controls="panel-library"
-              className="planner-tab-btn"
-              data-active={activeTab === 'library'}
-              onClick={() => setActiveTab('library')}
-            >
-              Crop Library ({crops.length})
-            </button>
-            <button
-              type="button"
-              role="tab"
-              id="tab-studies"
-              aria-selected={activeTab === 'studies'}
-              aria-controls="panel-studies"
-              className="planner-tab-btn"
-              data-active={activeTab === 'studies'}
-              onClick={() => setActiveTab('studies')}
-            >
-              Field Studies ({rotationGuides.length})
-            </button>
+            {plannerTabs.map(({ id: tab, label, icon }, index) => {
+              const selected = activeTab === tab;
+              return (
+                <button key={tab} type="button" role="tab" id={`tab-${tab}`} aria-selected={selected}
+                  aria-controls={`panel-${tab}`} className="planner-tab-btn"
+                  tabIndex={selected ? 0 : -1} onClick={() => setActiveTab(tab)} onKeyDown={(event) => {
+                    const last = plannerTabs.length - 1;
+                    const destination = event.key === 'Home' ? 0 : event.key === 'End' ? last
+                      : event.key === 'ArrowLeft' ? (index + last) % plannerTabs.length
+                      : event.key === 'ArrowRight' ? (index + 1) % plannerTabs.length : null;
+                    if (destination === null) return;
+                    event.preventDefault();
+                    const next = plannerTabs[destination].id;
+                    setActiveTab(next);
+                    document.getElementById(`tab-${next}`)?.focus();
+                  }}>
+                  <MapControlIcon name={icon} />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {activeTab === 'recommendations' && (
-            <section id="panel-recommendations" role="tabpanel" aria-labelledby="tab-recommendations" className="planner-results">
-              <div className="planner-results-header">
-                <div>
-                  <h2 id="planner-results-heading">Recommended Crops</h2>
-                  <p className="planner-note" aria-live="polite">
-                    {season ? `${location} · Planting ${formatPlantingDate(start)}` : <>Select a <a className="planner-inline-link" href="#planner-location">town or city</a> to see crops for your planting date.</>}
-                  </p>
-                </div>
-                {suggestions.length > 0 && <p className="crop-options-artwork-note">{cropArtworkCredit}</p>}
+          <section id="panel-recommendations" role="tabpanel" aria-labelledby="tab-recommendations" className="planner-results" hidden={activeTab !== 'recommendations'}>
+            <div className="planner-results-header">
+              <div>
+                <h2 id="crop-options" tabIndex={-1}>Recommended Crops</h2>
+                <p className="planner-note" aria-live="polite">
+                  {season ? `${plotName(plot)} · ${location} · Planting ${formatPlantingDate(start)}` : <>Select a <a className="planner-inline-link" href="#planner-location">town or city</a> to see crops for your planting date.</>}
+                </p>
               </div>
+              {suggestions.length > 0 && <p className="crop-options-artwork-note">{cropArtworkCredit}</p>}
+            </div>
 
-              <div className="planner-sub-filter-bar" role="group" aria-label="Recommendation filters">
+            <div className="planner-sub-filter-bar" role="group" aria-label="Recommendation filters">
+              <button
+                type="button"
+                className="planner-filter-pill"
+                data-active={activeFilter === 'suitable'}
+                aria-pressed={activeFilter === 'suitable'}
+                onClick={() => setRecFilter('suitable')}
+              >
+                Best fit ({suggestions.length})
+              </button>
+              {otherOptions.length > 0 && (
                 <button
                   type="button"
                   className="planner-filter-pill"
-                  data-active={recFilter === 'suitable'}
-                  onClick={() => setRecFilter('suitable')}
+                  data-active={activeFilter === 'other'}
+                  aria-pressed={activeFilter === 'other'}
+                  onClick={() => setRecFilter('other')}
                 >
-                  Best fit ({suggestions.length})
+                  Other options ({otherOptions.length})
                 </button>
-                {otherOptions.length > 0 && (
-                  <button
-                    type="button"
-                    className="planner-filter-pill"
-                    data-active={recFilter === 'other'}
-                    onClick={() => setRecFilter('other')}
-                  >
-                    Other options ({otherOptions.length})
-                  </button>
-                )}
-                {unsuitable.length > 0 && (
-                  <button
-                    type="button"
-                    className="planner-filter-pill"
-                    data-active={recFilter === 'unsuitable'}
-                    onClick={() => setRecFilter('unsuitable')}
-                  >
-                    Ruled out ({unsuitable.length})
-                  </button>
-                )}
-              </div>
-
-              {recFilter === 'suitable' && (
-                <>
-                  {season && !suggestions.length && (
-                    <p className="planner-note" role="status">No crops fit this date and the field answers provided. Check "Other options" or adjust your field setup.</p>
-                  )}
-                  <div className="rotation-results">
-                    {suggestions.map((rotation) => (
-                      <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />
-                    ))}
-                  </div>
-                </>
               )}
+              {unsuitable.length > 0 && (
+                <button
+                  type="button"
+                  className="planner-filter-pill"
+                  data-active={activeFilter === 'unsuitable'}
+                  aria-pressed={activeFilter === 'unsuitable'}
+                  onClick={() => setRecFilter('unsuitable')}
+                >
+                  Ruled out ({unsuitable.length})
+                </button>
+              )}
+            </div>
 
-              {recFilter === 'other' && (
+            {activeFilter === 'suitable' && (
+              <>
+                {season && !suggestions.length && (
+                  <p className="planner-note" role="status">No crops fit this date and the field answers provided. Check "Other options" or adjust your field setup.</p>
+                )}
                 <div className="rotation-results">
-                  {otherOptions.map((rotation) => (
+                  {suggestions.map((rotation) => (
                     <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />
                   ))}
                 </div>
-              )}
+              </>
+            )}
 
-              {recFilter === 'unsuitable' && (
-                <div className="rotation-exclusions-panel">
-                  <p className="rotation-exclusions-intro">
-                    These crops do not fit the chosen planting date ({formatPlantingDate(start)}) or your reported field conditions:
-                  </p>
-                  <ul className="rotation-exclusions">
-                    {unsuitable.map(({ first, findings }) => (
-                      <li key={first.crop.name}>
-                        <div className="exclusion-crop-heading">
-                          <CropArt crop={first.crop} />
-                          <strong>{farmerCropName(first.crop)}</strong>
-                        </div>
-                        <div className="exclusion-reasons">
-                          {findings.filter(({ status }) => status === 'unsuitable').map(({ message }) => (
-                            <span key={message}>{message}</span>
-                          ))}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            {activeFilter === 'other' && (
+              <div className="rotation-results">
+                {otherOptions.map((rotation) => (
+                  <RotationCard key={rotation.first.crop.name} rotation={rotation} previous={previousCrop} />
+                ))}
+              </div>
+            )}
 
-              {season && (
-                <details className="planner-details planner-timing-adjustment" name="planner-reference">
-                  <summary>Adjust time between crops</summary>
-                  <div className="planner-detail-content">
-                    <label className="picking-input" htmlFor="picking-days">Days to keep picking after the first harvest
-                      <input id="picking-days" type="number" min="0" max="365" step="1" value={pickingDays}
-                        onChange={(event) => setPickingDays(event.target.value)} onBlur={() => setPickingDays(String(extraDays))} />
-                    </label>
-                    <p>Repeat-pick crops get this many extra days. The Planner also allows {turnaroundDays} days to clear and prepare the field before a follow-up crop or the next rice planting.</p>
-                  </div>
-                </details>
-              )}
-            </section>
-          )}
+            {activeFilter === 'unsuitable' && (
+              <div className="rotation-exclusions-panel">
+                <p className="rotation-exclusions-intro">
+                  These crops do not fit the chosen planting date ({formatPlantingDate(start)}) or your reported field conditions:
+                </p>
+                <ul className="rotation-exclusions">
+                  {unsuitable.map(({ first, findings }) => (
+                    <li key={first.crop.name}>
+                      <div className="exclusion-crop-heading">
+                        <CropArt crop={first.crop} />
+                        <strong>{farmerCropName(first.crop)}</strong>
+                      </div>
+                      <div className="exclusion-reasons">
+                        {findings.filter(({ status }) => status === 'unsuitable').map(({ message }) => (
+                          <span key={message}>{message}</span>
+                        ))}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-          {activeTab === 'soil' && (
-            <section id="panel-soil" role="tabpanel" aria-labelledby="tab-soil" className="planner-tab-panel">
-              <SoilLayers
-                month={month}
-                season={season}
-                coordinates={coordinates}
-                rainfallReference={reference?.name ?? ''}
-                localRainfall={localRainfall}
-                drainage={drainage}
-                moisture={soilMoisture}
-                onSelectMonth={(index) => {
-                  const next = nextPlantingMonth(start, index);
-                  if (planningDate(next)) setDate(next);
-                }}
-              />
-            </section>
-          )}
-
-          {activeTab === 'library' && (
-            <section id="panel-library" role="tabpanel" aria-labelledby="tab-library" className="planner-tab-panel">
-              <div className="resource-library">
-                <div ref={resourceLibrary} className="resource-card-content">
-                  <div className="resource-heading">
-                    <h3 id="crop-library-heading">Crop Library</h3>
-                    <span role="status">{query ? `${visibleCrops.length} of ${crops.length} crops` : `${crops.length} crops`}</span>
-                  </div>
-                  <p className="crop-options-artwork-note">{cropArtworkCredit}</p>
-                  <label className="crop-search" htmlFor="crop-search">Search by crop name
-                    <input id="crop-search" type="search" placeholder="Try monggo or mungbean" value={search} onChange={(event) => setSearch(event.target.value)} />
+            {season && (
+              <details className="planner-details planner-timing-adjustment" name="planner-reference">
+                <summary>Adjust time between crops</summary>
+                <div className="planner-detail-content">
+                  <label className="picking-input" htmlFor="picking-days">Days to keep picking after the first harvest
+                    <input id="picking-days" type="number" min="0" max="365" step="1" value={pickingDays}
+                      onChange={(event) => onUpdatePlot({ pickingDays: event.target.value })} onBlur={() => onUpdatePlot({ pickingDays: String(extraDays) })} />
                   </label>
-                  <div id="crop-library-list" className="crop-library crop-library-grid">
-                    {(showAllCrops ? visibleCrops : visibleCrops.slice(0, 8)).map((crop) => (
-                      <CropProfile key={crop.name} crop={crop} types={climateTypes} start={start} />
-                    ))}
-                  </div>
-                  {!visibleCrops.length && <p className="crop-library-empty" role="status">No crops match your search.</p>}
-                  {!query && (
-                    <button ref={browseCrops} className="quiet-button crop-library-toggle" type="button" aria-expanded={libraryExpanded}
-                      aria-controls="crop-library-list" onClick={() => {
-                        if (libraryExpanded) document.getElementById('crop-search')?.focus();
-                        setLibraryExpanded(!libraryExpanded);
-                      }}>
-                      {libraryExpanded ? 'Show fewer crops' : `Browse all ${crops.length} crops`}
-                    </button>
-                  )}
+                  <p>Repeat-pick crops get this many extra days. The Planner also allows {turnaroundDays} days to clear and prepare the field before a follow-up crop or the next rice planting.</p>
                 </div>
-              </div>
-            </section>
-          )}
-
-          {activeTab === 'studies' && (
-            <section id="panel-studies" role="tabpanel" aria-labelledby="tab-studies" className="planner-tab-panel">
-              <div className="resource-guides">
-                <div ref={resourceGuides} className="resource-card-content">
-                  <div className="resource-heading">
-                    <h3 id="rotation-guides-heading">Rotations Studied in Bicol</h3>
-                  </div>
-                  <div className="field-study-list field-study-grid">
-                    {rotationGuides.map(({ id, crops: sequence, location, detail, fieldCheck, sources }) => (
-                      <article className="field-study" key={id}>
-                        <h4>{location}</h4>
-                        <ol className="study-sequence" aria-label="Crop order" role="list">
-                          {sequence.map((name, index) => {
-                            const crop = availableCrops.find((entry) => shortName(entry) === name);
-                            return <li key={index}>
-                              {index > 0 && <span className="study-arrow" aria-hidden="true">→</span>}
-                              {crop && <CropArt crop={crop} />}
-                              <span>{crop ? farmerCropName(crop) : name}</span>
-                            </li>;
-                          })}
-                        </ol>
-                        <p className="study-field-check">{fieldCheck}</p>
-                        <details className="study-details">
-                          <summary>Study notes and sources</summary>
-                          <p>{detail}</p>
-                          <p className="guide-sources">{sources.map(({ label, url }) => <a href={url} key={url} target="_blank" rel="noreferrer">{label}</a>)}</p>
-                        </details>
-                      </article>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <details className="planner-details resource-vegetation" onToggle={(event) => setVegetationOpen(event.currentTarget.open)}>
-                <summary>Satellite vegetation timeline (NASA HLS)</summary>
-                {!pin && <div className="planner-detail-content"><p>Choose a field pin in <a className="planner-inline-link" href={mapPath} data-app-link>Field Map</a> to see NASA satellite observations for that spot.</p></div>}
-                {pin && vegetationOpen && (
-                  <Suspense fallback={<p className="planner-detail-content" role="status">Loading NASA HLS timeline…</p>}>
-                    <VegetationTimeline key={locationId} longitude={pin[0]} latitude={pin[1]} />
-                  </Suspense>
-                )}
               </details>
-            </section>
-          )}
-        </main>
+            )}
+          </section>
+
+          <section id="panel-soil" role="tabpanel" aria-labelledby="tab-soil" className="planner-tab-panel" hidden={activeTab !== 'soil'}>
+            <SoilLayers
+              month={month}
+              season={season}
+              coordinates={coordinates}
+              rainfallReference={reference?.name ?? ''}
+              localRainfall={localRainfall}
+              drainage={drainage}
+              moisture={soilMoisture}
+              onSelectMonth={(index) => {
+                const next = nextPlantingMonth(start, index);
+                if (planningDate(next)) onUpdatePlot({ date: next });
+              }}
+            />
+          </section>
+
+          <section id="panel-watering" role="tabpanel" aria-labelledby="tab-watering" className="planner-tab-panel" hidden={activeTab !== 'watering'}>
+            <WateringGuide selection={plot} crops={availableCrops} crop={wateringCrop}
+              suggestedCrop={suggestedWateringCrop} advice={advice} onChange={onUpdatePlot}
+              rainfall={monthlyRain == null ? undefined : {
+                month: labelMonth(month), averageMm: monthlyRain, pattern: rainPattern,
+                source: localRainfall ? `NASA IMERG, ${imergSeasonalPeriod}` : `NASA POWER at ${reference?.name}, ${climatePeriod}`
+              }} />
+          </section>
+
+          <section id="panel-library" role="tabpanel" aria-labelledby="tab-library" className="planner-tab-panel" hidden={activeTab !== 'library'}>
+            <div className="resource-library" id="crop-resources" tabIndex={-1}>
+              <div ref={resourceLibrary} className="resource-card-content">
+                <div className="resource-heading">
+                  <h3 id="crop-library-heading">Crop Library</h3>
+                  <span role="status">{query ? `${visibleCrops.length} of ${crops.length} crops` : `${crops.length} crops`}</span>
+                </div>
+                <p className="crop-options-artwork-note">{cropArtworkCredit}</p>
+                <label className="crop-search" htmlFor="crop-search">Search by crop name
+                  <input id="crop-search" type="search" placeholder="Try monggo or mungbean" value={search} onChange={(event) => setSearch(event.target.value)} />
+                </label>
+                <div id="crop-library-list" className="crop-library crop-library-grid">
+                  {(showAllCrops ? visibleCrops : visibleCrops.slice(0, 8)).map((crop) => (
+                    <CropProfile key={crop.name} crop={crop} types={climateTypes} start={start} />
+                  ))}
+                </div>
+                {!visibleCrops.length && <p className="crop-library-empty" role="status">No crops match your search.</p>}
+                {!query && (
+                  <button ref={browseCrops} className="quiet-button crop-library-toggle" type="button" aria-expanded={libraryExpanded}
+                    aria-controls="crop-library-list" onClick={() => {
+                      if (libraryExpanded) document.getElementById('crop-search')?.focus();
+                      setLibraryExpanded(!libraryExpanded);
+                    }}>
+                    {libraryExpanded ? 'Show fewer crops' : `Browse all ${crops.length} crops`}
+                  </button>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-studies" role="tabpanel" aria-labelledby="tab-studies" className="planner-tab-panel" hidden={activeTab !== 'studies'}>
+            <div className="resource-guides" id="field-studies" tabIndex={-1}>
+              <div className="resource-card-content">
+                <div className="resource-heading">
+                  <h3 id="rotation-guides-heading">Rotations Studied in Bicol</h3>
+                </div>
+                <div className="field-study-list field-study-grid">
+                  {rotationGuides.map(({ id, crops: sequence, location, detail, fieldCheck, sources }) => (
+                    <article className="field-study" key={id}>
+                      <h4>{location}</h4>
+                      <ol className="study-sequence" aria-label="Crop order" role="list">
+                        {sequence.map((name, index) => {
+                          const crop = availableCrops.find((entry) => shortName(entry) === name);
+                          return <li key={index}>
+                            {index > 0 && <span className="study-arrow" aria-hidden="true">→</span>}
+                            {crop && <CropArt crop={crop} />}
+                            <span>{crop ? farmerCropName(crop) : name}</span>
+                          </li>;
+                        })}
+                      </ol>
+                      <p className="study-field-check">{fieldCheck}</p>
+                      <details className="study-details">
+                        <summary>Study notes and sources</summary>
+                        <p>{detail}</p>
+                        <p className="guide-sources">{sources.map(({ label, url }) => <a href={url} key={url} target="_blank" rel="noreferrer">{label}</a>)}</p>
+                      </details>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <details className="planner-details resource-vegetation" onToggle={(event) => setVegetationOpen(event.currentTarget.open)}>
+              <summary>Satellite vegetation timeline (NASA HLS)</summary>
+              {!pin && <div className="planner-detail-content"><p>Choose a field pin in <a className="planner-inline-link" href={mapPath} data-app-link>Field Map</a> to see NASA satellite observations for that spot.</p></div>}
+              {pin && vegetationOpen && (
+                <Suspense fallback={<p className="planner-detail-content" role="status">Loading NASA HLS timeline…</p>}>
+                  <VegetationTimeline key={locationId} longitude={pin[0]} latitude={pin[1]} />
+                </Suspense>
+              )}
+            </details>
+          </section>
+        </div>
       </div>
 
       <footer className="data-footer planner-footer">
@@ -594,14 +608,6 @@ export function RotationPlanner({ town, fieldPin: pin, onSelectTown, onUseTown }
       </footer>
     </section>
   );
-}
-
-function CropArt({ crop, featured }: { crop: Crop; featured?: boolean }) {
-  const { url, column, row } = cropArtwork(crop.artwork);
-  return <span className={featured ? 'crop-art crop-art-featured' : 'crop-art'} aria-hidden="true" style={{
-    backgroundImage: `url(${url})`,
-    backgroundPosition: `${column / 3 * 100}% ${row / 3 * 100}%`
-  }} />;
 }
 
 function RotationStep({ step, phase }: { step: GrowingStep; phase: string }) {

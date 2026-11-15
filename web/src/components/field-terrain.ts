@@ -12,6 +12,10 @@ import slopeBands from '../data/slope-bands.json';
 
 export { slopeBands };
 
+export function slopeBandIndex(percent: number) {
+  return slopeBands.findIndex(({ max }) => max === null || percent < max);
+}
+
 export type FieldPoint = {
   x: number;
   z: number;
@@ -111,7 +115,7 @@ export function createFieldTerrain(terrain: TerrainMesh) {
       if (x < region.west || x > region.east || z < region.north || z > region.south) continue;
       ab.subVectors(b, a).cross(ac.subVectors(c, a));
       const percent = 100 * Math.hypot(ab.x, ab.z) / Math.max(0.00001, Math.abs(ab.y));
-      const color = palette[slopeBands.findIndex(({ max }) => max === null || percent < max)];
+      const color = palette[slopeBandIndex(percent)];
       for (const point of [a, b, c]) {
         values[offset] = point.x / 1000;
         values[offset + 1] = point.y / 1000;

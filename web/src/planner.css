@@ -19,6 +19,23 @@
 .planner-download:disabled { border-color: var(--line); background: var(--soft); color: var(--muted); cursor: not-allowed; }
 .planner-export p { margin-top: 5px; font-size: 13px; }
 .planner-export [role="alert"] { color: #843f28; }
+.planner-preview { width: min(640px, calc(100vw - 24px)); max-width: none; max-height: min(84dvh, 820px); margin: auto; padding: 0; overflow: hidden; border: 1px solid var(--control-line); border-radius: 12px; background: var(--surface); color: var(--ink); box-shadow: var(--control-shadow); }
+.planner-preview[open] { display: flex; flex-direction: column; }
+.planner-preview::backdrop { background: rgb(16 46 36 / 65%); }
+.planner-preview-header { display: flex; flex: none; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 12px; border-bottom: 1px solid var(--line); }
+.planner-preview-header h2 { margin: 0; color: var(--forest); font-size: 18px; font-weight: 750; }
+.planner-preview-header p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+.planner-preview-actions { display: flex; align-items: center; gap: 8px; }
+.planner-preview-actions :is(a, button) { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; text-decoration: none; }
+.planner-preview-toolbar { display: flex; flex: none; align-items: center; gap: 4px; padding: 4px 12px; border-bottom: 1px solid var(--line); }
+.planner-preview-toolbar .quiet-button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+.planner-preview-toolbar output { min-width: 52px; color: var(--forest); text-align: center; font-size: 13px; font-variant-numeric: tabular-nums; }
+.planner-preview-toolbar .planner-preview-fit { margin-left: auto; }
+.planner-preview-body { min-height: 0; padding: 16px; overflow: auto; overflow-anchor: none; overscroll-behavior: contain; touch-action: none; user-select: none; cursor: grab; background: #000; }
+.planner-preview-body.is-dragging { cursor: grabbing; }
+.planner-preview-image { display: block; width: 100%; padding: 0; border: 0; background: none; }
+.planner-preview-image img { display: block; width: 100%; height: auto; pointer-events: none; }
+.planner-preview-body:focus-visible { outline: 3px solid var(--leaf); outline-offset: -3px; }
 .planner-field-actions { display: flex; justify-content: flex-end; margin-top: 14px; }
 .planner-field-actions button { min-height: 44px; }
 .section-nav { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-bottom: 20px; }
@@ -59,6 +76,89 @@
 .planner-form :is(input, select), .readings-location select { min-height: 44px; }
 .planner-form .planner-inputs { margin: 0; }
 .planner-form .field-inputs > div { grid-template-rows: auto min-content; align-content: end; }
+.planner-form .planner-plot-controls { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; margin-bottom: 0; }
+.planner-form .planner-plot-actions { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; }
+.planner-plot-actions button { min-height: 44px; }
+.planner-plot-note { margin: 8px 0 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.planner-watering { container: watering-guide / inline-size; }
+.watering-heading { align-items: center; gap: 8px 16px; }
+.watering-forecast { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; }
+.planner-watering .watering-inputs { grid-template-columns: repeat(auto-fit, minmax(min(175px, 100%), 1fr)); }
+.watering-crop-picker { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.watering-crop-picker .crop-art { width: 44px; height: 44px; flex-basis: 44px; }
+.watering-soil { min-inline-size: 0; margin-top: 20px; padding: 0; border: 0; }
+.watering-soil legend { color: var(--forest); font-size: 17px; font-weight: 750; }
+.watering-soil > p { margin: 4px 0 12px; color: var(--muted); font-size: 14px; }
+.watering-soil-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.planner-watering .watering-soil-option {
+  position: relative;
+  display: grid;
+  grid-template: 'photo photo' auto 'description indicator' 1fr / minmax(0, 1fr) auto;
+  align-self: stretch;
+  align-items: start;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--forest);
+  cursor: pointer;
+}
+.watering-soil-option:hover { border-color: var(--control-line); }
+.watering-soil-option:has(:checked) { border-color: var(--forest); background: #edf3ec; box-shadow: inset 0 0 0 1px var(--forest); }
+.watering-soil-option:has(:focus-visible) { outline: 2px solid var(--coastal-blue); outline-offset: 3px; }
+.watering-soil-option img { grid-area: photo; width: 100%; height: clamp(68px, 17cqw, 106px); object-fit: cover; border-radius: 4px; }
+.watering-soil-description { grid-area: description; display: grid; gap: 3px; padding: 0 0 4px 4px; }
+.watering-soil-description strong { font-size: 15px; line-height: 1.15; }
+.watering-soil-description small { color: var(--muted); font-size: 12px; line-height: 1.35; }
+.watering-soil-indicator {
+  grid-area: indicator;
+  width: 17px;
+  height: 17px;
+  margin-right: 4px;
+  border: 1px solid var(--control-line);
+  border-radius: 50%;
+  background: #fff;
+}
+.watering-soil-option:has(:checked) .watering-soil-indicator { border: 5px solid var(--forest); }
+.watering-unchecked { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.watering-soil-option input, .watering-unchecked input { min-height: 0; accent-color: var(--forest); }
+.planner-watering-advice {
+  --watering-accent: #795521;
+  --watering-wash: #f9f1de;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--watering-accent) 30%, var(--watering-wash));
+  border-radius: 8px;
+  background: var(--watering-wash);
+}
+.planner-watering-advice[data-action="hold"] { --watering-accent: #245a6c; --watering-wash: #eaf3f6; }
+.planner-watering-advice[data-action="water"] { --watering-accent: #2c664b; --watering-wash: #edf5ec; }
+.watering-action-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: #fff; color: var(--watering-accent); }
+.planner-watering-advice h3 { color: var(--forest); font-size: clamp(18px, 3.3cqw, 22px); font-weight: 750; line-height: 1.22; }
+.planner-watering-advice p { margin-top: 6px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.planner-watering-advice .watering-action-label { margin: 0 0 3px; color: var(--watering-accent); font-size: 12px; font-weight: 750; }
+.watering-source { display: inline-block; margin-top: 8px; font-size: 13px; }
+.watering-history { margin-top: 12px; border-top: 1px solid var(--line); }
+.watering-history summary { min-height: 44px; padding-block: 10px; color: var(--forest); font-size: 14px; font-weight: 700; cursor: pointer; }
+.watering-history summary .map-control-icon { display: inline-block; margin: 0 6px; color: var(--coastal-blue); vertical-align: -4px; }
+.watering-history p { padding-bottom: 6px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+@container watering-guide (max-width: 385px) {
+  .watering-soil-options { grid-template-columns: minmax(0, 1fr); }
+  .planner-watering .watering-soil-option {
+    grid-template: 'photo description indicator' auto / 80px minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .watering-soil-description { padding: 0; }
+  .watering-soil-option img { height: 54px; }
+}
+@media (max-width: 760px) {
+  .planner-form .planner-plot-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .planner-form .planner-plot-actions { grid-column: 1 / -1; }
+}
 .planner-form .planner-field-details { min-width: 0; margin: 18px 0 0; padding: 0; }
 .planner-field-details legend { width: 100%; padding-top: 14px; border-top: 1px solid var(--line); color: var(--forest); font-size: 15px; font-weight: 750; }
 .planner-field-details .field-inputs { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; }
@@ -142,13 +242,24 @@
   margin-top: 14px;
 }
 .planner-sidebar {
-  position: sticky;
-  top: calc(var(--anchor-offset) + 12px);
   min-width: 0;
+}
+@media (min-width: 881px) {
+  body:has(.planner-page),
+  .app-layout:has(> .planner-page) { overflow-x: clip; }
+  .planner-sidebar {
+    --sidebar-top: calc(var(--anchor-offset) + env(safe-area-inset-top));
+    position: sticky;
+    top: var(--sidebar-top);
+    max-height: calc(100dvh - var(--sidebar-top) - 16px);
+    overflow-y: auto;
+  }
 }
 .planner-sidebar .planner-form {
   padding: 16px;
 }
+.planner-sidebar .planner-plot-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.planner-sidebar .planner-plot-actions { grid-column: 1 / -1; }
 .planner-sidebar .planner-inputs {
   grid-template-columns: 1fr;
   gap: 12px;
@@ -173,51 +284,61 @@
 .planner-main-content {
   min-width: 0;
 }
-.planner-main-content .planner-tab-bar {
-  margin-top: 0;
-}
 @media (max-width: 880px) {
   .planner-workspace-split {
     grid-template-columns: 1fr;
   }
-  .planner-sidebar {
-    position: static;
-  }
 }
 .planner-tab-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 24px 0 20px;
+  container-type: inline-size;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 3px;
+  margin: 0 0 20px;
   padding: 4px;
-  background: var(--surface);
+  background: var(--soft);
   border: 1px solid var(--line);
   border-radius: 10px;
 }
 .planner-tab-btn {
-  flex: 1 1 auto;
-  min-height: 44px;
-  padding: 8px 16px;
-  border: 1px solid transparent;
+  display: grid;
+  grid-template-rows: 18px minmax(2.3em, auto);
+  justify-items: center;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 54px;
+  padding: 7px 2px 4px;
+  border: 0;
   border-radius: 7px;
   background: transparent;
   color: var(--muted);
-  font-size: 14px;
+  font-size: clamp(11px, 2.8cqw, 13px);
   font-weight: 700;
+  line-height: 1.15;
   cursor: pointer;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s;
   text-align: center;
-  white-space: nowrap;
 }
+.planner-tab-btn > span { text-wrap: balance; }
 .planner-tab-btn:hover {
-  background: var(--soft);
+  background: var(--surface);
   color: var(--forest);
 }
-.planner-tab-btn[data-active="true"] {
-  background: #fff;
-  border-color: var(--line);
-  color: var(--forest);
-  box-shadow: 0 1px 3px rgb(24 58 45 / 8%);
+.planner-tab-btn[aria-selected="true"] {
+  background: var(--forest);
+  color: #fff;
+}
+.planner-tab-btn:focus-visible { outline: 2px solid var(--coastal-blue); outline-offset: 1px; }
+@container (min-width: 585px) {
+  .planner-tab-btn {
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    min-height: 44px;
+    padding: 8px 4px;
+  }
 }
 .planner-tab-panel {
   min-width: 0;
@@ -541,12 +662,6 @@
 .study-details p:last-child { padding-block: 5px 12px; }
 .field-study .guide-sources { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .resource-vegetation { margin: 0; }
-.rainfall-stats { display: flex; flex-wrap: wrap; gap: 10px 22px; }
-.rainfall-stats > div { display: grid; gap: 2px; min-width: 0; }
-.rainfall-stats dt { color: var(--muted); font-size: 13px; font-weight: 650; }
-.rainfall-stats dd { color: var(--forest); font-size: clamp(25px, 3vw, 36px); font-weight: 750; line-height: 1.12; font-variant-numeric: tabular-nums; }
-.rainfall-stats dd small { font-size: 15px; }
-.rainfall-summary .rainfall-note, .rainfall-note { margin-top: 10px; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .soil-outlook-link { display: inline-flex; min-height: 44px; align-items: center; font-size: 14px; }
 .planner-footer { padding-top: 10px; border-top: 1px solid var(--line); }
 .readings-location { grid-template-columns: minmax(0, 400px); padding: 16px; margin: 0 0 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }

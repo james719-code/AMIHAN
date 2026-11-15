@@ -3,7 +3,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { MapControlIcon } from './MapControlIcon';
 import geography from '../data/bicol-map.json';
 import { fieldCoordinates } from '../data/field-location';
-import { profileSpacingKm, slopeBands, type FieldSelection } from './field-terrain';
+import { profileSpacingKm, slopeBandIndex, slopeBands, type FieldSelection } from './field-terrain';
 
 type Props = {
   selection: FieldSelection;
@@ -25,37 +25,37 @@ export type SlopeCategory = {
   meaning: string;
 };
 
-export function getSlopeCategory(slope: number): SlopeCategory {
-  if (slope < 3) {
-    return {
-      badge: 'Lowland / Level (0–3%)',
-      badgeClass: 'field-badge-level',
-      suitability: 'Best for lowland rice and paddy rotations',
-      meaning: 'This spot is mostly flat. Watch where water collects after rain and ensure field drainage canals are kept clear.'
-    };
-  }
-  if (slope < 8) {
-    return {
-      badge: 'Gentle Incline (3–8%)',
-      badgeClass: 'field-badge-gentle',
-      suitability: 'Well-suited for diversified crops, corn, and vegetables',
-      meaning: 'Good natural runoff without rapid surface wash. Keep soil covered to protect topsoil during monsoon rains.'
-    };
-  }
-  if (slope < 18) {
-    return {
-      badge: 'Rolling / Sloped (8–18%)',
-      badgeClass: 'field-badge-rolling',
-      suitability: 'Requires contour farming or hedgerows',
-      meaning: 'Noticeable slope. Plant crops along contour lines and use vegetative buffer strips to control erosion.'
-    };
-  }
-  return {
-    badge: 'Steep / Upland (>18%)',
+const slopeCategories: SlopeCategory[] = [
+  {
+    badge: 'Level ground',
+    badgeClass: 'field-badge-level',
+    suitability: 'Best for lowland rice and paddy rotations',
+    meaning: 'This spot is mostly flat. Watch where water collects after rain and ensure field drainage canals are kept clear.'
+  },
+  {
+    badge: 'Gentle slope',
+    badgeClass: 'field-badge-gentle',
+    suitability: 'Well-suited for diversified crops, corn, and vegetables',
+    meaning: 'Good natural runoff without rapid surface wash. Keep soil covered to protect topsoil during monsoon rains.'
+  },
+  {
+    badge: 'Rolling ground',
+    badgeClass: 'field-badge-rolling',
+    suitability: 'Requires contour farming or hedgerows',
+    meaning: 'Noticeable slope. Plant crops along contour lines and use vegetative buffer strips to control erosion.'
+  },
+  {
+    badge: 'Steep ground',
     badgeClass: 'field-badge-steep',
     suitability: 'Recommended for agroforestry & perennial tree crops',
     meaning: 'High erosion risk during heavy rains. Avoid bare tilling; consider fruit trees, abaca, or agroforestry.'
-  };
+  }
+];
+
+export function getSlopeCategory(slope: number): SlopeCategory {
+  const index = slopeBandIndex(slope);
+  const category = slopeCategories[index];
+  return { ...category, badge: `${category.badge} (${slopeBands[index].label})` };
 }
 
 export function FieldCheck({ selection, slopeVisible, missed, onSlopeChange, onClear, onSampleCenter, onSampleCoordinates, onUseField }: Props) {

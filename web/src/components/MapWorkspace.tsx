@@ -1,7 +1,14 @@
-import { lazy, Suspense, useRef, useState } from "react";
+import { lazy, Suspense, useMemo, useRef, useState } from "react";
+import { climateTypeAt } from "../data/climate-types";
+import { labelMonth, rainfallPattern } from "../data/historical-climate";
 import { provinces } from "../data/sites";
-import { plantingMonth, todayInBicol } from "../data/planting-plan";
-import { places, type MapPlace } from "../data/places";
+import {
+  plantingMonth,
+  plantingSeasonAt,
+  seasonalCropOptions,
+  todayInBicol,
+} from "../data/planting-plan";
+import { farmingPlaces, places, type MapPlace } from "../data/places";
 import { LocationSearch } from "./LocationSearch";
 import { PlaceOverview } from "./PlaceOverview";
 import type { MapTool } from "./MapPanel";
@@ -32,11 +39,30 @@ export function MapWorkspace({
   const [explorerPreference, setExplorerOpen] = useState<boolean>();
   const [activeTool, setActiveTool] = useState<MapTool | null>(null);
   const [toolMinimized, setToolMinimized] = useState(false);
-  const [rainMonth, setRainMonth] = useState(() =>
-    plantingMonth(todayInBicol()),
+  const today = todayInBicol();
+  const plantingMonthIndex = plantingMonth(today);
+  const cropMonth = labelMonth(plantingMonthIndex);
+  const [rainMonth, setRainMonth] = useState(plantingMonthIndex);
+  const cropOptions = useMemo(
+    () =>
+      new Map(
+        farmingPlaces.map((place) => {
+          const { season } = plantingSeasonAt(place.coordinates);
+          const { types } = climateTypeAt(place.coordinates, place);
+          return [
+            place.id,
+            {
+              picks: seasonalCropOptions(today, season, types).slice(0, 3),
+              rain: rainfallPattern(season, plantingMonthIndex),
+            },
+          ] as const;
+        }),
+      ),
+    [today, plantingMonthIndex],
   );
   const [focusRequest, setFocusRequest] = useState(0);
   const placesButton = useRef<HTMLButtonElement>(null);
+  const placeScroll = useRef<HTMLDivElement>(null);
   const isCompactMap = useMediaQuery(
     "(max-width: 650px), (max-width: 950px) and (max-height: 500px)",
   );
@@ -76,6 +102,7 @@ export function MapWorkspace({
     onPlaceSelect(id);
     setExplorerOpen(true);
     if (isCompactMap) setToolMinimized(true);
+    if (placeScroll.current) placeScroll.current.scrollTop = 0;
   };
 
   return (
@@ -115,6 +142,7 @@ export function MapWorkspace({
           </button>
         </div>
         <div
+          ref={placeScroll}
           className="sidebar-scroll"
           tabIndex={0}
           role="region"
@@ -176,6 +204,8 @@ export function MapWorkspace({
               key={selectedPlace.id}
               place={selectedPlace}
               province={selectedProvince?.name}
+              cropMonth={cropMonth}
+              seasonalCrops={cropOptions.get(selectedPlace.id)}
             />
           </div>
         </div>
@@ -201,6 +231,8 @@ export function MapWorkspace({
         >
           <MapPanel
             selectedPlace={selectedPlace}
+            cropOptions={cropOptions}
+            cropMonth={cropMonth}
             focusRequest={focusRequest}
             rainMonth={rainMonth}
             onRainMonthChange={setRainMonth}

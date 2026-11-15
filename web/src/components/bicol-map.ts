@@ -23,15 +23,16 @@ const { origin, metersPerDegree, metersPerLongitude } = geography;
 const elevationRecord = terrainElevations as Record<string, number>;
 
 const GRID_CELL = 64;
+type ScreenBox = [left: number, top: number, right: number, bottom: number];
 
 class SpatialGrid {
-  private cells = new Map<number, [number, number, number, number][]>();
+  private cells = new Map<number, ScreenBox[]>();
 
   clear() {
     this.cells.clear();
   }
 
-  insert(box: [number, number, number, number]) {
+  insert(box: ScreenBox) {
     const [l, t, r, b] = box;
     const startCol = Math.max(0, Math.floor(l / GRID_CELL));
     const endCol = Math.max(0, Math.floor(r / GRID_CELL));
@@ -50,7 +51,7 @@ class SpatialGrid {
     }
   }
 
-  overlaps(left: number, top: number, right: number, bottom: number): boolean {
+  overlaps(left: number, top: number, right: number, bottom: number, ignore?: ScreenBox): boolean {
     const startCol = Math.max(0, Math.floor(left / GRID_CELL));
     const endCol = Math.max(0, Math.floor(right / GRID_CELL));
     const startRow = Math.max(0, Math.floor(top / GRID_CELL));
@@ -61,7 +62,7 @@ class SpatialGrid {
         if (list) {
           for (let i = 0; i < list.length; i++) {
             const b = list[i];
-            if (left < b[2] && right > b[0] && top < b[3] && bottom > b[1]) return true;
+            if (b !== ignore && left < b[2] && right > b[0] && top < b[3] && bottom > b[1]) return true;
           }
         }
       }
@@ -617,17 +618,43 @@ export function createBicolMap(
     }
   }
 
-  function positionMarkerLabel(element: HTMLButtonElement, x: number, y: number, selected: boolean) {
-    const labelWidth = (selected ? 17 : 2) + (element.dataset.label?.length ?? 0) * (width < 500 ? 5.5 : 6.5);
-    const labelHeight = selected ? 12 : 8;
-    const right = x + 10 + labelWidth < width - 4
-      && !grid.overlaps(x + 10, y - labelHeight, x + 10 + labelWidth, y + labelHeight);
-    const left = !right && x - 10 - labelWidth > 4
-      && !grid.overlaps(x - 10 - labelWidth, y - labelHeight, x - 10, y + labelHeight);
-    toggleClass(element, 'has-label', right || left);
-    toggleClass(element, 'label-left', left);
-    if (right) grid.insert([x + 10, y - labelHeight, x + 10 + labelWidth, y + labelHeight]);
-    if (left) grid.insert([x - 10 - labelWidth, y - labelHeight, x - 10, y + labelHeight]);
+  function markerLabelPosition(x: number, y: number, gap: number, labelWidth: number, halfHeight: number) {
+    const top = y - halfHeight;
+    const bottom = y + halfHeight;
+    if (top < 4 || bottom > height - 4) return;
+    const right: ScreenBox = [x + gap, top, x + gap + labelWidth, bottom];
+    if (right[2] < width - 4 && !grid.overlaps(...right)) return { left: false, bounds: right };
+    const left: ScreenBox = [x - gap - labelWidth, top, x - gap, bottom];
+    if (left[0] > 4 && !grid.overlaps(...left)) return { left: true, bounds: left };
+  }
+
+  function positionMarkerLabel(element: HTMLButtonElement, x: number, y: number, selected: boolean, gap: number) {
+    const charWidth = width < 500 ? 5.5 : 6.5;
+    const nameWidth = (element.dataset.label?.length ?? 0) * charWidth;
+    const crop = element.dataset.cropLabel;
+    const cropPosition = crop ? markerLabelPosition(x, y, gap, Math.max(nameWidth, crop.length * charWidth) + 16, 22) : undefined;
+    const label = cropPosition ?? markerLabelPosition(x, y, gap, nameWidth + (selected ? 17 : 2), selected ? 12 : 8);
+    toggleClass(element, 'has-label', !!label);
+    toggleClass(element, 'has-crop-label', !!cropPosition);
+    toggleClass(element, 'label-left', label?.left ?? false);
+    if (label) grid.insert(label.bounds);
+  }
+
+  function reserveCropPin(element: HTMLButtonElement, x: number, y: number, anchor: ScreenBox) {
+    if (!element.dataset.cropLabel) return 10;
+
+    // Reserve space around the existing town pins first so a picture never covers a nearby town.
+    let radius = 7;
+    for (const size of [15, 11]) {
+      const bounds: ScreenBox = [x - size, y - size, x + size, y + size];
+      if (bounds[0] < 2 || bounds[1] < 2 || bounds[2] > width - 2 || bounds[3] > height - 2 || grid.overlaps(...bounds, anchor)) continue;
+      grid.insert(bounds);
+      radius = size;
+      break;
+    }
+    toggleClass(element, 'crop-pin-compact', radius === 11);
+    toggleClass(element, 'crop-pin-tiny', radius === 7);
+    return radius + 4;
   }
 
   function positionOverlays(verticalSpan: number) {
@@ -657,17 +684,20 @@ export function createBicolMap(
       projected.set(position.x, position.y * relief + 0.35, position.z).project(camera);
       const x = (projected.x + 1) * width / 2;
       const y = (1 - projected.y) * height / 2;
+      const anchor: ScreenBox = [x - 7, y - 7, x + 7, y + 7];
       const visible = x > 13 && x < width - 13 && y > 15 && y < height - 15
-        && !grid.overlaps(x - 6, y - 6, x + 6, y + 6);
+        && !grid.overlaps(...anchor);
       placeElement(element, x, y, visible);
       if (visible) {
-        grid.insert([x - 7, y - 7, x + 7, y + 7]);
-        if (selected) positionMarkerLabel(element, x, y, true);
-        else visibleMarkers.push({ element, x, y });
+        grid.insert(anchor);
+        visibleMarkers.push({ element, x, y, selected, anchor, gap: 10 });
       }
     }
-    for (const { element, x, y } of visibleMarkers) {
-      positionMarkerLabel(element, x, y, false);
+    for (const marker of visibleMarkers) {
+      marker.gap = reserveCropPin(marker.element, marker.x, marker.y, marker.anchor);
+    }
+    for (const { element, x, y, selected, gap } of visibleMarkers) {
+      positionMarkerLabel(element, x, y, selected, gap);
     }
     for (const { element, position, maxSpan } of contextLabels) {
       projected.copy(position).project(camera);

@@ -19,6 +19,8 @@ Open the Vite URL printed by the dev server. The map and 2015–2024 climate his
 
 ## Crop rotation planning
 
+Use **Add plot** under **Field setup** to keep separate plans. Each named plot keeps its town or map pin, crop history, dates, and field answers in this browser. Open **Watering guide**, select a crop and growth stage, and enter the soil condition from a field check. The guide uses those answers with the plot’s water source and drainage. Monthly rainfall history provides seasonal context for comparing planting dates.
+
 Choose a town or city and a planting date in **Crop Planner**. Enter the previous crop and harvest date, water source, and drainage. Crop cards show planting and expected harvest windows and link to any field answers needed. Open **Planting calendar settings** to review the local PAGASA climate type or override it. Use **Download PNG guide** to save the top crop options, rainfall chart, and field notes for offline use.
 
 To check the rice–mungbean pilot, select Pamplona, Camarines Sur and enter rice as the previous crop with rainfed as the water source. Enter the available soil moisture or water and the next rice planting date. The planner checks that the mungbean planting window fits and that final picking and field preparation can finish before the next rice planting. The crop library includes all 48 crops from the supplied workbook, with illustrations, growth milestones, and production references.

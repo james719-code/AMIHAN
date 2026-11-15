@@ -1,8 +1,9 @@
-const paths = {
+export const mapControlIconPaths = {
   info: 'M12 11v6m0-10h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
   chevron: 'm6 9 6 6 6-6',
   people: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0M22 21v-2a4 4 0 0 0-3-4m-1-12a4 4 0 0 1 0 8',
   planner: 'M12 21v-9m0 3C5 15 3 11 3 6c6 0 9 3 9 9zm0-3c0-6 3-9 9-9 0 6-3 9-9 9z',
+  book: 'M12 6a7 7 0 0 0-5-2H3v15h4a7 7 0 0 1 5 2 7 7 0 0 1 5-2h4V4h-4a7 7 0 0 0-5 2zm0 0v15',
   readings: 'M4 3v17h17M8 15l4-5 4 3 5-7',
   rain: 'M8 3c0 4-5 7-5 11a5 5 0 0 0 10 0c0-4-5-7-5-11M17 10l-2 4m6-1-2 4m-3 1-2 3',
   temperature: 'M9 14.5V5a3 3 0 0 1 6 0v9.5a5 5 0 1 1-6 0M12 8v10m6-12h3m-3 4h2',
@@ -14,6 +15,8 @@ const paths = {
   play: 'M7 4l14 8-14 8V4',
   pause: 'M7 4h3v16H7zM14 4h3v16h-3z',
   arrow: 'M5 12h14m-6-6 6 6-6 6',
+  zoomIn: 'M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0m-2 5 6 6M7 10h6m-3-3v6',
+  zoomOut: 'M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0m-2 5 6 6M7 10h6',
   tools: 'M4 5h16M4 12h16M4 19h16M8 3v4M16 10v4M10 17v4',
   expand: 'M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5',
   collapse: 'M3 8h5V3M21 8h-5V3M16 21v-5h5M8 21v-5H3',
@@ -26,8 +29,8 @@ const paths = {
   roads: 'M8 3L5 21M16 3l3 18M12 3v3M12 10v4M12 18v3',
 };
 
-export function MapControlIcon({ name }: { name: keyof typeof paths }) {
+export function MapControlIcon({ name }: { name: keyof typeof mapControlIconPaths }) {
   return <svg className="map-control-icon" width="18" height="18" viewBox="0 0 24 24"
     fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-    aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>;
+    aria-hidden="true" focusable="false"><path d={mapControlIconPaths[name]} /></svg>;
 }

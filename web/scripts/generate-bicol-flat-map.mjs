@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { PNG } from 'pngjs';
+import { Color } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import geography from '../src/data/bicol-map.json' with { type: 'json' };
 import slopeBands from '../src/data/slope-bands.json' with { type: 'json' };
@@ -10,7 +11,7 @@ const source = await readFile(new URL('bicol.glb', assets));
 const { scene } = await new GLTFLoader().parseAsync(source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength), '');
 const { position, normal, color } = scene.getObjectByName('Terrain').geometry.attributes;
 const indices = scene.getObjectByName('Terrain').geometry.index.array;
-const { bounds, detailBounds, origin, metersPerDegree, metersPerLongitude } = geography;
+const { bounds, detailBounds, overviewPreview, origin, metersPerDegree, metersPerLongitude } = geography;
 const west = (bounds.west - origin[0]) * metersPerLongitude;
 const north = (origin[1] - bounds.north) * metersPerDegree;
 const worldWidth = (bounds.east - bounds.west) * metersPerLongitude;
@@ -21,6 +22,11 @@ const flat = new PNG({ width, height });
 const shaded = new PNG({ width, height });
 const slope = new PNG({ width, height });
 slope.data.fill(0);
+const preview = new PNG({ width: overviewPreview.width, height: overviewPreview.height });
+const [previewLongitude, previewLatitude] = overviewPreview.center;
+const previewLeft = Math.round((previewLongitude - bounds.west) * metersPerLongitude * width / worldWidth - preview.width / 2);
+const previewTop = Math.round((bounds.north - previewLatitude) * metersPerDegree * height / worldHeight - preview.height / 2);
+const previewPalette = overviewPreview.bands.map(({ min, color }) => ({ min, channels: new Color(color).toArray() }));
 
 function toSrgb(value) {
   const channel = Math.max(0, Math.min(1, value));
@@ -39,6 +45,7 @@ const palette = slopeBands.map(({ color }) => Buffer.from(color.slice(1), 'hex')
 const water = [183, 211, 210, 255];
 flat.data.fill(Buffer.from(water));
 shaded.data.fill(Buffer.from(water));
+preview.data.fill(Buffer.from(water));
 
 for (let index = 0; index < indices.length; index += 3) {
   const a = pixels[indices[index]];
@@ -72,7 +79,8 @@ for (let index = 0; index < indices.length; index += 3) {
       const wb = (dx * acy - dy * acx) / area;
       const wc = (abx * dy - aby * dx) / area;
       const wa = 1 - wb - wc;
-      if (Math.min(wa, wb, wc) < -1e-8 || wa * a.elevation + wb * b.elevation + wc * c.elevation <= 0) continue;
+      const elevation = wa * a.elevation + wb * b.elevation + wc * c.elevation;
+      if (Math.min(wa, wb, wc) < -1e-8 || elevation <= 0) continue;
 
       const offset = (y * width + x) * 4;
       const light = wa * a.light + wb * b.light + wc * c.light;
@@ -83,6 +91,18 @@ for (let index = 0; index < indices.length; index += 3) {
         if (withinDetail) slope.data[offset + channel] = band[channel];
       }
       if (withinDetail) slope.data[offset + 3] = 196;
+
+      const previewX = x - previewLeft;
+      const previewY = y - previewTop;
+      if (previewX >= 0 && previewX < preview.width && previewY >= 0 && previewY < preview.height) {
+        const { channels } = previewPalette.findLast(({ min }) => elevation >= min);
+        const previewOffset = (previewY * preview.width + previewX) * 4;
+        // Darken higher ground within each band so the relief remains visible beneath the colors.
+        const previewLight = light ** 2 * (1 - Math.min(elevation, 2400) / 3800);
+        for (let channel = 0; channel < 3; channel++) {
+          preview.data[previewOffset + channel] = toSrgb(channels[channel] * previewLight);
+        }
+      }
     }
   }
 }
@@ -90,3 +110,4 @@ for (let index = 0; index < indices.length; index += 3) {
 for (const [name, image] of [['flat', flat], ['hillshade', shaded], ['slope', slope]]) {
   await writeFile(new URL(`bicol-${name}.png`, assets), PNG.sync.write(image));
 }
+await writeFile(new URL('../public/landing/bicol-terrain.png', import.meta.url), PNG.sync.write(preview));

@@ -1,13 +1,21 @@
-import { climatePeriod, climateSiteFor, coordinatesLabel } from '../data/historical-climate';
+import { climatePeriod, climateSiteFor, coordinatesLabel, type rainfallPattern } from '../data/historical-climate';
+import { daysLabel, farmerCropName, type seasonalCropOptions } from '../data/planting-plan';
 import { citySource, coordinateSource, elevationSource, municipalitySource, type MapPlace } from '../data/places';
 import { powerWeatherSite, powerWeatherYear } from '../data/power-weather';
 import { readingsPath } from '../workspace-routes';
+import { CropArt } from './CropArt';
 import { MapControlIcon } from './MapControlIcon';
 import { MoreDetails } from './MoreDetails';
 
 const number = new Intl.NumberFormat('en-PH');
+type Props = {
+  place: MapPlace;
+  province?: string;
+  cropMonth: string;
+  seasonalCrops?: { picks: ReturnType<typeof seasonalCropOptions>; rain: ReturnType<typeof rainfallPattern> };
+};
 
-export function PlaceOverview({ place, province }: { place: MapPlace; province?: string }) {
+export function PlaceOverview({ place, province, cropMonth, seasonalCrops }: Props) {
   const summitSource = place.volcanoNumber ? `https://volcano.si.edu/volcano.cfm?vn=${place.volcanoNumber}` : null;
   const reference = climateSiteFor(place);
   const weather = powerWeatherSite(place.id);
@@ -20,6 +28,28 @@ export function PlaceOverview({ place, province }: { place: MapPlace; province?:
         <span className="brochure-symbol"><MapControlIcon name={summitSource ? 'hillshade' : 'location'} /></span>
         <div><span className="brochure-kicker">{place.kind} · {province}</span><h2>{place.name}</h2></div>
       </div>
+      {seasonalCrops && (
+        <section className="place-crop-picks" aria-labelledby="place-crop-heading">
+          <h3 id="place-crop-heading">Crops to consider in {cropMonth}</h3>
+          {seasonalCrops.picks.length ? <>
+            <ul className="place-crop-list" role="list">
+              {seasonalCrops.picks.map(({ crop, notes }) => (
+                <li key={crop.name}>
+                  <CropArt crop={crop} />
+                  <div>
+                    <strong>{farmerCropName(crop)}</strong>
+                    <span>{crop.milestone} in {daysLabel(crop.days)}{crop.timing === 'From emergence' ? ' after sprouting' : ''}</span>
+                    {notes.length > 0 && <small>{notes.join(' ')}</small>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <p>{seasonalCrops.rain === 'wetter' ? 'Usually a wetter month. Check drainage before sowing.'
+              : seasonalCrops.rain === 'drier' ? 'Usually a drier month. Check water availability before sowing.'
+                : 'Based on local planting calendars and past rainfall. Check your field in Crop Planner.'}</p>
+          </> : <p>No crop options match this month with the available climate data.</p>}
+        </section>
+      )}
       <dl className="place-facts">
         <div><dt>{summitSource ? 'Summit elevation' : 'Elevation at marker'}</dt><dd>{elevation}</dd></div>
         {place.population !== undefined && <div><dt>Population · 2024 census</dt><dd>{number.format(place.population)}</dd></div>}
