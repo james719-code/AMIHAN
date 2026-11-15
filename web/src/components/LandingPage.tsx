@@ -6,6 +6,7 @@ import { sourceGroups } from '../data/landing-sources';
 import { farmingPlaces } from '../data/places';
 import { plantingMonth, todayInBicol } from '../data/planting-plan';
 import { provinces } from '../data/sites';
+import { imergRainDaysAt } from '../data/imerg-seasonal';
 import { mapPath, overviewPath, plannerPath, readingsPath } from '../workspace-routes';
 
 const wordmark = `${overviewPath}amihan-full-light.svg`;
@@ -33,9 +34,31 @@ const tools = [
   }
 ];
 
+const decisions = [
+  ['When should I plant next?', 'Start with the usual rainfall for your town, then compare the crop calendar for the month.'],
+  ['Will this rotation fit?', 'Check harvest, planting, and field-preparation dates before the next crop is due.'],
+  ['Is my field ready?', 'Use slope, elevation, drainage, and seasonal moisture as checks before you sow.']
+];
+
+const audiences = [
+  ['Farmers', 'Turn local seasonal data into a practical planting check.'],
+  ['Extension workers', 'Use the same town-level evidence when discussing field options.'],
+  ['Researchers', 'Explore the sources, assumptions, and regional coverage behind each view.']
+];
+
+const percent = new Intl.NumberFormat('en-PH', { style: 'percent', maximumFractionDigits: 1 });
+const millimeters = new Intl.NumberFormat('en-PH', { maximumFractionDigits: 0 });
+
 export function LandingPage({ hash, townId, onSelectTown }: { hash: string; townId: string; onSelectTown: (id: string) => void }) {
   const town = farmingPlaces.find(({ id }) => id === townId);
   const month = plantingMonth(todayInBicol());
+  const rainHistory = town ? imergRainDaysAt(town.coordinates, month) : undefined;
+  const rainFrequency = rainHistory ? rainHistory.wetDays / rainHistory.totalDays : undefined;
+  const rainNote = rainFrequency !== undefined
+    ? rainFrequency >= .65 ? 'Rain is common in a typical month. Check drainage before sowing.'
+      : rainFrequency < .35 ? 'Rain is less common in a typical month. Check that crops can establish with available water.'
+      : 'Rainfall is mixed in a typical month. Check the local outlook before sowing.'
+    : 'Choose a town to see its seasonal rainfall context.';
 
   useEffect(() => {
     if (hash === '#sources' || hash === '#seasonal-rainfall') document.getElementById(hash.slice(1))?.scrollIntoView();
@@ -47,7 +70,8 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
           <div className="landing-hero-copy">
             <p className="section-kicker">Bicol Region V · Philippines</p>
             <h1 id="landing-title">Plan the next growing season</h1>
-            <p>Check typical rainfall for your town, explore the terrain, and compare crop rotations for your field.</p>
+            <p>Start with your town, then use local rainfall, terrain, and crop windows to plan the next field decision.</p>
+            <p className="hero-guide"><strong>Start here</strong><span aria-hidden="true">&#8594;</span> Choose your town <span aria-hidden="true">&#8594;</span> Check the season <span aria-hidden="true">&#8594;</span> Plan a crop</p>
             <div className="hero-actions">
               <a className="landing-button landing-button-gold" href={plannerPath} data-app-link>Open Crop Planner</a>
               <a className="landing-text-link" href="#seasonal-rainfall">Check this month’s rainfall</a>
@@ -72,6 +96,38 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
               </div>
             ))}
           </dl>
+        </section>
+
+        <section className="landing-width landing-now" aria-labelledby="now-title">
+          <div className="landing-now-intro">
+            <p className="section-kicker">Seasonal starting point</p>
+            <h2 id="now-title">This month in {town?.name ?? 'your town'}</h2>
+            <p>Use typical conditions as a first check, then confirm what is happening in your field.</p>
+          </div>
+          <div className="landing-now-card">
+            <div className="field-group">
+              <label htmlFor="now-town">Town or city</label>
+              <TownSelect id="now-town" value={townId} onChange={onSelectTown} />
+            </div>
+            <div className="now-stats" aria-live="polite">
+              <div><span>Month</span><strong>{labelMonth(month)}</strong></div>
+              <div><span>Typical rain days</span><strong>{rainFrequency !== undefined ? percent.format(rainFrequency) : '—'}</strong></div>
+              <div><span>Typical rainfall</span><strong>{rainHistory?.averageMm !== null && rainHistory?.averageMm !== undefined ? `${millimeters.format(rainHistory.averageMm)} mm` : '—'}</strong></div>
+            </div>
+            <p className="now-note">{rainNote}</p>
+          </div>
+        </section>
+
+        <section className="how-it-works" aria-labelledby="how-title">
+          <div className="landing-width">
+            <p className="section-kicker">A practical workflow</p>
+            <h2 id="how-title">From local conditions to a field decision</h2>
+            <ol className="workflow-list">
+              <li><strong>1</strong><span>Choose your town</span></li>
+              <li><strong>2</strong><span>Check field conditions</span></li>
+              <li><strong>3</strong><span>Compare the crop window</span></li>
+            </ol>
+          </div>
         </section>
 
         <section className="landing-width rainfall-section" id="seasonal-rainfall" aria-labelledby="seasonal-rainfall-title" tabIndex={-1}>
@@ -112,6 +168,16 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
           </div>
         </section>
 
+        <section className="landing-width landing-section decision-section" aria-labelledby="decisions-title">
+          <div className="landing-section-intro">
+            <div><p className="section-kicker">Make a better call</p><h2 id="decisions-title">What you can decide here</h2></div>
+            <p>AMIHAN does not replace field observation. It helps you bring weather, terrain, and crop timing into the same conversation.</p>
+          </div>
+          <div className="decision-list">
+            {decisions.map(([title, detail]) => <article key={title}><h3>{title}</h3><p>{detail}</p></article>)}
+          </div>
+        </section>
+
         <section className="pilot-band" aria-labelledby="pilot-title">
           <div className="landing-width landing-section pilot-layout">
             <figure className="pilot-map">
@@ -127,9 +193,17 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
               <h2 id="pilot-title">Can mungbean fit between rice crops?</h2>
               <p>In Pamplona, Camarines Sur, DA Region V tested short-duration mungbean after rainfed rice. The Planner checks whether mungbean planting, final picking, and field preparation fit before the next rice planting.</p>
               <p>Enter the last rice harvest and the next planting date. Check that the paddy has drained and that there’s enough moisture for the mungbean to establish.</p>
+              <p className="pilot-result"><strong>What the planner checks:</strong> Mungbean can fit only when its final picking and a seven-day field turnaround finish before the next rice planting date.</p>
               <a className="landing-button" href={`${plannerPath}&place=0501726000`} data-app-link>Open the Pamplona planner</a>
               <p className="pilot-coverage"><strong>Regional coverage</strong> {provinces.map(({ name }) => name).join(' · ')}</p>
             </div>
+          </div>
+        </section>
+
+        <section className="audience-band" aria-labelledby="audience-title">
+          <div className="landing-width landing-section">
+            <div className="landing-section-intro"><div><p className="section-kicker">Built for shared decisions</p><h2 id="audience-title">Useful in the field and beyond it</h2></div></div>
+            <div className="audience-list">{audiences.map(([title, detail]) => <article key={title}><h3>{title}</h3><p>{detail}</p></article>)}</div>
           </div>
         </section>
 
@@ -160,6 +234,7 @@ export function LandingPage({ hash, townId, onSelectTown }: { hash: string; town
               </article>
             ))}
           </div>
+          <p className="source-signal">Built from public regional and satellite data, including PAGASA climate references, NASA POWER, GPM IMERG, SMAP, Department of Agriculture guides, and DA Region V trial references.</p>
         </section>
       <footer className="landing-footer">
         <div className="landing-width">

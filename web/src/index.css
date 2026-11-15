@@ -37,7 +37,15 @@
   text-rendering: optimizeLegibility;
 }
 html * {scrollbar-width: thin; scrollbar-color: var(--line) transparent;}
-body { margin: 0; }
+html {
+  background: var(--forest);
+  overscroll-behavior-y: none;
+}
+body { min-width: 320px; margin: 0; background: var(--forest); }
+#root { min-height: 100dvh; }
+/* The overview remains scrollable; its browser chrome stays out of the way. */
+html:has(.overview-page) { scrollbar-width: none; }
+html:has(.overview-page)::-webkit-scrollbar { display: none; }
 h1, h2, h3 { text-wrap: balance; }
 p { text-wrap: pretty; }
 :where([tabindex="-1"], input, select) { scroll-margin-top: var(--anchor-offset, 90px); }
@@ -54,6 +62,7 @@ button { cursor: pointer; }
   background: var(--forest);
   color: #fff;
 }
+.app-layout:not(.map-layout) { min-height: 100dvh; background: var(--paper); }
 .app-header-inner {
   display: flex;
   align-items: center;

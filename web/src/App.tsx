@@ -19,8 +19,8 @@ const Overview = lazy(async () => {
 const home = import.meta.env.BASE_URL;
 const workspaceLinks = [
   { view: 'overview', label: 'Overview', href: overviewPath },
+  { view: 'map', label: 'Field Map', href: mapPath },
   { view: 'planner', label: 'Crop Planner', href: plannerPath },
-  { view: 'map', label: 'Field Map', href: mapPath }
 ] as const;
 const emptyField: FieldSelection = { start: null, profile: null };
 const initialUrl = window.location.href;
