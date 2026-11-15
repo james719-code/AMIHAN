@@ -63,13 +63,81 @@
 .planner-form .planner-plot-actions { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; }
 .planner-plot-actions button { min-height: 44px; }
 .planner-plot-note { margin: 8px 0 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
-.planner-watering { margin-top: clamp(22px, 3vw, 36px); }
-.planner-watering .field-inputs { grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)); }
-.planner-tab-panel .planner-watering { margin-top: 0; }
-.planner-watering .planner-plot-note:last-child { margin-bottom: 0; }
-.planner-watering-advice { padding: 12px 14px; border-left: 3px solid var(--coastal-blue); border-radius: 7px; background: var(--soft); }
-.planner-watering-advice h3 { color: var(--forest); font-size: 17px; font-weight: 750; }
-.planner-watering-advice p { margin-top: 4px; font-size: 14px; line-height: 1.5; }
+.planner-watering { container: watering-guide / inline-size; }
+.watering-heading { align-items: center; gap: 8px 16px; }
+.watering-forecast { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; }
+.planner-watering .watering-inputs { grid-template-columns: repeat(auto-fit, minmax(min(175px, 100%), 1fr)); }
+.watering-crop-picker { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.watering-crop-picker .crop-art { width: 44px; height: 44px; flex-basis: 44px; }
+.watering-soil { min-inline-size: 0; margin-top: 20px; padding: 0; border: 0; }
+.watering-soil legend { color: var(--forest); font-size: 17px; font-weight: 750; }
+.watering-soil > p { margin: 4px 0 12px; color: var(--muted); font-size: 14px; }
+.watering-soil-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.planner-watering .watering-soil-option {
+  position: relative;
+  display: grid;
+  grid-template: 'photo photo' auto 'description indicator' 1fr / minmax(0, 1fr) auto;
+  align-self: stretch;
+  align-items: start;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--forest);
+  cursor: pointer;
+}
+.watering-soil-option:hover { border-color: var(--control-line); }
+.watering-soil-option:has(:checked) { border-color: var(--forest); background: #edf3ec; box-shadow: inset 0 0 0 1px var(--forest); }
+.watering-soil-option:has(:focus-visible) { outline: 2px solid var(--coastal-blue); outline-offset: 3px; }
+.watering-soil-option img { grid-area: photo; width: 100%; height: clamp(68px, 17cqw, 106px); object-fit: cover; border-radius: 4px; }
+.watering-soil-description { grid-area: description; display: grid; gap: 3px; padding: 0 0 4px 4px; }
+.watering-soil-description strong { font-size: 15px; line-height: 1.15; }
+.watering-soil-description small { color: var(--muted); font-size: 12px; line-height: 1.35; }
+.watering-soil-indicator {
+  grid-area: indicator;
+  width: 17px;
+  height: 17px;
+  margin-right: 4px;
+  border: 1px solid var(--control-line);
+  border-radius: 50%;
+  background: #fff;
+}
+.watering-soil-option:has(:checked) .watering-soil-indicator { border: 5px solid var(--forest); }
+.watering-unchecked { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.watering-soil-option input, .watering-unchecked input { min-height: 0; accent-color: var(--forest); }
+.planner-watering-advice {
+  --watering-accent: #795521;
+  --watering-wash: #f9f1de;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--watering-accent) 30%, var(--watering-wash));
+  border-radius: 8px;
+  background: var(--watering-wash);
+}
+.planner-watering-advice[data-action="hold"] { --watering-accent: #245a6c; --watering-wash: #eaf3f6; }
+.planner-watering-advice[data-action="water"] { --watering-accent: #2c664b; --watering-wash: #edf5ec; }
+.watering-action-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: #fff; color: var(--watering-accent); }
+.planner-watering-advice h3 { color: var(--forest); font-size: clamp(18px, 3.3cqw, 22px); font-weight: 750; line-height: 1.22; }
+.planner-watering-advice p { margin-top: 6px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.planner-watering-advice .watering-action-label { margin: 0 0 3px; color: var(--watering-accent); font-size: 12px; font-weight: 750; }
+.watering-source { display: inline-block; margin-top: 8px; font-size: 13px; }
+.watering-history { margin-top: 12px; border-top: 1px solid var(--line); }
+.watering-history summary { min-height: 44px; padding-block: 10px; color: var(--forest); font-size: 14px; font-weight: 700; cursor: pointer; }
+.watering-history summary .map-control-icon { display: inline-block; margin: 0 6px; color: var(--coastal-blue); vertical-align: -4px; }
+.watering-history p { padding-bottom: 6px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+@container watering-guide (max-width: 385px) {
+  .watering-soil-options { grid-template-columns: minmax(0, 1fr); }
+  .planner-watering .watering-soil-option {
+    grid-template: 'photo description indicator' auto / 80px minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .watering-soil-description { padding: 0; }
+  .watering-soil-option img { height: 54px; }
+}
 @media (max-width: 760px) {
   .planner-form .planner-plot-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .planner-form .planner-plot-actions { grid-column: 1 / -1; }

@@ -6,10 +6,10 @@ import {
 import cropWorkbook from '../data/crop-workbook.json';
 import { cropArtworkCredit } from '../data/crop-artwork';
 import { climateTypeAt } from '../data/climate-types';
-import { planningDate, plotName, plotNameLimit, wateringSoils, wateringStages, type FieldPlot } from '../data/field-plots';
+import { planningDate, plotName, plotNameLimit, wateringStages, type FieldPlot } from '../data/field-plots';
 import { imergRainDaysAt, imergSeasonalPeriod, imergWetDayThresholdMm } from '../data/imerg-seasonal';
 import {
-  climatePeriod, coordinatesLabel, formatReading, labelMonth, powerUrl, rainfallPattern, soilUrl
+  climatePeriod, coordinatesLabel, labelMonth, powerUrl, rainfallPattern, soilUrl
 } from '../data/historical-climate';
 import {
   calendarMonths, compactDateRange, dateRangeLabel, daysLabel, farmerCropName, formatPlantingDate, growingStep,
@@ -24,6 +24,7 @@ import { wateringAdvice } from '../data/watering';
 import { CropArt } from './CropArt';
 import { SoilLayers } from './SoilLayers';
 import { TownSelect } from './TownSelect';
+import { WateringGuide } from './WateringGuide';
 import { MapControlIcon } from './MapControlIcon';
 import { mapPath } from '../workspace-routes';
 
@@ -500,45 +501,12 @@ export function RotationPlanner({ town, plot, plots, plotsSaved, onUpdatePlot, o
           </section>
 
           <section id="panel-watering" role="tabpanel" aria-labelledby="tab-watering" className="planner-tab-panel" hidden={activeTab !== 'watering'}>
-            <section id="watering" className="planner-form planner-watering" aria-labelledby="watering-heading" tabIndex={-1}>
-              <div className="planner-section-title">
-                <h2 id="watering-heading">Watering guide</h2>
-                <a className="planner-inline-link" href={pagasaFarmWeather}>PAGASA farm forecast</a>
-              </div>
-              <div className="field-inputs">
-                <div>
-                  <label htmlFor="watering-crop">Crop to check</label>
-                  <select id="watering-crop" value={plot.wateringCrop} onChange={(event) => onUpdatePlot({ wateringCrop: event.target.value, wateringSoil: '' })}>
-                    <option value="">{suggestedWateringCrop ? `First crop option · ${farmerCropName(suggestedWateringCrop)}` : 'Choose a crop'}</option>
-                    {availableCrops.map((crop) => <option key={crop.name} value={crop.name}>{farmerCropName(crop)}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="watering-stage">Growth stage</label>
-                  <select id="watering-stage" value={plot.wateringStage} onChange={(event) => onUpdatePlot({ wateringStage: event.target.value as FieldPlot['wateringStage'] })}>
-                    {Object.entries(wateringStages).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="watering-soil">Soil condition at field check</label>
-                  <select id="watering-soil" value={plot.wateringSoil} onChange={(event) => onUpdatePlot({ wateringSoil: event.target.value as FieldPlot['wateringSoil'] })}>
-                    {Object.entries(wateringSoils).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                  </select>
-                </div>
-              </div>
-              {advice && <div className="planner-watering-advice" aria-live="polite">
-                <h3>{advice.action}</h3>
-                <p>{advice.detail}</p>
-                {advice.cropNote && <p>{advice.cropNote}</p>}
-                <p className="guide-sources"><a href={advice.source.url}>{advice.source.label}</a></p>
-              </div>}
-              {monthlyRain != null && <p className="planner-plot-note">
-                {labelMonth(month)} historically averaged {formatReading.format(monthlyRain)} mm of rain
-                {' '}({localRainfall ? `NASA IMERG, ${imergSeasonalPeriod}` : `NASA POWER at ${reference?.name}, ${climatePeriod}`})
-                {rainPattern === 'wetter' ? ', among the wetter months' : rainPattern === 'drier' ? ', among the drier months' : ''}.
-                {' '}Use field checks and the local forecast to decide when to water.
-              </p>}
-            </section>
+            <WateringGuide selection={plot} crops={availableCrops} crop={wateringCrop}
+              suggestedCrop={suggestedWateringCrop} advice={advice} onChange={onUpdatePlot}
+              rainfall={monthlyRain == null ? undefined : {
+                month: labelMonth(month), averageMm: monthlyRain, pattern: rainPattern,
+                source: localRainfall ? `NASA IMERG, ${imergSeasonalPeriod}` : `NASA POWER at ${reference?.name}, ${climatePeriod}`
+              }} />
           </section>
 
           <section id="panel-library" role="tabpanel" aria-labelledby="tab-library" className="planner-tab-panel" hidden={activeTab !== 'library'}>
