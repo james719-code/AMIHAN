@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { farmingPlaces } from '../data/places';
 import { provinces } from '../data/sites';
+import { MapControlIcon } from './MapControlIcon';
 
 const locations = farmingPlaces.map((place) => ({
   ...place,
@@ -130,7 +131,7 @@ export function LocationSearch({ onSelect }: { onSelect: (id: string) => void })
             {!query.trim() && typeof navigator !== 'undefined' && 'geolocation' in navigator && (
               <li role="option" aria-selected={false} className="location-search-gps-item"
                 onPointerDown={(event) => event.preventDefault()} onClick={handleUseMyLocation}>
-                <span>📍 Nearest town to my location</span>
+                <span><MapControlIcon name="location" /> Nearest town to my location</span>
                 <small>{locating ? 'Locating via GPS…' : 'Uses device location'}</small>
               </li>
             )}

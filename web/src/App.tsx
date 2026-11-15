@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type MouseEvent } from 'react';
 import { TownSelect } from './components/TownSelect';
 import { WorkspaceMenu, type WorkspaceView } from './components/WorkspaceMenu';
+import { MapControlIcon } from './components/MapControlIcon';
 import type { FieldSelection } from './components/field-terrain';
 import { fieldCoordinates } from './data/field-location';
 import { loadPlots, newPlot, savePlots, type FieldPlot } from './data/field-plots';
@@ -187,10 +188,17 @@ function App() {
           </Suspense>
         </div>}
 
-        {view === 'readings' && <div className="planner-width">
+        {view === 'readings' && <div className="planner-width readings-page-content">
+          <div className="readings-top-nav">
+            <a className="quiet-button icon-text-button readings-back-link" href={overviewPath} data-app-link>
+              <MapControlIcon name="back" />
+              <span>Back to Overview</span>
+            </a>
+          </div>
           <header className="planner-title">
+            <span className="demo-badge">AMIHAN Climate Insights</span>
             <h1>Climate archive</h1>
-            <p>Compare daily weather, monthly climate, and regional rainfall across Bicol.</p>
+            <p>Explore seasonal rainfall patterns, recent weather records, and climate history across Bicol.</p>
           </header>
           <div className="readings-location field-inputs">
             <div>

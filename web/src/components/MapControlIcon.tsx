@@ -1,4 +1,5 @@
 export const mapControlIconPaths = {
+  back: 'M19 12H5m6-6-6 6 6 6',
   info: 'M12 11v6m0-10h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
   chevron: 'm6 9 6 6 6-6',
   people: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0M22 21v-2a4 4 0 0 0-3-4m-1-12a4 4 0 0 1 0 8',
